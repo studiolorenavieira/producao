@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestão de Produção</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0f0f;
+    --surface: #181818;
+    --surface2: #222222;
+    --border: #2a2a2a;
+    --accent: #e8c547;
+    --accent2: #4ade80;
+    --accent3: #f87171;
+    --accent4: #60a5fa;
+    --text: #f0f0f0;
+    --text2: #888;
+    --text3: #555;
+    --radius: 8px;
+    --font-head: 'Inter', sans-serif;
+    --font-mono: 'Inter', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font-mono); font-size: 13px; min-height: 100vh; }
+  .app { display: flex; flex-direction: column; min-height: 100vh; }
+  .topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 20px; display: flex; align-items: center; justify-content: space-between; height: 52px; position: sticky; top: 0; z-index: 100; }
+  .topbar-brand { font-family: 'Inter', sans-serif; font-weight: 800; font-size: 16px; letter-spacing: -0.5px; color: var(--accent); }
+  .topbar-brand span { color: var(--text2); font-weight: 400; font-size: 12px; margin-left: 8px; }
+  .nav { display: flex; gap: 2px; }
+  .nav-btn { background: none; border: none; color: var(--text2); font-family: var(--font-mono); font-size: 11px; padding: 6px 12px; border-radius: var(--radius); cursor: pointer; transition: all .15s; white-space: nowrap; }
+  .nav-btn:hover { color: var(--text); background: var(--surface2); }
+  .nav-btn.active { color: var(--accent); background: rgba(232,197,71,0.1); }
+  .content { flex: 1; padding: 24px 20px; max-width: 1100px; margin: 0 auto; width: 100%; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
+  .card-title { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 14px; color: var(--text); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .card-title .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+  .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
+  .form-group { display: flex; flex-direction: column; gap: 4px; }
+  .form-group label { font-size: 10px; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; }
+  .form-group input, .form-group select, .form-group textarea { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: var(--font-mono); font-size: 12px; padding: 8px 10px; outline: none; transition: border-color .15s; width: 100%; }
+  .form-group input:focus, .form-group select:focus { border-color: var(--accent); }
+  .form-group select option { background: var(--surface2); }
+  .btn { border: none; border-radius: 6px; font-family: var(--font-mono); font-size: 12px; padding: 8px 16px; cursor: pointer; transition: all .15s; font-weight: 500; }
+  .btn-primary { background: var(--accent); color: #000; }
+  .btn-primary:hover { background: #f0d060; }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-ghost { background: transparent; color: var(--text2); border: 1px solid var(--border); }
+  .btn-ghost:hover { color: var(--text); border-color: var(--text2); }
+  .btn-danger { background: rgba(248,113,113,0.15); color: var(--accent3); border: 1px solid rgba(248,113,113,0.3); }
+  .btn-danger:hover { background: rgba(248,113,113,0.25); }
+  .btn-success { background: rgba(74,222,128,0.15); color: var(--accent2); border: 1px solid rgba(74,222,128,0.3); }
+  .btn-sm { padding: 4px 10px; font-size: 11px; }
+  .btn-row { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: .5px; padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  td { padding: 10px 10px; border-bottom: 1px solid rgba(42,42,42,0.5); font-size: 12px; vertical-align: middle; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+  .no-data { text-align: center; color: var(--text3); padding: 32px; font-size: 12px; }
+  .chip { display: inline-block; padding: 3px 8px; border-radius: 20px; font-size: 10px; font-weight: 500; white-space: nowrap; }
+  .chip-yellow { background: rgba(232,197,71,0.15); color: var(--accent); }
+  .chip-blue { background: rgba(96,165,250,0.15); color: var(--accent4); }
+  .chip-green { background: rgba(74,222,128,0.15); color: var(--accent2); }
+  .chip-red { background: rgba(248,113,113,0.15); color: var(--accent3); }
+  .chip-gray { background: rgba(136,136,136,0.15); color: var(--text2); }
+  .filters { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+  .filters input, .filters select { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: var(--font-mono); font-size: 12px; padding: 6px 10px; outline: none; }
+  .filters input:focus, .filters select:focus { border-color: var(--accent); }
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .stat-card { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+  .stat-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
+  .stat-value { font-family: 'Inter', sans-serif; font-size: 26px; font-weight: 800; color: var(--text); line-height: 1; }
+  .stat-value.accent { color: var(--accent); }
+  .stat-value.green { color: var(--accent2); }
+  .stat-value.red { color: var(--accent3); }
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; }
+  .modal-title { font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 700; margin-bottom: 20px; color: var(--accent); }
+  .modal-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+  .toast { position: fixed; bottom: 20px; right: 20px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; font-size: 12px; z-index: 999; transform: translateY(100px); opacity: 0; transition: all .3s; max-width: 300px; }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { border-color: var(--accent2); color: var(--accent2); }
+  .toast.error { border-color: var(--accent3); color: var(--accent3); }
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+  .section-title { font-family: 'Inter', sans-serif; font-size: 20px; font-weight: 800; color: var(--text); }
+  .section-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
+  .group-header { background: var(--surface2); padding: 8px 12px; border-radius: 6px; margin: 12px 0 4px; display: flex; align-items: center; justify-content: space-between; }
+  .group-header-title { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; }
+  .group-header-val { font-size: 12px; color: var(--accent); font-weight: 500; }
+  .tabs { display: flex; gap: 2px; margin-bottom: 20px; background: var(--surface2); border-radius: 8px; padding: 4px; }
+  .tab { flex: 1; text-align: center; padding: 7px; border-radius: 6px; cursor: pointer; font-size: 11px; color: var(--text3); transition: all .15s; border: none; background: none; font-family: var(--font-mono); }
+  .tab.active { background: var(--surface); color: var(--text); }
+  .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .6s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .mobile-nav { display: none; overflow-x: auto; gap: 4px; padding: 8px 20px; background: var(--surface); border-bottom: 1px solid var(--border); }
+  .mobile-nav .nav-btn { font-size: 10px; padding: 5px 10px; white-space: nowrap; }
+  @media (max-width: 600px) {
+    .nav { display: none; }
+    .mobile-nav { display: flex; }
+    .form-grid { grid-template-columns: 1fr 1fr; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+  }
+  .color-yellow { color: var(--accent); }
+  .color-green { color: var(--accent2); }
+  .color-red { color: var(--accent3); }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="topbar-brand">PRODUÇÃO <span>gestão de confecção</span></div>
+    <nav class="nav">
+      <button class="nav-btn active" onclick="showPage('dashboard')">Dashboard</button>
+      <button class="nav-btn" onclick="showPage('cortes')">Cortes</button>
+      <button class="nav-btn" onclick="showPage('faccoes')">Facções</button>
+      <button class="nav-btn" onclick="showPage('pagamentos')">Pagamentos</button>
+      <button class="nav-btn" onclick="showPage('leadtime')">Lead Time</button>
+    </nav>
+  </div>
+  <div class="mobile-nav">
+    <button class="nav-btn active" onclick="showPage('dashboard')">Dashboard</button>
+    <button class="nav-btn" onclick="showPage('cortes')">Cortes</button>
+    <button class="nav-btn" onclick="showPage('faccoes')">Facções</button>
+    <button class="nav-btn" onclick="showPage('pagamentos')">Pagamentos</button>
+    <button class="nav-btn" onclick="showPage('leadtime')">Lead Time</button>
+  </div>
+
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div id="page-dashboard">
+      <div class="section-header">
+        <div><div class="section-title">Dashboard</div><div class="section-sub" id="dash-mes"></div></div>
+        <button class="btn btn-ghost btn-sm" onclick="loadDashboard()">↻ Atualizar</button>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-label">Peças Cortadas / Mês</div><div class="stat-value accent" id="s1">—</div></div>
+        <div class="stat-card"><div class="stat-label">Aguardando Facção</div><div class="stat-value" id="s2">—</div></div>
+        <div class="stat-card"><div class="stat-label">Lotes em Atraso</div><div class="stat-value red" id="s3">—</div></div>
+        <div class="stat-card"><div class="stat-label">A Pagar (R$)</div><div class="stat-value green" id="s4">—</div></div>
+        <div class="stat-card"><div class="stat-label">Coleções Ativas</div><div class="stat-value" id="s5">—</div></div>
+        <div class="stat-card"><div class="stat-label">Lotes Ativos</div><div class="stat-value" id="s6">—</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="card">
+          <div class="card-title"><span class="dot"></span>Cortes Aguardando Facção</div>
+          <div id="dash-cortes-aguardando"><div class="no-data">Carregando...</div></div>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="dot" style="background:var(--accent3)"></span>Lotes com Pendências</div>
+          <div id="dash-lotes-pendentes"><div class="no-data">Carregando...</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CORTES -->
+    <div id="page-cortes" style="display:none">
+      <div class="section-header">
+        <div><div class="section-title">Cortes</div><div class="section-sub">Registro e acompanhamento de cortes</div></div>
+        <button class="btn btn-primary" onclick="resetCorteForm();openModal('modal-corte')">+ Novo Corte</button>
+      </div>
+      <div class="filters">
+        <select id="filter-corte-mes" onchange="renderCortes()"><option value="">Todos os meses</option></select>
+        <input type="text" id="filter-corte-colecao" placeholder="Coleção..." oninput="renderCortes()" style="width:140px">
+        <select id="filter-corte-status" onchange="renderCortes()">
+          <option value="">Todos os status</option>
+          <option>Aguardando facção</option><option>Em facção</option><option>Concluído</option>
+        </select>
+      </div>
+      <div class="card" style="padding:0">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>#</th><th>Data</th><th>Coleção</th><th>Modelo</th><th>Tipo</th><th>Prev.</th><th>Real.</th><th>Custo</th><th>Cortador</th><th>Status</th><th></th></tr></thead>
+            <tbody id="cortes-tbody"><tr><td colspan="11" class="no-data"><span class="spinner"></span></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+      <div id="cortes-totais" style="text-align:right;color:var(--text2);font-size:11px;margin-top:8px"></div>
+    </div>
+
+    <!-- FACCOES -->
+    <div id="page-faccoes" style="display:none">
+      <div class="section-header">
+        <div><div class="section-title">Facções</div><div class="section-sub">Lotes enviados para facção</div></div>
+        <button class="btn btn-primary" onclick="prepModalFaccao()">+ Novo Lote</button>
+      </div>
+      <div class="filters">
+        <select id="filter-faccao-status" onchange="renderFaccoes()">
+          <option value="">Todos</option><option>Em facção</option><option>Retornado</option><option>Concluído</option>
+        </select>
+        <input type="text" id="filter-faccao-nome" placeholder="Facção..." oninput="renderFaccoes()" style="width:140px">
+      </div>
+      <div class="card" style="padding:0">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>#</th><th>Envio</th><th>Facção</th><th>Modelo</th><th>Tipo</th><th>Peças</th><th>Vlr/Peça</th><th>Prazo</th><th>Status</th><th></th></tr></thead>
+            <tbody id="faccoes-tbody"><tr><td colspan="10" class="no-data"><span class="spinner"></span></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGAMENTOS -->
+    <div id="page-pagamentos" style="display:none">
+      <div class="section-header">
+        <div><div class="section-title">Pagamentos</div><div class="section-sub">Grupos aprovados disponíveis para pagamento</div></div>
+      </div>
+      <div class="tabs">
+        <button class="tab active" onclick="showPayTab('aprovados')">Disponíveis para Pagar</button>
+        <button class="tab" onclick="showPayTab('historico')">Histórico</button>
+      </div>
+      <div id="pay-tab-aprovados">
+        <div id="grupos-aprovados-list"><div class="no-data"><span class="spinner"></span></div></div>
+        <div class="card" style="margin-top:16px">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+            <div>
+              <div style="font-size:11px;color:var(--text3)">TOTAL SELECIONADO</div>
+              <div style="font-family:'Inter',sans-serif;font-size:28px;font-weight:800;color:var(--accent2)" id="pay-total">R$ 0,00</div>
+            </div>
+            <button class="btn btn-primary" onclick="gerarPagamento()" id="btn-gerar-pgto" disabled>Gerar Lote de Pagamento</button>
+          </div>
+        </div>
+      </div>
+      <div id="pay-tab-historico" style="display:none">
+        <div id="historico-pgto-list"><div class="no-data"><span class="spinner"></span></div></div>
+      </div>
+    </div>
+
+    <!-- LEAD TIME -->
+    <div id="page-leadtime" style="display:none">
+      <div class="section-header">
+        <div><div class="section-title">Lead Time</div><div class="section-sub">Análise de prazos e pontualidade</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="card">
+          <div class="card-title"><span class="dot"></span>Lead Time por Tipo de Peça</div>
+          <div id="lt-tipo-table"><div class="no-data">Carregando...</div></div>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="dot" style="background:var(--accent4)"></span>Lead Time por Facção</div>
+          <div id="lt-faccao-table"><div class="no-data">Carregando...</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL CORTE -->
+<div class="modal-overlay" id="modal-corte">
+  <div class="modal">
+    <div class="modal-title" id="modal-corte-title">Registrar Corte</div>
+    <div class="form-grid">
+      <div class="form-group"><label>Data do Corte *</label><input type="date" id="c-data"></div>
+      <div class="form-group"><label>Número do Corte *</label><input type="text" id="c-numero" placeholder="001"></div>
+      <div class="form-group"><label>Coleção *</label><input type="text" id="c-colecao" placeholder="Verão 2026"></div>
+      <div class="form-group"><label>Modelo/Referência *</label><input type="text" id="c-modelo" placeholder="REF-001"></div>
+      <div class="form-group"><label>Tipo de Peça *</label>
+        <select id="c-tipo">
+          <option value="">Selecione...</option>
+          <option>Blusa</option><option>Vestido</option><option>Calça</option>
+          <option>Saia</option><option>Conjunto</option><option>Shorts</option>
+          <option>Blazer</option><option>Outro</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Qtd Pretendida *</label><input type="number" id="c-qtdp" min="1"></div>
+      <div class="form-group"><label>Qtd Realizada</label><input type="number" id="c-qtdr" min="0"></div>
+      <div class="form-group"><label>Custo Total (R$)</label><input type="number" id="c-custo" step="0.01" min="0"></div>
+      <div class="form-group"><label>Cortador</label><input type="text" id="c-cortador" placeholder="Nome..."></div>
+      <div class="form-group"><label>Status</label>
+        <select id="c-status">
+          <option>Aguardando facção</option><option>Em facção</option><option>Concluído</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-corte')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarCorte()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL FACCAO -->
+<div class="modal-overlay" id="modal-faccao">
+  <div class="modal">
+    <div class="modal-title">Novo Lote de Facção</div>
+    <div class="form-grid">
+      <div class="form-group"><label>Data de Envio *</label><input type="date" id="f-data"></div>
+      <div class="form-group"><label>Número do Lote *</label><input type="text" id="f-numero" placeholder="LT-001"></div>
+      <div class="form-group"><label>Facção *</label><input type="text" id="f-faccao" placeholder="Nome da facção"></div>
+      <div class="form-group"><label>Modelo/Referência *</label><input type="text" id="f-modelo" placeholder="REF-001"></div>
+      <div class="form-group"><label>Tipo de Peça *</label>
+        <select id="f-tipo">
+          <option value="">Selecione...</option>
+          <option>Blusa</option><option>Vestido</option><option>Calça</option>
+          <option>Saia</option><option>Conjunto</option><option>Shorts</option>
+          <option>Blazer</option><option>Outro</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Peças Enviadas *</label><input type="number" id="f-pecas" min="1"></div>
+      <div class="form-group"><label>Valor por Peça (R$) *</label><input type="number" id="f-vlr" step="0.01" min="0"></div>
+      <div class="form-group"><label>Prazo (dias) *</label><input type="number" id="f-prazo" min="1" value="7"></div>
+      <div class="form-group" style="grid-column:1/-1"><label>Vincular ao Corte</label>
+        <select id="f-corte"><option value="">Sem vínculo</option></select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-faccao')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarFaccao()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL RETORNO -->
+<div class="modal-overlay" id="modal-retorno">
+  <div class="modal">
+    <div class="modal-title" id="retorno-title">Registrar Retorno</div>
+    <input type="hidden" id="ret-lote-id">
+    <input type="hidden" id="ret-lote-vlr">
+    <p style="font-size:12px;color:var(--text2);margin-bottom:16px">Informe os grupos de peças retornadas. Peças OK ficam disponíveis para pagamento imediatamente.</p>
+    <div id="ret-grupos"></div>
+    <button class="btn btn-ghost btn-sm" onclick="addRetGrupo()" style="margin-top:8px">+ Adicionar grupo</button>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-retorno')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarRetorno()">Salvar Retorno</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PAGAMENTO OK -->
+<div class="modal-overlay" id="modal-pgto-ok">
+  <div class="modal">
+    <div class="modal-title">✓ Pagamento Gerado</div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:16px">Lote de pagamento registrado com sucesso.</p>
+    <div id="pgto-ok-content"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-pgto-ok');loadPagamentos()">Fechar</button>
+      <button class="btn btn-primary" onclick="imprimirPgto()">Imprimir</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPA_URL = 'https://lrtphrdqyeoblbwnujv.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxydHBocmRxeWVvYmxid3dudWp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1NDc3MDUsImV4cCI6MjA5MTEyMzcwNX0.0UbgGWrllHXWrK3AW8o4lG-OsHX8vWxI-N9PmGdjjnk';
+const H = {'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':`Bearer ${SUPA_KEY}`,'Prefer':'return=representation'};
+
+async function api(path, method='GET', body=null) {
+  const opts = {method, headers:H};
+  if(body) opts.body = JSON.stringify(body);
+  const r = await fetch(`${SUPA_URL}/rest/v1/${path}`, opts);
+  if(!r.ok){const e=await r.json();throw new Error(e.message||r.statusText);}
+  if(r.status===204) return [];
+  return r.json();
+}
+
+function fmtD(d){if(!d)return'—';const[y,m,dd]=d.split('-');return`${dd}/${m}/${y}`;}
+function fmtR(v){return'R$ '+Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2});}
+function fmtDate(d){return d?new Date(d+'T00:00:00').toLocaleDateString('pt-BR'):'—';}
+function hoje(){return new Date().toISOString().split('T')[0];}
+
+function toast(msg,type='success'){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className=`toast show ${type}`;
+  setTimeout(()=>t.className='toast',3000);
+}
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+function showPage(page){
+  document.querySelectorAll('[id^="page-"]').forEach(el=>el.style.display='none');
+  document.getElementById(`page-${page}`).style.display='block';
+  document.querySelectorAll('.nav-btn').forEach(b=>{
+    b.classList.toggle('active',b.getAttribute('onclick')?.includes(`'${page}'`));
+  });
+  if(page==='dashboard') loadDashboard();
+  else if(page==='cortes') loadCortes();
+  else if(page==='faccoes') loadFaccoes();
+  else if(page==='pagamentos') loadPagamentos();
+  else if(page==='leadtime') loadLeadTime();
+}
+
+// DASHBOARD
+async function loadDashboard(){
+  const now=new Date();
+  const mes=String(now.getMonth()+1).padStart(2,'0');
+  const ano=now.getFullYear();
+  document.getElementById('dash-mes').textContent=`${now.toLocaleString('pt-BR',{month:'long'})} ${ano}`;
+  try{
+    const[cortes,lotes,grupos]=await Promise.all([
+      api('cortes?select=*'),
+      api('lotes_faccao?select=*'),
+      api('grupos_peca?select=*')
+    ]);
+    const mesCortes=cortes.filter(c=>c.data_corte?.startsWith(`${ano}-${mes}`));
+    const totalPecas=mesCortes.reduce((s,c)=>s+(c.qtd_realizada||c.qtd_pretendida||0),0);
+    const aguardando=cortes.filter(c=>c.status==='Aguardando facção').length;
+    const hoje2=new Date();
+    const atrasados=lotes.filter(l=>{
+      if(l.status==='Concluído') return false;
+      const p=new Date(l.data_envio);p.setDate(p.getDate()+l.prazo_dias);
+      return p<hoje2;
+    }).length;
+    const dispPgto=grupos.filter(g=>g.aprovado_pagamento&&g.status!=='Pago').reduce((s,g)=>s+g.valor_liquido,0);
+    const colAtivas=[...new Set(mesCortes.map(c=>c.colecao))].length;
+    const lotesAtivos=lotes.filter(l=>l.status==='Em facção').length;
+    document.getElementById('s1').textContent=totalPecas;
+    document.getElementById('s2').textContent=aguardando;
+    document.getElementById('s3').textContent=atrasados;
+    document.getElementById('s4').textContent=fmtR(dispPgto);
+    document.getElementById('s5').textContent=colAtivas;
+    document.getElementById('s6').textContent=lotesAtivos;
+    const ag=cortes.filter(c=>c.status==='Aguardando facção').slice(0,5);
+    document.getElementById('dash-cortes-aguardando').innerHTML=ag.length?ag.map(c=>`
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px">
+        <div><span style="color:var(--accent)">#${c.numero_corte}</span> ${c.modelo}</div>
+        <div style="color:var(--text2)">${c.colecao}</div>
+      </div>`).join(''):'<div class="no-data">Nenhum corte aguardando</div>';
+    const pend=lotes.filter(l=>l.status!=='Concluído').slice(0,5);
+    document.getElementById('dash-lotes-pendentes').innerHTML=pend.length?pend.map(l=>{
+      const p=new Date(l.data_envio);p.setDate(p.getDate()+l.prazo_dias);
+      const diff=Math.ceil((p-hoje2)/(1000*60*60*24));
+      const cc=diff<0?'chip-red':diff<=2?'chip-yellow':'chip-blue';
+      const ct=diff<0?`${Math.abs(diff)}d atraso`:diff===0?'hoje':`${diff}d`;
+      return`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;align-items:center">
+        <div><span style="color:var(--accent4)">${l.faccao}</span> · ${l.modelo}</div>
+        <span class="chip ${cc}">${ct}</span>
+      </div>`;
+    }).join(''):'<div class="no-data">Sem pendências</div>';
+  }catch(e){toast('Erro dashboard: '+e.message,'error');}
+}
+
+// CORTES
+let cortesData=[];
+async function loadCortes(){
+  try{
+    cortesData=await api('cortes?select=*&order=data_corte.desc');
+    const sel=document.getElementById('filter-corte-mes');
+    const val=sel.value;
+    const meses=[...new Set(cortesData.map(c=>c.data_corte?.substring(0,7)).filter(Boolean))].sort().reverse();
+    sel.innerHTML='<option value="">Todos os meses</option>'+meses.map(m=>`<option value="${m}">${m}</option>`).join('');
+    sel.value=val;
+    renderCortes();
+  }catch(e){toast('Erro cortes: '+e.message,'error');}
+}
+
+function renderCortes(){
+  let data=[...cortesData];
+  const mes=document.getElementById('filter-corte-mes').value;
+  const col=document.getElementById('filter-corte-colecao').value.toLowerCase();
+  const st=document.getElementById('filter-corte-status').value;
+  if(mes) data=data.filter(c=>c.data_corte?.startsWith(mes));
+  if(col) data=data.filter(c=>c.colecao?.toLowerCase().includes(col));
+  if(st) data=data.filter(c=>c.status===st);
+  const total=data.reduce((s,c)=>s+(c.qtd_realizada||c.qtd_pretendida||0),0);
+  document.getElementById('cortes-totais').textContent=`${data.length} corte(s) · ${total} peças`;
+  if(!data.length){document.getElementById('cortes-tbody').innerHTML='<tr><td colspan="11" class="no-data">Nenhum corte encontrado</td></tr>';return;}
+  const sc={'Aguardando facção':'chip-yellow','Em facção':'chip-blue','Concluído':'chip-green'};
+  document.getElementById('cortes-tbody').innerHTML=data.map(c=>`
+    <tr>
+      <td class="color-yellow">#${c.numero_corte}</td>
+      <td>${fmtDate(c.data_corte)}</td>
+      <td>${c.colecao||'—'}</td>
+      <td>${c.modelo||'—'}</td>
+      <td><span class="chip chip-gray">${c.tipo_peca||'—'}</span></td>
+      <td>${c.qtd_pretendida||0}</td>
+      <td>${c.qtd_realizada??'—'}</td>
+      <td>${c.custo_total?fmtR(c.custo_total):'—'}</td>
+      <td>${c.cortador||'—'}</td>
+      <td><span class="chip ${sc[c.status]||'chip-gray'}">${c.status}</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-ghost btn-sm" onclick="editCorte('${c.id}')">✎</button>
+        <button class="btn btn-danger btn-sm" onclick="delCorte('${c.id}')">✕</button>
+      </td>
+    </tr>`).join('');
+}
+
+function resetCorteForm(){
+  ['c-data','c-numero','c-colecao','c-modelo','c-qtdp','c-qtdr','c-custo','c-cortador'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('c-tipo').value='';
+  document.getElementById('c-status').value='Aguardando facção';
+  document.getElementById('c-data').value=hoje();
+  document.getElementById('c-data').dataset.editId='';
+  document.getElementById('modal-corte-title').textContent='Registrar Corte';
+}
+
+async function salvarCorte(){
+  const editId=document.getElementById('c-data').dataset.editId;
+  const data={
+    data_corte:document.getElementById('c-data').value,
+    numero_corte:document.getElementById('c-numero').value,
+    colecao:document.getElementById('c-colecao').value,
+    modelo:document.getElementById('c-modelo').value,
+    tipo_peca:document.getElementById('c-tipo').value,
+    qtd_pretendida:parseInt(document.getElementById('c-qtdp').value)||0,
+    qtd_realizada:document.getElementById('c-qtdr').value?parseInt(document.getElementById('c-qtdr').value):null,
+    custo_total:document.getElementById('c-custo').value?parseFloat(document.getElementById('c-custo').value):null,
+    cortador:document.getElementById('c-cortador').value||null,
+    status:document.getElementById('c-status').value
+  };
+  if(!data.data_corte||!data.numero_corte||!data.colecao||!data.modelo||!data.tipo_peca){toast('Preencha os campos obrigatórios','error');return;}
+  try{
+    if(editId){await api(`cortes?id=eq.${editId}`,'PATCH',data);toast('Corte atualizado!');}
+    else{await api('cortes','POST',data);toast('Corte registrado!');}
+    closeModal('modal-corte');loadCortes();
+  }catch(e){toast('Erro: '+e.message,'error');}
+}
+
+function editCorte(id){
+  const c=cortesData.find(x=>x.id===id);if(!c)return;
+  document.getElementById('c-data').value=c.data_corte||'';
+  document.getElementById('c-data').dataset.editId=id;
+  document.getElementById('c-numero').value=c.numero_corte||'';
+  document.getElementById('c-colecao').value=c.colecao||'';
+  document.getElementById('c-modelo').value=c.modelo||'';
+  document.getElementById('c-tipo').value=c.tipo_peca||'';
+  document.getElementById('c-qtdp').value=c.qtd_pretendida||'';
+  document.getElementById('c-qtdr').value=c.qtd_realizada||'';
+  document.getElementById('c-custo').value=c.custo_total||'';
+  document.getElementById('c-cortador').value=c.cortador||'';
+  document.getElementById('c-status').value=c.status||'Aguardando facção';
+  document.getElementById('modal-corte-title').textContent='Editar Corte';
+  openModal('modal-corte');
+}
+
+async function delCorte(id){
+  if(!confirm('Excluir este corte?'))return;
+  try{await api(`cortes?id=eq.${id}`,'DELETE');toast('Corte excluído');loadCortes();}
+  catch(e){toast('Erro: '+e.message,'error');}
+}
+
+// FACCOES
+let faccoesData=[];
+async function loadFaccoes(){
+  try{
+    faccoesData=await api('lotes_faccao?select=*&order=data_envio.desc');
+    renderFaccoes();
+  }catch(e){toast('Erro facções: '+e.message,'error');}
+}
+
+function renderFaccoes(){
+  let data=[...faccoesData];
+  const st=document.getElementById('filter-faccao-status').value;
+  const nm=document.getElementById('filter-faccao-nome').value.toLowerCase();
+  if(st) data=data.filter(f=>f.status===st);
+  if(nm) data=data.filter(f=>f.faccao?.toLowerCase().includes(nm));
+  if(!data.length){document.getElementById('faccoes-tbody').innerHTML='<tr><td colspan="10" class="no-data">Nenhum lote encontrado</td></tr>';return;}
+  const hoje2=new Date();
+  const sc={'Em facção':'chip-blue','Retornado':'chip-yellow','Concluído':'chip-green'};
+  document.getElementById('faccoes-tbody').innerHTML=data.map(f=>{
+    const p=new Date(f.data_envio);p.setDate(p.getDate()+f.prazo_dias);
+    const diff=Math.ceil((p-hoje2)/(1000*60*60*24));
+    const cc=f.status==='Concluído'?'chip-green':diff<0?'chip-red':diff<=2?'chip-yellow':'chip-blue';
+    const ct=f.status==='Concluído'?'OK':diff<0?`${Math.abs(diff)}d atraso`:diff===0?'hoje':`${diff}d`;
+    return`<tr>
+      <td class="color-yellow">${f.numero_lote}</td>
+      <td>${fmtDate(f.data_envio)}</td>
+      <td><b>${f.faccao}</b></td>
+      <td>${f.modelo}</td>
+      <td><span class="chip chip-gray">${f.tipo_peca}</span></td>
+      <td>${f.pecas_enviadas}</td>
+      <td>${fmtR(f.valor_por_peca)}</td>
+      <td><span class="chip ${cc}">${ct}</span></td>
+      <td><span class="chip ${sc[f.status]||'chip-gray'}">${f.status}</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-success btn-sm" onclick="openRetorno('${f.id}','${f.faccao}',${f.valor_por_peca},'${f.numero_lote}')">↩ Retorno</button>
+        <button class="btn btn-danger btn-sm" onclick="delFaccao('${f.id}')">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+async function prepModalFaccao(){
+  document.getElementById('f-data').value=hoje();
+  const cortes=await api('cortes?status=eq.Aguardando+fac%C3%A7%C3%A3o&select=id,numero_corte,modelo,colecao');
+  const sel=document.getElementById('f-corte');
+  sel.innerHTML='<option value="">Sem vínculo</option>'+cortes.map(c=>`<option value="${c.id}">#${c.numero_corte} · ${c.modelo} (${c.colecao})</option>`).join('');
+  openModal('modal-faccao');
+}
+
+async function salvarFaccao(){
+  const data={
+    data_envio:document.getElementById('f-data').value,
+    numero_lote:document.getElementById('f-numero').value,
+    faccao:document.getElementById('f-faccao').value,
+    modelo:document.getElementById('f-modelo').value,
+    tipo_peca:document.getElementById('f-tipo').value,
+    pecas_enviadas:parseInt(document.getElementById('f-pecas').value)||0,
+    valor_por_peca:parseFloat(document.getElementById('f-vlr').value)||0,
+    prazo_dias:parseInt(document.getElementById('f-prazo').value)||7,
+    corte_id:document.getElementById('f-corte').value||null,
+    status:'Em facção'
+  };
+  if(!data.data_envio||!data.numero_lote||!data.faccao||!data.modelo||!data.tipo_peca||!data.pecas_enviadas||!data.valor_por_peca){toast('Preencha os campos obrigatórios','error');return;}
+  try{
+    const[lote]=await api('lotes_faccao','POST',data);
+    if(data.corte_id) await api(`cortes?id=eq.${data.corte_id}`,'PATCH',{status:'Em facção',lote_faccao_id:lote.id});
+    toast('Lote registrado!');closeModal('modal-faccao');loadFaccoes();
+  }catch(e){toast('Erro: '+e.message,'error');}
+}
+
+async function delFaccao(id){
+  if(!confirm('Excluir este lote?'))return;
+  try{await api(`lotes_faccao?id=eq.${id}`,'DELETE');toast('Lote excluído');loadFaccoes();}
+  catch(e){toast('Erro: '+e.message,'error');}
+}
+
+// RETORNO
+let retGruposCount=0;
+function openRetorno(loteId,faccao,vlrPeca,numLote){
+  document.getElementById('ret-lote-id').value=loteId;
+  document.getElementById('ret-lote-vlr').value=vlrPeca;
+  document.getElementById('retorno-title').textContent=`Retorno — Lote ${numLote} · ${faccao}`;
+  retGruposCount=0;
+  document.getElementById('ret-grupos').innerHTML='';
+  addRetGrupo();
+  openModal('modal-retorno');
+}
+
+function addRetGrupo(){
+  const i=retGruposCount++;
+  const div=document.createElement('div');
+  div.style.cssText='background:var(--surface2);border-radius:8px;padding:14px;margin-bottom:10px';
+  div.innerHTML=`
+    <div style="font-size:11px;color:var(--text2);margin-bottom:10px;text-transform:uppercase">Grupo ${i+1}</div>
+    <div class="form-grid" style="grid-template-columns:repeat(auto-fill,minmax(140px,1fr))">
+      <div class="form-group"><label>Quantidade *</label><input type="number" id="rg-qtd-${i}" min="1"></div>
+      <div class="form-group"><label>Status *</label>
+        <select id="rg-st-${i}" onchange="toggleRetFields(${i})">
+          <option value="OK">OK — Aprovado</option>
+          <option value="Retrabalho">Retrabalho (volta p/ facção)</option>
+          <option value="Perdida">Perdida</option>
+        </select>
+      </div>
+      <div class="form-group" id="rg-conserto-wrap-${i}"><label>Custo Conserto (R$)</label><input type="number" id="rg-cons-${i}" step="0.01" min="0" value="0"></div>
+      <div class="form-group" id="rg-frete-wrap-${i}" style="display:none"><label>Frete Desconto (R$)</label><input type="number" id="rg-frete-${i}" step="0.01" min="0" value="0"></div>
+    </div>`;
+  document.getElementById('ret-grupos').appendChild(div);
+}
+
+function toggleRetFields(i){
+  const st=document.getElementById(`rg-st-${i}`).value;
+  document.getElementById(`rg-conserto-wrap-${i}`).style.display=st==='Retrabalho'?'none':'flex';
+  document.getElementById(`rg-frete-wrap-${i}`).style.display=st==='Retrabalho'?'flex':'none';
+}
+
+async function salvarRetorno(){
+  const loteId=document.getElementById('ret-lote-id').value;
+  const vlrPeca=parseFloat(document.getElementById('ret-lote-vlr').value)||0;
+  const grupos=[];
+  for(let i=0;i<retGruposCount;i++){
+    const qtdEl=document.getElementById(`rg-qtd-${i}`);
+    if(!qtdEl)continue;
+    const qtd=parseInt(qtdEl.value)||0;
+    if(!qtd)continue;
+    const st=document.getElementById(`rg-st-${i}`).value;
+    const cons=parseFloat(document.getElementById(`rg-cons-${i}`)?.value)||0;
+    const frete=parseFloat(document.getElementById(`rg-frete-${i}`)?.value)||0;
+    const bruto=qtd*vlrPeca;
+    const liquido=st==='Perdida'?0:Math.max(0,bruto-cons-frete);
+    grupos.push({lote_id:loteId,quantidade:qtd,status:st,custo_conserto:cons,frete_desconto:frete,valor_bruto:bruto,valor_liquido:liquido,aprovado_pagamento:st==='OK',data_retorno:hoje()});
+  }
+  if(!grupos.length){toast('Informe ao menos um grupo','error');return;}
+  try{
+    for(const g of grupos) await api('grupos_peca','POST',g);
+    const todosOk=grupos.every(g=>g.status==='OK'||g.status==='Perdida');
+    await api(`lotes_faccao?id=eq.${loteId}`,'PATCH',{status:todosOk?'Concluído':'Retornado'});
+    toast('Retorno registrado!');closeModal('modal-retorno');loadFaccoes();
+  }catch(e){toast('Erro: '+e.message,'error');}
+}
+
+// PAGAMENTOS
+let gruposDisponiveis=[];
+let selectedGrupos=new Set();
+let lastPgtoData=null;
+
+async function loadPagamentos(){
+  try{
+    gruposDisponiveis=await api('grupos_peca?aprovado_pagamento=eq.true&status=eq.OK&order=created_at.desc');
+    const lotes=await api('lotes_faccao?select=id,faccao,numero_lote');
+    const loteMap=Object.fromEntries(lotes.map(l=>[l.id,l]));
+    renderGruposDisponiveis(gruposDisponiveis,loteMap);
+  }catch(e){toast('Erro pagamentos: '+e.message,'error');}
+}
+
+function renderGruposDisponiveis(grupos,loteMap){
+  if(!grupos.length){document.getElementById('grupos-aprovados-list').innerHTML='<div class="no-data">Nenhum grupo disponível para pagamento</div>';return;}
+  const byFaccao={};
+  grupos.forEach(g=>{
+    const lote=loteMap[g.lote_id];
+    const faccao=lote?.faccao||'Desconhecida';
+    if(!byFaccao[faccao])byFaccao[faccao]=[];
+    byFaccao[faccao].push({...g,lote});
+  });
+  let html='';
+  for(const[faccao,gs] of Object.entries(byFaccao)){
+    const tot=gs.reduce((s,g)=>s+g.valor_liquido,0);
+    html+=`<div class="group-header"><span class="group-header-title">${faccao}</span><span class="group-header-val">${fmtR(tot)}</span></div>`;
+    gs.forEach(g=>{
+      const checked=selectedGrupos.has(g.id)?'checked':'';
+      html+=`<div style="display:flex;align-items:center;gap:12px;padding:10px 4px;border-bottom:1px solid var(--border)">
+        <input type="checkbox" ${checked} onchange="toggleGrupo('${g.id}',${g.valor_liquido},this.checked)" style="accent-color:var(--accent);width:16px;height:16px">
+        <div style="flex:1;font-size:12px">
+          <span style="color:var(--accent4)">Lote ${g.lote?.numero_lote||'—'}</span>
+          · ${g.quantidade} peças · retorno ${fmtDate(g.data_retorno)}
+          ${g.custo_conserto>0?`<span style="color:var(--accent3)"> · conserto -${fmtR(g.custo_conserto)}</span>`:''}
+        </div>
+        <div style="font-weight:600;color:var(--accent2)">${fmtR(g.valor_liquido)}</div>
+      </div>`;
+    });
+  }
+  document.getElementById('grupos-aprovados-list').innerHTML=html;
+  updatePayTotal();
+}
+
+function toggleGrupo(id,val,checked){
+  if(checked)selectedGrupos.add(id);else selectedGrupos.delete(id);
+  updatePayTotal();
+}
+
+function updatePayTotal(){
+  let total=0;
+  gruposDisponiveis.forEach(g=>{if(selectedGrupos.has(g.id))total+=g.valor_liquido;});
+  document.getElementById('pay-total').textContent=fmtR(total);
+  document.getElementById('btn-gerar-pgto').disabled=selectedGrupos.size===0;
+}
+
+async function gerarPagamento(){
+  if(!selectedGrupos.size)return;
+  const total=gruposDisponiveis.filter(g=>selectedGrupos.has(g.id)).reduce((s,g)=>s+g.valor_liquido,0);
+  try{
+    const[lote]=await api('lotes_pagamento','POST',{data_pgto:hoje(),valor_total:total,obs:''});
+    const lotes=await api('lotes_faccao?select=id,faccao');
+    const loteMap=Object.fromEntries(lotes.map(l=>[l.id,l.faccao]));
+    for(const gId of selectedGrupos){
+      const g=gruposDisponiveis.find(x=>x.id===gId);
+      await api('itens_pagamento','POST',{lote_pgto_id:lote.id,grupo_id:gId,faccao:loteMap[g.lote_id]||'—',valor:g.valor_liquido});
+      await api(`grupos_peca?id=eq.${gId}`,'PATCH',{status:'Pago'});
+    }
+    lastPgtoData=lote;
+    selectedGrupos.clear();
+    toast('Pagamento gerado!');
+    document.getElementById('pgto-ok-content').innerHTML=`<div style="font-size:20px;font-family:'Inter',sans-serif;font-weight:800;color:var(--accent2)">${fmtR(total)}</div><div style="color:var(--text2);font-size:12px;margin-top:4px">${fmtDate(hoje())}</div>`;
+    openModal('modal-pgto-ok');
+  }catch(e){toast('Erro: '+e.message,'error');}
+}
+
+async function loadHistoricoPgto(){
+  try{
+    const pgtos=await api('lotes_pagamento?select=*&order=created_at.desc');
+    if(!pgtos.length){document.getElementById('historico-pgto-list').innerHTML='<div class="no-data">Nenhum pagamento realizado</div>';return;}
+    document.getElementById('historico-pgto-list').innerHTML=pgtos.map(p=>`
+      <div class="card" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+        <div>
+          <div style="font-size:11px;color:var(--text3)">LOTE DE PAGAMENTO</div>
+          <div style="font-family:'Inter',sans-serif;font-size:15px;font-weight:700">${fmtDate(p.data_pgto)}</div>
+        </div>
+        <div style="font-family:'Inter',sans-serif;font-size:22px;font-weight:800;color:var(--accent2)">${fmtR(p.valor_total)}</div>
+      </div>`).join('');
+  }catch(e){}
+}
+
+function showPayTab(tab){
+  document.getElementById('pay-tab-aprovados').style.display=tab==='aprovados'?'block':'none';
+  document.getElementById('pay-tab-historico').style.display=tab==='historico'?'block':'none';
+  document.querySelectorAll('.tabs .tab').forEach((b,i)=>b.classList.toggle('active',(i===0&&tab==='aprovados')||(i===1&&tab==='historico')));
+  if(tab==='historico')loadHistoricoPgto();
+}
+
+function imprimirPgto(){
+  if(!lastPgtoData)return;
+  const w=window.open('','_blank');
+  w.document.write(`<html><head><title>Pagamento</title><style>body{font-family:monospace;padding:20px}h1{font-size:18px}@media print{button{display:none}}</style></head><body>
+  <h1>Lote de Pagamento — ${fmtDate(lastPgtoData.data_pgto)}</h1>
+  <p>Total: <strong>${fmtR(lastPgtoData.valor_total)}</strong></p>
+  <br><button onclick="window.print()">Imprimir</button></body></html>`);
+  w.document.close();
+}
+
+// LEAD TIME
+async function loadLeadTime(){
+  try{
+    const lotes=await api('lotes_faccao?status=eq.Concluído&select=*');
+    if(!lotes.length){
+      document.getElementById('lt-tipo-table').innerHTML='<div class="no-data">Dados insuficientes — conclua lotes para ver análise</div>';
+      document.getElementById('lt-faccao-table').innerHTML='<div class="no-data">Dados insuficientes</div>';
+      return;
+    }
+    const byTipo={};
+    lotes.forEach(l=>{if(!byTipo[l.tipo_peca])byTipo[l.tipo_peca]=[];byTipo[l.tipo_peca].push(l.prazo_dias);});
+    document.getElementById('lt-tipo-table').innerHTML=`<table><thead><tr><th>Tipo</th><th>Lead Time Médio</th><th>Lotes</th></tr></thead><tbody>${
+      Object.entries(byTipo).map(([t,d])=>`<tr><td>${t}</td><td>${(d.reduce((a,b)=>a+b,0)/d.length).toFixed(1)} dias</td><td>${d.length}</td></tr>`).join('')
+    }</tbody></table>`;
+    const byFac={};
+    lotes.forEach(l=>{if(!byFac[l.faccao])byFac[l.faccao]=[];byFac[l.faccao].push(l.prazo_dias);});
+    document.getElementById('lt-faccao-table').innerHTML=`<table><thead><tr><th>Facção</th><th>Lead Time Médio</th><th>Lotes</th></tr></thead><tbody>${
+      Object.entries(byFac).map(([f,d])=>`<tr><td>${f}</td><td>${(d.reduce((a,b)=>a+b,0)/d.length).toFixed(1)} dias</td><td>${d.length}</td></tr>`).join('')
+    }</tbody></table>`;
+  }catch(e){toast('Erro lead time: '+e.message,'error');}
+}
+
+// INIT
+loadDashboard();
+</script>
+</body>
+</html>
