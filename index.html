@@ -561,7 +561,12 @@ async function finalizarCorte(){
       tipo_peca:c.tipo_peca,
       qtd_cortada:qtd,
       status:'Aguardando Facção',
-      data_criacao:hoje()
+      data_envio:hoje(),
+      data_criacao:hoje(),
+      faccao:'',
+      pecas_enviadas:0,
+      valor_por_peca:0,
+      prazo_dias:0
     });
     toast('Corte finalizado! Cortador na fila de pagamento.');
     fecharModal('m-retcorte');loadCortes();
