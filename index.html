@@ -1199,6 +1199,7 @@ async function confirmarCancelamento(){
     }
     toast('Pagamento cancelado!');
     fecharModal('mo-cancel');
+    loadHistPgto();
     verDetalhePgto(pgtoId,data,total);
     loadPagamentos();
   }catch(e){toast('Erro: '+e.message,'err');}
