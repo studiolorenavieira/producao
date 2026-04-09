@@ -764,21 +764,24 @@ async function salvarEnvio(){
 
 async function delLote(id){
   try{
-    // Verifica se tem grupos com pagamento efetuado (não cancelado)
     const grupos=await db('grupos_peca?lote_id=eq.'+id+'&select=id,status');
     const gruposPagos=grupos.filter(g=>g.status==='Pago');
+    let itensAtivos=[];
     if(gruposPagos.length>0){
-      const itensAtivos=await db('itens_pagamento?grupo_id=in.('+gruposPagos.map(g=>g.id).join(',')+')'+'&cancelado=eq.false&select=id');
-      if(itensAtivos.length>0){
-        toast('Cancele o pagamento deste lote antes de excluí-lo','err');
-        return;
-      }
+      itensAtivos=await db('itens_pagamento?grupo_id=in.('+gruposPagos.map(g=>g.id).join(',')+')'+'&cancelado=eq.false&select=id');
     }
-    if(!confirm('Excluir este lote?'))return;
+    const msgConfirm=itensAtivos.length>0
+      ?'Este lote tem pagamentos ativos que serão cancelados automaticamente. Confirma a exclusão?'
+      :'Excluir este lote definitivamente?';
+    if(!confirm(msgConfirm))return;
+    // Cancela pagamentos ativos automaticamente
+    for(const it of itensAtivos){
+      await db('itens_pagamento?id=eq.'+it.id,'PATCH',{cancelado:true,data_cancelamento:hoje(),justificativa_cancelamento:'Lote de facção excluído pelo usuário'});
+    }
     await db('grupos_peca?lote_id=eq.'+id,'DELETE');
     const lote=facData.find(f=>f.id===id);
     await db('lotes_faccao?id=eq.'+id,'DELETE');
-    toast('Lote excluído.');
+    toast('Lote excluído'+(itensAtivos.length>0?' e pagamentos cancelados':'')+'.');
     if(lote?.corte_id){
       const restantes=await db('lotes_faccao?corte_id=eq.'+lote.corte_id+'&select=id');
       if(restantes.length===0){
@@ -923,11 +926,18 @@ async function verDetalhe(corteId){
       db('lotes_faccao?corte_id=eq.'+corteId+'&select=*')
     ]);
     const c=cortes[0];if(!c)return;
-    let grupos=[];
+    let grupos=[],itensPgto=[];
     if(lotes.length){
       const ids=lotes.map(l=>l.id).join(',');
       grupos=await db('grupos_peca?lote_id=in.('+ids+')&select=*');
+      // Busca itens de pagamento vinculados aos grupos
+      if(grupos.length){
+        const gids=grupos.map(g=>g.id).join(',');
+        itensPgto=await db('itens_pagamento?grupo_id=in.('+gids+')&select=*&order=created_at.asc');
+      }
     }
+    // Itens de pagamento do corte
+    const itensCortePgto=await db('itens_pagamento?corte_id=eq.'+corteId+'&select=*&order=created_at.asc');
     document.getElementById('mo-det-titulo').textContent=c.modelo+' — '+c.colecao;
     const ltCorte=diffD(c.data_corte,c.data_retorno_corte);
     let html=`<div style="background:var(--s2);border-radius:8px;padding:12px;margin-bottom:14px;font-size:12px">
@@ -942,10 +952,26 @@ async function verDetalhe(corteId){
     if(c.data_retorno_corte){
       html+=`<div class="tli"><div class="tld">${fD(c.data_retorno_corte)}</div><div class="tlt">✅ Retorno do corte${ltCorte?' ('+ltCorte+'d)':''}</div><div class="tlb">${c.qtd_cortada} peças · Custo: ${fR(c.custo_corte)}${c.obs_corte?' · '+c.obs_corte:''}</div></div>`;
     }
+    // Eventos de pagamento do corte
+    itensCortePgto.forEach(it=>{
+      if(it.cancelado){
+        html+=`<div class="tli"><div class="tld">${fD(it.data_cancelamento)}</div><div class="tlt" style="color:var(--rd)">❌ Pagamento de corte cancelado</div><div class="tlb">Motivo: ${it.justificativa_cancelamento||'—'} · ${fR(it.valor)}</div></div>`;
+      } else {
+        html+=`<div class="tli"><div class="tld">${fD(it.created_at?.split('T')[0])}</div><div class="tlt" style="color:var(--gn)">💳 Corte pago</div><div class="tlb">${fR(it.valor)}</div></div>`;
+      }
+    });
     lotes.forEach(l=>{
       html+=`<div class="tli"><div class="tld">${fD(l.data_envio)}</div><div class="tlt">🚚 Enviado → ${l.faccao||'—'}</div><div class="tlb">${l.qtd_enviada} pçs · ${fR(l.valor_peca)}/pç · Prazo: ${l.prazo_dias}d</div></div>`;
       grupos.filter(g=>g.lote_id===l.id).forEach(g=>{
-        html+=`<div class="tli"><div class="tld">${fD(g.data_retorno)}</div><div class="tlt">📦 Retorno: ${g.quantidade} pçs OK</div><div class="tlb">Bruto: ${fR(g.valor_bruto)}${g.desconto>0?' · Desc: -'+fR(g.desconto):''}${g.obs?' · '+g.obs:''} · <b>Líquido: ${fR(g.valor_liquido)}</b></div></div>`;
+        html+=`<div class="tli"><div class="tld">${fD(g.data_retorno)}</div><div class="tlt">📦 Retorno: ${g.quantidade} pçs OK</div><div class="tlb">Bruto: ${fR(g.valor_bruto)}${g.desconto>0?' · Desc: -'+fR(g.desconto):''}${g.acrescimo>0?' · Acrés: +'+fR(g.acrescimo):''}${g.obs?' · '+g.obs:''} · <b>Líquido: ${fR(g.valor_liquido)}</b></div></div>`;
+        // Eventos de pagamento deste grupo
+        itensPgto.filter(it=>it.grupo_id===g.id).forEach(it=>{
+          if(it.cancelado){
+            html+=`<div class="tli"><div class="tld">${fD(it.data_cancelamento)}</div><div class="tlt" style="color:var(--rd)">❌ Pagamento de facção cancelado</div><div class="tlb">Motivo: ${it.justificativa_cancelamento||'—'} · ${fR(it.valor)}</div></div>`;
+          } else {
+            html+=`<div class="tli"><div class="tld">${fD(it.created_at?.split('T')[0])}</div><div class="tlt" style="color:var(--gn)">💳 Facção paga</div><div class="tlb">${l.faccao} · ${fR(it.valor)}</div></div>`;
+          }
+        });
       });
     });
     html+='</div>';
@@ -1021,8 +1047,12 @@ function updatePayTotal(){
   document.getElementById('btn-gerar').disabled=selPay.size===0;
 }
 
+let gerandoPgto=false;
 async function gerarLotePgto(){
-  if(!selPay.size)return;
+  if(!selPay.size||gerandoPgto)return;
+  gerandoPgto=true;
+  document.getElementById('btn-gerar').disabled=true;
+  document.getElementById('btn-gerar').textContent='Gerando...';
   const selecionados=payItems.filter(p=>selPay.has(p.key));
   const total=selecionados.reduce((s,p)=>s+p.valor,0);
   try{
@@ -1113,8 +1143,8 @@ async function verDetalhePgto(pgtoId,data,total){
     let html='';
     for(const[tipo,its] of Object.entries(byTipo)){
       if(!its.length)continue;
-      const tot=its.reduce((s,i)=>s+i.valor,0);
-      html+=`<div class="gh"><span class="gh-t">${tipo}s</span><span class="gh-v">${fR(tot)}</span></div>`;
+      const totPago=its.filter(i=>!i.cancelado).reduce((s,i)=>s+i.valor,0);
+      html+=`<div class="gh"><span class="gh-t">${tipo}s</span><span class="gh-v">${fR(totPago)}</span></div>`;
       its.forEach(i=>html+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 4px;border-bottom:1px solid var(--bd);font-size:12px;gap:10px">
         <div style="flex:1">
           <span style="color:var(--yw)">#${i.referencia}</span> · ${i.descricao}
@@ -1127,10 +1157,13 @@ async function verDetalhePgto(pgtoId,data,total){
         </div>
       </div>`);
     }
-    html+=`<div style="text-align:right;padding:12px 4px;font-size:16px;font-weight:800;color:var(--gn)">Total: ${fR(total)}</div>`;
+    // Total real = só os não cancelados
+    const totalReal=itens.filter(i=>!i.cancelado).reduce((s,i)=>s+i.valor,0);
+    const todoCancelado=itens.length>0&&itens.every(i=>i.cancelado);
+    html+=`<div style="text-align:right;padding:12px 4px;font-size:16px;font-weight:800;color:${todoCancelado?'var(--rd)':'var(--gn)'}${todoCancelado?';text-decoration:line-through':''}">Total Efetivo: ${fR(totalReal)}</div>`;
     document.getElementById('mo-detpgto-titulo').textContent='Pagamento — '+data;
     document.getElementById('mo-detpgto-content').innerHTML=html;
-    ultimoLote={data_pgto:data,valor_total:total,itens};
+    ultimoLote={data_pgto:data,valor_total:totalReal,itens};
     abrirModal('mo-detpgto');
   }catch(e){toast('Erro: '+e.message,'err');}
 }
@@ -1154,8 +1187,16 @@ async function confirmarCancelamento(){
   try{
     const[item]=await db('itens_pagamento?id=eq.'+itemId+'&select=*');
     await db('itens_pagamento?id=eq.'+itemId,'PATCH',{cancelado:true,data_cancelamento:hoje(),justificativa_cancelamento:justif});
-    if(item.corte_id)await db('cortes?id=eq.'+item.corte_id,'PATCH',{status:'Concluído / Ag. Pagamento',pgto_pendente:true});
-    if(item.grupo_id)await db('grupos_peca?id=eq.'+item.grupo_id,'PATCH',{status:'OK'});
+    if(item.corte_id){
+      await db('cortes?id=eq.'+item.corte_id,'PATCH',{status:'Concluído / Ag. Pagamento',pgto_pendente:true});
+    }
+    if(item.grupo_id){
+      const[grupo]=await db('grupos_peca?id=eq.'+item.grupo_id+'&select=lote_id');
+      await db('grupos_peca?id=eq.'+item.grupo_id,'PATCH',{status:'OK'});
+      if(grupo?.lote_id){
+        await db('lotes_faccao?id=eq.'+grupo.lote_id,'PATCH',{status:'Concluído / Ag. Pagamento'});
+      }
+    }
     toast('Pagamento cancelado!');
     fecharModal('mo-cancel');
     verDetalhePgto(pgtoId,data,total);
