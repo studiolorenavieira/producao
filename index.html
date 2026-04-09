@@ -226,6 +226,30 @@ tr:hover td{background:rgba(255,255,255,.015);}
     <div><div class="st">Relatórios</div></div>
     <button class="btn bg bsm" onclick="loadRel()">↻ Atualizar</button>
   </div>
+
+  <!-- RELATÓRIO DE COLEÇÃO -->
+  <div class="card">
+    <div style="font-size:13px;font-weight:700;margin-bottom:14px">📊 Relatório por Coleção / Período</div>
+    <div class="fg" style="margin-bottom:14px">
+      <div class="fi"><label>Data Inicial</label><input type="date" id="rel-dt-ini"></div>
+      <div class="fi"><label>Data Final</label><input type="date" id="rel-dt-fim"></div>
+      <div class="fi"><label>Coleção</label><select id="rel-colecao"><option value="">Todas</option></select></div>
+      <div class="fi"><label>Status</label>
+        <select id="rel-status">
+          <option value="">Todos</option>
+          <option>Aguardando Retorno</option>
+          <option>Concluído / Ag. Pagamento</option>
+          <option>Concluído / Pago</option>
+          <option>Em Produção</option>
+        </select>
+      </div>
+      <div class="fi" style="justify-content:flex-end;padding-top:18px">
+        <button class="btn by" onclick="gerarRelColecao()">Gerar Relatório</button>
+      </div>
+    </div>
+    <div id="rel-colecao-result"></div>
+  </div>
+
   <div class="gc2">
     <div class="card"><div style="font-size:12px;font-weight:700;margin-bottom:14px">Lead Time por Tipo de Peça</div><div id="rel-tipo"></div></div>
     <div class="card"><div style="font-size:12px;font-weight:700;margin-bottom:14px">Lead Time por Facção</div><div id="rel-fac"></div></div>
@@ -1229,34 +1253,174 @@ function showPayTab(tab){
 // ===== RELATORIOS =====
 async function loadRel(){
   try{
-    const[lotes,grupos,pgtos,pgItens]=await Promise.all([
-      db('lotes_faccao?status=eq.Concluído&select=*'),
+    // Lead time usa lotes com status que contém "Concluído"
+    const[lotes,grupos,pgtos,pgItens,cortes]=await Promise.all([
+      db('lotes_faccao?select=*'),
       db('grupos_peca?select=*'),
       db('lotes_pagamento?select=*&order=created_at.desc'),
-      db('itens_pagamento?cancelado=eq.false&select=*')
+      db('itens_pagamento?select=*'),
+      db('cortes?select=colecao&order=colecao.asc')
     ]);
+
+    // Só lotes concluídos (qualquer status com "Concluído")
+    const lotesConc=lotes.filter(l=>l.status?.startsWith('Concluído'));
+
+    // Lead time por tipo
     const byTipo={};
-    lotes.forEach(l=>{if(!byTipo[l.tipo_peca])byTipo[l.tipo_peca]=[];byTipo[l.tipo_peca].push(l.prazo_dias||0);});
+    lotesConc.forEach(l=>{
+      if(!l.tipo_peca||!l.prazo_dias)return;
+      if(!byTipo[l.tipo_peca])byTipo[l.tipo_peca]=[];
+      byTipo[l.tipo_peca].push(l.prazo_dias);
+    });
     document.getElementById('rel-tipo').innerHTML=Object.keys(byTipo).length?
       `<table><thead><tr><th>Tipo</th><th>Lead Time Médio</th><th>Lotes</th></tr></thead><tbody>${Object.entries(byTipo).map(([t,d])=>`<tr><td>${t}</td><td>${(d.reduce((a,b)=>a+b,0)/d.length).toFixed(1)} dias</td><td>${d.length}</td></tr>`).join('')}</tbody></table>`
-      :'<div class="nd">Dados insuficientes</div>';
+      :'<div class="nd">Dados insuficientes — conclua lotes para ver</div>';
+
+    // Lead time por facção
     const byFac={};
-    lotes.forEach(l=>{if(!byFac[l.faccao])byFac[l.faccao]=[];byFac[l.faccao].push(l.prazo_dias||0);});
+    lotesConc.forEach(l=>{
+      if(!l.faccao||!l.prazo_dias)return;
+      if(!byFac[l.faccao])byFac[l.faccao]=[];
+      byFac[l.faccao].push(l.prazo_dias);
+    });
     document.getElementById('rel-fac').innerHTML=Object.keys(byFac).length?
       `<table><thead><tr><th>Facção</th><th>Lead Time Médio</th><th>Lotes</th></tr></thead><tbody>${Object.entries(byFac).map(([f,d])=>`<tr><td>${f}</td><td>${(d.reduce((a,b)=>a+b,0)/d.length).toFixed(1)} dias</td><td>${d.length}</td></tr>`).join('')}</tbody></table>`
       :'<div class="nd">Dados insuficientes</div>';
+
+    // Preço médio por tipo
     const precoTipo={};
-    lotes.forEach(l=>{if(!precoTipo[l.tipo_peca])precoTipo[l.tipo_peca]=[];precoTipo[l.tipo_peca].push(l.valor_peca||0);});
+    lotesConc.forEach(l=>{
+      if(!l.tipo_peca||!l.valor_peca)return;
+      if(!precoTipo[l.tipo_peca])precoTipo[l.tipo_peca]=[];
+      precoTipo[l.tipo_peca].push(l.valor_peca);
+    });
     document.getElementById('rel-preco').innerHTML=Object.keys(precoTipo).length?
       `<table><thead><tr><th>Tipo</th><th>Preço Médio/Pç</th><th>Lotes</th></tr></thead><tbody>${Object.entries(precoTipo).map(([t,v])=>`<tr><td>${t}</td><td>${fR(v.reduce((a,b)=>a+b,0)/v.length)}</td><td>${v.length}</td></tr>`).join('')}</tbody></table>`
       :'<div class="nd">Dados insuficientes</div>';
+
+    // Histórico de pagamentos com valores reais (descontando cancelados)
     document.getElementById('rel-pgtos').innerHTML=pgtos.length?
-      pgtos.map(p=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--bd);cursor:pointer" onclick="verDetalhePgto('${p.id}','${fD(p.data_pgto)}',${p.valor_total})">
-        <div><div style="font-size:13px;font-weight:600">${fD(p.data_pgto)}</div><div style="font-size:11px;color:var(--t3)">${pgItens.filter(i=>i.lote_pgto_id===p.id).length} itens · clique para ver</div></div>
-        <div style="font-size:15px;font-weight:800;color:var(--gn)">${fR(p.valor_total)}</div>
-      </div>`).join('')
+      pgtos.map(p=>{
+        const itens=pgItens.filter(i=>i.lote_pgto_id===p.id);
+        const totalReal=itens.filter(i=>!i.cancelado).reduce((s,i)=>s+i.valor,0);
+        const todoCancelado=itens.length>0&&itens.every(i=>i.cancelado);
+        const parcCancelado=!todoCancelado&&itens.some(i=>i.cancelado);
+        const cor=todoCancelado?'var(--rd)':parcCancelado?'var(--or)':'var(--gn)';
+        const badge=todoCancelado?'<span class="chip cr" style="margin-left:6px">Cancelado</span>':parcCancelado?'<span class="chip co" style="margin-left:6px">Parc. Cancelado</span>':'';
+        return`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--bd);cursor:pointer" onclick="verDetalhePgto('${p.id}','${fD(p.data_pgto)}',${p.valor_total})">
+          <div><div style="font-size:13px;font-weight:600${todoCancelado?';text-decoration:line-through;color:var(--rd)':''}">${fD(p.data_pgto)} ${badge}</div>
+          <div style="font-size:11px;color:var(--t3)">${itens.filter(i=>!i.cancelado).length} itens · clique para ver</div></div>
+          <div style="font-size:15px;font-weight:800;color:${cor}${todoCancelado?';text-decoration:line-through':''}">${fR(totalReal)}</div>
+        </div>`;
+      }).join('')
       :'<div class="nd">Nenhum pagamento</div>';
+
+    // Popula dropdown de coleções
+    const colecoes=[...new Set(cortes.map(c=>c.colecao).filter(Boolean))].sort();
+    const sel=document.getElementById('rel-colecao');
+    const vAtual=sel.value;
+    sel.innerHTML='<option value="">Todas</option>'+colecoes.map(c=>`<option value="${c}">${c}</option>`).join('');
+    sel.value=vAtual;
+
   }catch(e){toast('Erro relatórios: '+e.message,'err');}
+}
+
+async function gerarRelColecao(){
+  const dtIni=document.getElementById('rel-dt-ini').value;
+  const dtFim=document.getElementById('rel-dt-fim').value;
+  const colecao=document.getElementById('rel-colecao').value;
+  const status=document.getElementById('rel-status').value;
+
+  const el=document.getElementById('rel-colecao-result');
+  el.innerHTML='<div class="nd"><span class="sp"></span> Carregando...</div>';
+
+  try{
+    let query='cortes?select=*&order=colecao.asc,modelo.asc';
+    if(dtIni)query+='&data_corte=gte.'+dtIni;
+    if(dtFim)query+='&data_corte=lte.'+dtFim;
+    if(colecao)query+='&colecao=eq.'+encodeURIComponent(colecao);
+    if(status)query+='&status=eq.'+encodeURIComponent(status);
+
+    const cortes=await db(query);
+    if(!cortes.length){el.innerHTML='<div class="nd">Nenhum corte encontrado com os filtros selecionados</div>';return;}
+
+    // Busca lotes e grupos vinculados
+    const ids=cortes.map(c=>c.id).join(',');
+    const[lotes,itensPgto]=await Promise.all([
+      db('lotes_faccao?corte_id=in.('+ids+')&select=*'),
+      db('itens_pagamento?cancelado=eq.false&select=*')
+    ]);
+    const loteIds=lotes.map(l=>l.id);
+    let grupos=[];
+    if(loteIds.length){
+      grupos=await db('grupos_peca?lote_id=in.('+loteIds.join(',')+')'+'&select=*');
+    }
+
+    // Totais globais
+    let totPretendido=0,totCortado=0,totEnviado=0,totRetornado=0,totCorte=0,totFac=0;
+
+    const rows=cortes.map(c=>{
+      const lotesCorte=lotes.filter(l=>l.corte_id===c.id);
+      const gruposCorte=grupos.filter(g=>lotesCorte.find(l=>l.id===g.lote_id));
+      const custoFac=gruposCorte.reduce((s,g)=>s+g.valor_liquido,0);
+      const custoCorte=c.custo_corte||0;
+      const total=custoCorte+custoFac;
+      const enviado=lotesCorte.reduce((s,l)=>s+(l.qtd_enviada||0),0);
+      const retornado=gruposCorte.reduce((s,g)=>s+g.quantidade,0);
+
+      totPretendido+=c.qtd_pretendida||0;
+      totCortado+=c.qtd_cortada||0;
+      totEnviado+=enviado;
+      totRetornado+=retornado;
+      totCorte+=custoCorte;
+      totFac+=custoFac;
+
+      return`<tr style="cursor:pointer" onclick="verDetalhe('${c.id}')">
+        <td style="color:var(--yw);font-weight:600">${c.numero_corte}</td>
+        <td>${c.modelo||'—'}</td>
+        <td>${c.colecao||'—'}</td>
+        <td><span class="chip cgr">${c.tipo_peca||'—'}</span></td>
+        <td>${c.qtd_pretendida||0}</td>
+        <td>${c.qtd_cortada??'—'}</td>
+        <td>${enviado||'—'}</td>
+        <td>${retornado||'—'}</td>
+        <td>${custoCorte?fR(custoCorte):'—'}</td>
+        <td>${custoFac?fR(custoFac):'—'}</td>
+        <td style="font-weight:700;color:var(--yw)">${total?fR(total):'—'}</td>
+        <td>${chipCorte(c.status)}</td>
+      </tr>`;
+    }).join('');
+
+    el.innerHTML=`
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:16px">
+        <div class="stat"><div class="sl">Pretendido</div><div class="sv">${totPretendido}</div></div>
+        <div class="stat"><div class="sl">Cortado</div><div class="sv" style="color:var(--yw)">${totCortado}</div></div>
+        <div class="stat"><div class="sl">Enviado Facção</div><div class="sv" style="color:var(--bl)">${totEnviado}</div></div>
+        <div class="stat"><div class="sl">Retornado</div><div class="sv" style="color:var(--gn)">${totRetornado}</div></div>
+        <div class="stat"><div class="sl">Custo Cortes</div><div class="sv" style="font-size:16px;color:var(--t2)">${fR(totCorte)}</div></div>
+        <div class="stat"><div class="sl">Custo Facções</div><div class="sv" style="font-size:16px;color:var(--t2)">${fR(totFac)}</div></div>
+        <div class="stat"><div class="sl">Total Geral</div><div class="sv" style="font-size:16px;color:var(--yw)">${fR(totCorte+totFac)}</div></div>
+      </div>
+      <div class="tw">
+        <table>
+          <thead><tr><th>#</th><th>Referência</th><th>Coleção</th><th>Tipo</th><th>Prev.</th><th>Cortado</th><th>Enviado</th><th>Retornado</th><th>C. Corte</th><th>C. Facção</th><th>Total</th><th>Status</th></tr></thead>
+          <tbody>${rows}</tbody>
+          <tfoot><tr style="background:var(--s2)">
+            <td colspan="4" style="font-weight:700;padding:10px 12px">TOTAIS</td>
+            <td style="padding:10px 12px">${totPretendido}</td>
+            <td style="padding:10px 12px">${totCortado}</td>
+            <td style="padding:10px 12px">${totEnviado}</td>
+            <td style="padding:10px 12px">${totRetornado}</td>
+            <td style="padding:10px 12px">${fR(totCorte)}</td>
+            <td style="padding:10px 12px">${fR(totFac)}</td>
+            <td style="padding:10px 12px;font-weight:700;color:var(--yw)">${fR(totCorte+totFac)}</td>
+            <td></td>
+          </tr></tfoot>
+        </table>
+      </div>
+      <div style="font-size:11px;color:var(--t3);margin-top:8px">Clique em qualquer linha para ver o detalhamento completo da referência</div>`;
+
+  }catch(e){toast('Erro: '+e.message,'err');el.innerHTML='<div class="nd">Erro ao carregar</div>';}
 }
 
 loadDash();
