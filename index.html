@@ -560,7 +560,7 @@ async function finalizarCorte(){
       custo_corte:custo,
       obs_corte:obs,
       data_retorno_corte:dataRet,
-      status:'Concluído / Ag. Pagamento'
+      status:'Concluído / Ag. Pagamento',pgto_pendente:true
     });
     // Cria lote na faccao automaticamente
     await db('lotes_faccao','POST',{
@@ -849,7 +849,7 @@ let ultimoLote=null;
 async function loadPagamentos(){
   try{
     const[cortes,grupos,lotes]=await Promise.all([
-      db('cortes?status=eq.Concluído / Ag. Pagamento&select=*'),
+      db('cortes?pgto_pendente=eq.true&select=*'),
       db('grupos_peca?aprovado=eq.true&status=eq.OK&select=*'),
       db('lotes_faccao?select=id,faccao,modelo,numero_corte,tipo_peca,colecao')
     ]);
@@ -917,7 +917,7 @@ async function gerarLotePgto(){
         cancelado:false
       });
       if(it.raw_tipo==='corte'){
-        await db('cortes?id=eq.'+it.raw_id,'PATCH',{status:'Concluído / Pago'});
+        await db('cortes?id=eq.'+it.raw_id,'PATCH',{status:'Concluído / Pago',pgto_pendente:false});
       } else {
         await db('grupos_peca?id=eq.'+it.raw_id,'PATCH',{status:'Pago'});
         // Recalcula status do lote de facção
@@ -998,7 +998,7 @@ async function cancelarItem(itemId,pgtoId,data,total){
   try{
     const[item]=await db('itens_pagamento?id=eq.'+itemId+'&select=*');
     await db('itens_pagamento?id=eq.'+itemId,'PATCH',{cancelado:true,data_cancelamento:hoje()});
-    if(item.corte_id)await db('cortes?id=eq.'+item.corte_id,'PATCH',{status:'Concluído / Ag. Pagamento'});
+    if(item.corte_id)await db('cortes?id=eq.'+item.corte_id,'PATCH',{status:'Concluído / Ag. Pagamento',pgto_pendente:true});
     if(item.grupo_id)await db('grupos_peca?id=eq.'+item.grupo_id,'PATCH',{status:'OK'});
     toast('Item cancelado e devolvido para fila!');
     fecharModal('mo-detpgto');
