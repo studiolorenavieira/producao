@@ -176,8 +176,8 @@ tr:hover td{background:rgba(255,255,255,.015);}
     <input type="text" id="ff-fac" placeholder="Facção..." oninput="renderFaccoes()" style="width:130px">
   </div>
   <div class="card0"><div class="tw"><table>
-    <thead><tr><th>Modelo</th><th>Coleção</th><th>Tipo</th><th>Cortado</th><th>Enviado</th><th>Facção</th><th>Vlr/Pç</th><th>Envio</th><th>Retorno Prev.</th><th>Prazo</th><th>Status</th><th></th></tr></thead>
-    <tbody id="tb-faccoes"><tr><td colspan="12" class="nd"><span class="sp"></span></td></tr></tbody>
+    <thead><tr><th>Modelo</th><th>Coleção</th><th>Tipo</th><th>Cortado</th><th>Enviado</th><th>Retorno</th><th>Conserto</th><th>Facção</th><th>Vlr/Pç</th><th>Envio</th><th>Ret. Prev.</th><th>Prazo</th><th>Status</th><th></th></tr></thead>
+    <tbody id="tb-faccoes"><tr><td colspan="14" class="nd"><span class="sp"></span></td></tr></tbody>
   </table></div></div>
 </div>
 
@@ -572,9 +572,21 @@ async function delCorte(id){
 
 // ===== FACCOES =====
 let facData=[];
+let facGrupos={};
 async function loadFaccoes(){
   try{
-    facData=await db('lotes_faccao?select=*&order=created_at.desc');
+    const[lotes,grupos]=await Promise.all([
+      db('lotes_faccao?select=*&order=created_at.desc'),
+      db('grupos_peca?select=lote_id,quantidade,status')
+    ]);
+    facData=lotes;
+    // Calcula retorno e conserto por lote
+    facGrupos={};
+    grupos.forEach(g=>{
+      if(!facGrupos[g.lote_id])facGrupos[g.lote_id]={retorno:0,conserto:0};
+      if(g.status==='OK'||g.status==='Pago')facGrupos[g.lote_id].retorno+=g.quantidade;
+      else facGrupos[g.lote_id].conserto+=g.quantidade;
+    });
     renderFaccoes();
   }catch(e){toast('Erro facções: '+e.message,'err');}
 }
@@ -593,12 +605,15 @@ function renderFaccoes(){
     if(['Em Produção','Parc. Concluída / Ret. Conserto'].includes(f.status))btns.push(`<button class="btn bgr bsm" onclick="abrirRetFac('${f.id}')">↩ Retorno</button>`);
     btns.push(`<button class="btn bg bsm" onclick="verDetalhe('${f.corte_id}')">📋</button>`);
     btns.push(`<button class="btn br bsm" onclick="delLote('${f.id}')">✕</button>`);
+    const g=facGrupos[f.id]||{retorno:0,conserto:0};
     return`<tr>
       <td style="color:var(--yw);font-weight:600">${f.modelo||'—'}</td>
       <td>${f.colecao||'—'}</td>
       <td><span class="chip cgr">${f.tipo_peca||'—'}</span></td>
       <td>${f.qtd_cortada||'—'}</td>
       <td>${f.qtd_enviada||'—'}</td>
+      <td>${g.retorno>0?`<span style="color:var(--gn);font-weight:600">${g.retorno}</span>`:'—'}</td>
+      <td>${g.conserto>0?`<span style="color:var(--rd);font-weight:600">${g.conserto}</span>`:'—'}</td>
       <td><b>${f.faccao||'—'}</b></td>
       <td>${f.valor_peca?fR(f.valor_peca):'—'}</td>
       <td>${fD(f.data_envio)}</td>
