@@ -34,6 +34,8 @@ body{background:var(--bg);color:var(--tx);font-family:'Inter',sans-serif;font-si
 .bsm{padding:4px 9px;font-size:11px;}
 .tw{overflow-x:auto;min-width:100%;}
 table{width:100%;border-collapse:collapse;min-width:900px;}
+.sticky-col{position:sticky;right:0;background:var(--s1);z-index:1;}
+tr:hover .sticky-col{background:var(--s2);}
 th{font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;padding:10px 12px;text-align:left;border-bottom:1px solid var(--bd);white-space:nowrap;font-weight:600;}
 td{padding:11px 12px;border-bottom:1px solid rgba(46,46,46,.5);vertical-align:middle;}
 tr:last-child td{border-bottom:none;}
@@ -176,7 +178,7 @@ tr:hover td{background:rgba(255,255,255,.015);}
     <input type="text" id="ff-fac" placeholder="Facção..." oninput="renderFaccoes()" style="width:130px">
   </div>
   <div class="card0"><div class="tw"><table>
-    <thead><tr><th>Modelo</th><th>Coleção</th><th>Tipo</th><th>Cortado</th><th>Enviado</th><th>Retorno</th><th>Conserto</th><th>Facção</th><th>Vlr/Pç</th><th>Envio</th><th>Ret. Prev.</th><th>Prazo</th><th>Status</th><th></th></tr></thead>
+    <thead><tr><th>Modelo</th><th>Coleção</th><th>Tipo</th><th>Cortado</th><th>Enviado</th><th>Retorno</th><th>Conserto</th><th>Facção</th><th>Vlr/Pç</th><th>Envio</th><th>Ret. Prev.</th><th>Prazo</th><th>Status</th><th class="sticky-col"></th></tr></thead>
     <tbody id="tb-faccoes"><tr><td colspan="14" class="nd"><span class="sp"></span></td></tr></tbody>
   </table></div></div>
 </div>
@@ -622,7 +624,7 @@ function renderFaccoes(){
       <td>${dataPrevRetorno(f.data_envio,f.prazo_dias)}</td>
       <td>${chipPrazo(f.data_envio,f.prazo_dias,f.status)}</td>
       <td>${chipFac(f.status)}</td>
-      <td style="white-space:nowrap">
+      <td class="sticky-col" style="white-space:nowrap">
         <div style="display:flex;gap:4px;flex-wrap:nowrap">
           ${btns.join('')}
         </div>
