@@ -127,11 +127,21 @@ tr:hover td{background:rgba(255,255,255,.015);}
   </div>
   <div class="gc2">
     <div class="card">
-      <div style="font-size:12px;font-weight:700;margin-bottom:12px">⏳ Cortes Aguardando Facção</div>
+      <div style="font-size:12px;font-weight:700;margin-bottom:12px">✂️ Cortes no Cortador</div>
+      <div id="d-no-corte"></div>
+    </div>
+    <div class="card">
+      <div style="font-size:12px;font-weight:700;margin-bottom:12px">🏭 Cortes na Facção</div>
+      <div id="d-na-fac"></div>
+    </div>
+  </div>
+  <div class="gc2">
+    <div class="card">
+      <div style="font-size:12px;font-weight:700;margin-bottom:12px">⏳ Aguardando Envio p/ Facção</div>
       <div id="d-ag"></div>
     </div>
     <div class="card">
-      <div style="font-size:12px;font-weight:700;margin-bottom:12px">🔴 Lotes com Pendências</div>
+      <div style="font-size:12px;font-weight:700;margin-bottom:12px">🔴 Lotes com Atraso</div>
       <div id="d-pend"></div>
     </div>
   </div>
@@ -421,23 +431,56 @@ async function loadDash(){
       const p=new Date(l.data_envio);p.setDate(p.getDate()+l.prazo_dias);
       return p<new Date();
     }).length;
-    const pgCorte=cortes.filter(c=>c.status==='Concluído / Ag. Pagamento').reduce((s,c)=>s+(c.custo_corte||0),0);
+    const pgCorte=cortes.filter(c=>c.pgto_pendente).reduce((s,c)=>s+(c.custo_corte||0),0);
     document.getElementById('d4').textContent=fR(pgCorte);
     const pgFac=grupos.filter(g=>g.aprovado&&g.status==='OK').reduce((s,g)=>s+g.valor_liquido,0);
     document.getElementById('d5').textContent=fR(pgFac);
-    document.getElementById('d6').textContent=lotes.filter(l=>['Em Produção','Parc. Concluída / Ret. Conserto'].includes(l.status)).length;
+    document.getElementById('d6').textContent=lotes.filter(l=>['Em Produção','Ret. Conserto / Ag. Pagamento','Ret. Conserto / Pag. Parcial'].includes(l.status)).length;
     const ag=lotes.filter(l=>l.status==='Aguardando Facção').slice(0,5);
     document.getElementById('d-ag').innerHTML=ag.length?ag.map(l=>`
       <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bd);font-size:12px">
         <span style="color:var(--yw)">${l.modelo||'—'}</span>
         <span style="color:var(--t2)">${l.qtd_cortada||0} pçs</span>
       </div>`).join(''):'<div class="nd">Nenhum</div>';
-    const pend=lotes.filter(l=>!['Concluído','Aguardando Facção'].includes(l.status)).slice(0,5);
-    document.getElementById('d-pend').innerHTML=pend.length?pend.map(l=>`
-      <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bd);font-size:12px;align-items:center">
+    const statusConcluidos=['Concluído','Aguardando Facção','Concluído / Pago','Concluído / Ag. Pagamento','Concluído / Pag. Parcial'];
+
+    // Cortes no cortador
+    const cortesNoCortador=cortes.filter(c=>c.status==='Aguardando Retorno');
+    document.getElementById('d-no-corte').innerHTML=cortesNoCortador.length?cortesNoCortador.map(c=>`
+      <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bd);font-size:12px">
+        <div><span style="color:var(--yw)">#${c.numero_corte}</span> · ${c.modelo||'—'}</div>
+        <span style="color:var(--t2)">${c.cortador||'—'} · ${c.qtd_pretendida} pçs</span>
+      </div>`).join(''):'<div class="nd">Nenhum</div>';
+
+    // Cortes na facção (fisicamente lá)
+    const statusNaFac=['Em Produção','Ret. Conserto / Ag. Pagamento','Ret. Conserto / Pag. Parcial'];
+    const lotesNaFac=lotes.filter(l=>statusNaFac.includes(l.status));
+    document.getElementById('d-na-fac').innerHTML=lotesNaFac.length?lotesNaFac.map(l=>{
+      const p=new Date(l.data_envio);p.setDate(p.getDate()+l.prazo_dias);
+      const diff=Math.ceil((p-new Date())/(864e5));
+      const cc=diff<0?'cr':diff<=2?'cy':'cg';
+      const ct=diff<0?Math.abs(diff)+'d atraso':diff===0?'hoje':diff+'d';
+      return`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bd);font-size:12px;align-items:center">
+        <div><span style="color:var(--bl)">${l.faccao||'—'}</span> · ${l.modelo||'—'}</div>
+        <span class="chip ${cc}">${ct}</span>
+      </div>`;
+    }).join(''):'<div class="nd">Nenhum</div>';
+    // Lotes em atraso (fisicamente na facção e passaram do prazo)
+    const statusNaFacAtraso=['Em Produção','Ret. Conserto / Ag. Pagamento','Ret. Conserto / Pag. Parcial'];
+    const lotesAtrasados=lotes.filter(l=>{
+      if(!statusNaFacAtraso.includes(l.status))return false;
+      if(!l.data_envio||!l.prazo_dias)return false;
+      const p=new Date(l.data_envio);p.setDate(p.getDate()+l.prazo_dias);
+      return p<new Date();
+    });
+    document.getElementById('d-pend').innerHTML=lotesAtrasados.length?lotesAtrasados.map(l=>{
+      const p=new Date(l.data_envio);p.setDate(p.getDate()+l.prazo_dias);
+      const diff=Math.ceil((p-new Date())/(864e5));
+      return`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bd);font-size:12px;align-items:center">
         <span><b>${l.faccao||'—'}</b> · ${l.modelo||'—'}</span>
-        ${chipPrazo(l.data_envio,l.prazo_dias,l.status)}
-      </div>`).join(''):'<div class="nd">Sem pendências</div>';
+        <span class="chip cr">${Math.abs(diff)}d atraso</span>
+      </div>`;
+    }).join(''):'<div class="nd">Nenhum atraso</div>';
   }catch(e){toast('Erro dashboard: '+e.message,'err');}
 }
 
