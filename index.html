@@ -598,22 +598,24 @@ function renderFaccoes(){
   if(st)d=d.filter(f=>f.status===st);
   else d=d.filter(f=>f.status!=='Concluído');
   if(fac)d=d.filter(f=>f.faccao?.toLowerCase().includes(fac));
-  if(!d.length){document.getElementById('tb-faccoes').innerHTML='<tr><td colspan="12" class="nd">Nenhum lote</td></tr>';return;}
+  if(!d.length){document.getElementById('tb-faccoes').innerHTML='<tr><td colspan="14" class="nd">Nenhum lote</td></tr>';return;}
   document.getElementById('tb-faccoes').innerHTML=d.map(f=>{
     const btns=[];
     if(f.status==='Aguardando Facção')btns.push(`<button class="btn bbl bsm" onclick="abrirEnvio('${f.id}')">→ Enviar</button>`);
     if(['Em Produção','Parc. Concluída / Ret. Conserto'].includes(f.status))btns.push(`<button class="btn bgr bsm" onclick="abrirRetFac('${f.id}')">↩ Retorno</button>`);
     btns.push(`<button class="btn bg bsm" onclick="verDetalhe('${f.corte_id}')">📋</button>`);
     btns.push(`<button class="btn br bsm" onclick="delLote('${f.id}')">✕</button>`);
-    const g=facGrupos[f.id]||{retorno:0,conserto:0};
+    const g=facGrupos[f.id]||{retorno:0};
+    const retorno=g.retorno;
+    const conserto=Math.max(0,(f.qtd_enviada||0)-retorno);
     return`<tr>
       <td style="color:var(--yw);font-weight:600">${f.modelo||'—'}</td>
       <td>${f.colecao||'—'}</td>
       <td><span class="chip cgr">${f.tipo_peca||'—'}</span></td>
       <td>${f.qtd_cortada||'—'}</td>
       <td>${f.qtd_enviada||'—'}</td>
-      <td>${g.retorno>0?`<span style="color:var(--gn);font-weight:600">${g.retorno}</span>`:'—'}</td>
-      <td>${g.conserto>0?`<span style="color:var(--rd);font-weight:600">${g.conserto}</span>`:'—'}</td>
+      <td>${retorno>0?`<span style="color:var(--gn);font-weight:600">${retorno}</span>`:'—'}</td>
+      <td>${conserto>0?`<span style="color:var(--rd);font-weight:600">${conserto}</span>`:'—'}</td>
       <td><b>${f.faccao||'—'}</b></td>
       <td>${f.valor_peca?fR(f.valor_peca):'—'}</td>
       <td>${fD(f.data_envio)}</td>
