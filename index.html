@@ -471,12 +471,19 @@ function renderCortes(){
   </tr>`).join('');
 }
 
-function abrirCorte(){
+async function abrirCorte(){
   document.getElementById('cc-id').value='';
   ['cc-num','cc-col','cc-mod','cc-qtdp','cc-cort'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('cc-tipo').value='';
   document.getElementById('cc-data').value=hoje();
   document.getElementById('mo-corte-titulo').textContent='Novo Corte';
+  // Gera número sequencial automático
+  try{
+    const todos=await db('cortes?select=numero_corte&order=numero_corte.desc&limit=1');
+    const ultimo=todos[0]?.numero_corte;
+    const proximo=ultimo?parseInt(ultimo)+1:1;
+    document.getElementById('cc-num').value=String(proximo).padStart(3,'0');
+  }catch(e){document.getElementById('cc-num').value='';}
   abrirModal('mo-corte');
 }
 
