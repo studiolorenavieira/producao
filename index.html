@@ -310,8 +310,9 @@ tr:hover td{background:rgba(255,255,255,.015);}
       <div class="fi"><label>Qtd OK (aprovadas) *</label><input type="number" id="rf-qtd-ok" min="0" value="0" oninput="calcRetorno()"></div>
       <div class="fi"><label>Qtd Ret. Conserto</label><input type="number" id="rf-qtd-cons" min="0" value="0" oninput="calcRetorno()" readonly style="opacity:.6"></div>
       <div class="fi"><label>Data de Retorno *</label><input type="date" id="rf-data"></div>
-      <div class="fi"><label>Desconto Total (R$)</label><input type="number" id="rf-desc" step="0.01" min="0" value="0" oninput="calcRetorno()"></div>
-      <div class="fi" style="grid-column:1/-1"><label>Observação</label><input type="text" id="rf-obs" placeholder="Ex: frete R$20, conserto de 5 peças..."></div>
+      <div class="fi"><label>Desconto Total (R$)</label><input type="number" id="rf-desc" step="0.01" min="0" value="0" oninput="calcRetorno();toggleObsRetorno()"></div>
+      <div class="fi"><label>Acréscimo (R$)</label><input type="number" id="rf-acres" step="0.01" min="0" value="0" oninput="calcRetorno();toggleObsRetorno()"></div>
+      <div class="fi" style="grid-column:1/-1"><label id="rf-obs-label">Observação</label><input type="text" id="rf-obs" placeholder="Ex: frete R$20, acréscimo por urgência..."></div>
     </div>
     <div id="rf-calc" style="background:var(--s2);border-radius:8px;padding:12px;font-size:12px;margin-bottom:4px"></div>
     <div class="md-f">
@@ -338,6 +339,26 @@ tr:hover td{background:rgba(255,255,255,.015);}
     <div class="md-f">
       <button class="btn bg" onclick="fecharModal('mo-detpgto')">Fechar</button>
       <button class="btn by" onclick="imprimirLote()">Imprimir</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CANCELAMENTO PAGAMENTO -->
+<div class="mo" id="mo-cancel">
+  <div class="md" style="max-width:460px">
+    <div class="md-t" style="color:var(--rd)">Cancelar Pagamento</div>
+    <input type="hidden" id="cancel-item-id">
+    <input type="hidden" id="cancel-pgto-id">
+    <input type="hidden" id="cancel-pgto-data">
+    <input type="hidden" id="cancel-pgto-total">
+    <p style="font-size:12px;color:var(--t2);margin-bottom:16px">O item voltará para a fila de pagamentos. Informe o motivo obrigatoriamente.</p>
+    <div class="fi">
+      <label>Justificativa *</label>
+      <textarea id="cancel-justif" rows="3" placeholder="Descreva o motivo do cancelamento..." style="background:var(--s2);border:1px solid var(--bd);border-radius:6px;color:var(--tx);font-family:'Inter',sans-serif;font-size:12px;padding:8px 10px;outline:none;width:100%;resize:vertical"></textarea>
+    </div>
+    <div class="md-f">
+      <button class="btn bg" onclick="fecharModal('mo-cancel')">Voltar</button>
+      <button class="btn br" onclick="confirmarCancelamento()">Confirmar Cancelamento</button>
     </div>
   </div>
 </div>
@@ -621,9 +642,33 @@ async function finalizarCorte(){
 }
 
 async function delCorte(id){
-  if(!confirm('Excluir este corte?'))return;
-  try{await db('cortes?id=eq.'+id,'DELETE');toast('Excluído');loadCortes();}
-  catch(e){toast('Erro: '+e.message,'err');}
+  try{
+    // Verifica se o corte tem pagamento ativo
+    const itensCorte=await db('itens_pagamento?corte_id=eq.'+id+'&cancelado=eq.false&select=id');
+    if(itensCorte.length>0){
+      toast('Cancele o pagamento deste corte antes de excluí-lo','err');
+      return;
+    }
+    // Verifica se tem lotes com pagamento ativo
+    const lotes=await db('lotes_faccao?corte_id=eq.'+id+'&select=id');
+    for(const l of lotes){
+      const grupos=await db('grupos_peca?lote_id=eq.'+l.id+'&status=eq.Pago&select=id');
+      if(grupos.length>0){
+        const itensAtivos=await db('itens_pagamento?grupo_id=in.('+grupos.map(g=>g.id).join(',')+')'+'&cancelado=eq.false&select=id');
+        if(itensAtivos.length>0){
+          toast('Cancele o pagamento da facção vinculada antes de excluir o corte','err');
+          return;
+        }
+      }
+    }
+    if(!confirm('Excluir este corte e todos os lotes vinculados?'))return;
+    for(const l of lotes){
+      await db('grupos_peca?lote_id=eq.'+l.id,'DELETE');
+      await db('lotes_faccao?id=eq.'+l.id,'DELETE');
+    }
+    await db('cortes?id=eq.'+id,'DELETE');
+    toast('Corte excluído');loadCortes();
+  }catch(e){toast('Erro: '+e.message,'err');}
 }
 
 // ===== FACCOES =====
@@ -718,12 +763,22 @@ async function salvarEnvio(){
 }
 
 async function delLote(id){
-  if(!confirm('Excluir este lote?'))return;
   try{
+    // Verifica se tem grupos com pagamento efetuado (não cancelado)
+    const grupos=await db('grupos_peca?lote_id=eq.'+id+'&select=id,status');
+    const gruposPagos=grupos.filter(g=>g.status==='Pago');
+    if(gruposPagos.length>0){
+      const itensAtivos=await db('itens_pagamento?grupo_id=in.('+gruposPagos.map(g=>g.id).join(',')+')'+'&cancelado=eq.false&select=id');
+      if(itensAtivos.length>0){
+        toast('Cancele o pagamento deste lote antes de excluí-lo','err');
+        return;
+      }
+    }
+    if(!confirm('Excluir este lote?'))return;
+    await db('grupos_peca?lote_id=eq.'+id,'DELETE');
     const lote=facData.find(f=>f.id===id);
     await db('lotes_faccao?id=eq.'+id,'DELETE');
-    toast('Lote excluído');
-    // Verifica se era o único lote deste corte
+    toast('Lote excluído.');
     if(lote?.corte_id){
       const restantes=await db('lotes_faccao?corte_id=eq.'+lote.corte_id+'&select=id');
       if(restantes.length===0){
@@ -767,9 +822,28 @@ async function abrirRetFac(loteId){
   document.getElementById('rf-qtd-ok').max=pendentes;
   document.getElementById('rf-qtd-cons').value='0';
   document.getElementById('rf-desc').value='0';
+  document.getElementById('rf-acres').value='0';
   document.getElementById('rf-obs').value='';
+  document.getElementById('rf-obs').style.borderColor='';
+  document.getElementById('rf-obs-label').textContent='Observação';
   document.getElementById('rf-calc').innerHTML='';
   abrirModal('mo-retfac');
+}
+
+function toggleObsRetorno(){
+  const desc=parseFloat(document.getElementById('rf-desc').value)||0;
+  const acres=parseFloat(document.getElementById('rf-acres').value)||0;
+  const label=document.getElementById('rf-obs-label');
+  const input=document.getElementById('rf-obs');
+  if(desc>0||acres>0){
+    label.textContent='Observação *';
+    input.placeholder='Obrigatório quando há desconto ou acréscimo...';
+    input.style.borderColor='var(--or)';
+  } else {
+    label.textContent='Observação';
+    input.placeholder='Ex: frete R$20, acréscimo por urgência...';
+    input.style.borderColor='';
+  }
 }
 
 function calcRetorno(){
@@ -779,15 +853,17 @@ function calcRetorno(){
   if(ok>pendentes){ok=pendentes;okInput.value=pendentes;}
   const vlr=parseFloat(document.getElementById('rf-vlr-peca').value)||0;
   const desc=parseFloat(document.getElementById('rf-desc').value)||0;
+  const acres=parseFloat(document.getElementById('rf-acres').value)||0;
   const cons=Math.max(0,pendentes-ok);
   document.getElementById('rf-qtd-cons').value=cons;
   const bruto=ok*vlr;
-  const liquido=Math.max(0,bruto-desc);
+  const liquido=Math.max(0,bruto-desc+acres);
   document.getElementById('rf-calc').innerHTML=`
     <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:var(--t2)">Peças OK neste retorno</span><span style="color:var(--gn);font-weight:600">${ok}</span></div>
     <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:var(--t2)">Ainda em conserto</span><span style="color:var(--rd);font-weight:600">${cons}</span></div>
     <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:var(--t2)">Valor Bruto (${ok} × ${fR(vlr)})</span><span>${fR(bruto)}</span></div>
-    <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:var(--rd)">Desconto</span><span>- ${fR(desc)}</span></div>
+    ${desc>0?`<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:var(--rd)">Desconto</span><span>- ${fR(desc)}</span></div>`:''}
+    ${acres>0?`<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:var(--gn)">Acréscimo</span><span>+ ${fR(acres)}</span></div>`:''}
     <div style="border-top:1px solid var(--bd);padding-top:8px;display:flex;justify-content:space-between;font-weight:700"><span>Valor Líquido</span><span style="color:var(--gn)">${fR(liquido)}</span></div>`;
 }
 
@@ -798,18 +874,21 @@ async function salvarRetornoFac(){
   const ok=parseInt(document.getElementById('rf-qtd-ok').value)||0;
   const dataRet=document.getElementById('rf-data').value;
   const desc=parseFloat(document.getElementById('rf-desc').value)||0;
+  const acres=parseFloat(document.getElementById('rf-acres').value)||0;
   const obs=document.getElementById('rf-obs').value;
   if(!ok||!dataRet){toast('Informe qtd OK e data de retorno','err');return;}
   if(ok>pendentes){toast('Qtd OK não pode ser maior que as peças pendentes ('+pendentes+')','err');return;}
+  if((desc>0||acres>0)&&!obs.trim()){toast('Observação obrigatória quando há desconto ou acréscimo','err');return;}
   const cons=pendentes-ok;
   const bruto=ok*vlrPeca;
-  const liquido=Math.max(0,bruto-desc);
+  const liquido=Math.max(0,bruto-desc+acres);
   try{
     await db('grupos_peca','POST',{
       lote_id:loteId,
       quantidade:ok,
       status:'OK',
       desconto:desc,
+      acrescimo:acres,
       obs:obs,
       valor_bruto:bruto,
       valor_liquido:liquido,
@@ -992,19 +1071,37 @@ async function loadHistPgto(){
   try{
     const pgtos=await db('lotes_pagamento?select=*&order=created_at.desc');
     if(!pgtos.length){document.getElementById('pay-hist').innerHTML='<div class="nd">Nenhum pagamento</div>';return;}
-    document.getElementById('pay-hist').innerHTML=pgtos.map(p=>`
-      <div class="card" style="cursor:pointer" onclick="verDetalhePgto('${p.id}','${fD(p.data_pgto)}',${p.valor_total})">
+    // Busca todos os itens de todos os lotes
+    const todosItens=await db('itens_pagamento?select=*');
+    document.getElementById('pay-hist').innerHTML=pgtos.map(p=>{
+      const itens=todosItens.filter(i=>i.lote_pgto_id===p.id);
+      const totalCancelado=itens.filter(i=>i.cancelado).reduce((s,i)=>s+i.valor,0);
+      const totalPago=p.valor_total-totalCancelado;
+      const todoCancelado=itens.length>0&&itens.every(i=>i.cancelado);
+      const parcCancelado=!todoCancelado&&totalCancelado>0;
+      let estilo,badge='';
+      if(todoCancelado){
+        estilo='border-color:var(--rd);opacity:.7';
+        badge=`<span class="chip cr" style="margin-left:8px">Cancelado</span>`;
+      } else if(parcCancelado){
+        estilo='border-color:var(--or)';
+        badge=`<span class="chip co" style="margin-left:8px">Parc. Cancelado</span>`;
+      } else {
+        estilo='';
+      }
+      return`<div class="card" style="cursor:pointer;${estilo}" onclick="verDetalhePgto('${p.id}','${fD(p.data_pgto)}',${p.valor_total})">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
           <div>
-            <div style="font-size:10px;color:var(--t3);text-transform:uppercase;font-weight:600">Lote</div>
-            <div style="font-size:14px;font-weight:700;margin-top:2px">${fD(p.data_pgto)}</div>
+            <div style="font-size:10px;color:var(--t3);text-transform:uppercase;font-weight:600">Lote ${badge}</div>
+            <div style="font-size:14px;font-weight:700;margin-top:2px${todoCancelado?';text-decoration:line-through;color:var(--rd)':''}">${fD(p.data_pgto)}</div>
           </div>
           <div style="text-align:right">
-            <div style="font-size:22px;font-weight:800;color:var(--gn)">${fR(p.valor_total)}</div>
+            <div style="font-size:22px;font-weight:800;color:${todoCancelado?'var(--rd)':parcCancelado?'var(--or)':'var(--gn)'}${todoCancelado?';text-decoration:line-through':''}">${fR(totalPago)}</div>
             <div style="font-size:10px;color:var(--t3)">clique para detalhes</div>
           </div>
         </div>
-      </div>`).join('');
+      </div>`;
+    }).join('');
   }catch(e){}
 }
 
@@ -1019,11 +1116,13 @@ async function verDetalhePgto(pgtoId,data,total){
       const tot=its.reduce((s,i)=>s+i.valor,0);
       html+=`<div class="gh"><span class="gh-t">${tipo}s</span><span class="gh-v">${fR(tot)}</span></div>`;
       its.forEach(i=>html+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 4px;border-bottom:1px solid var(--bd);font-size:12px;gap:10px">
-        <div style="flex:1"><span style="color:var(--yw)">#${i.referencia}</span> · ${i.descricao}
-          ${i.cancelado?'<span class="chip cr" style="margin-left:6px">Cancelado</span>':''}
+        <div style="flex:1">
+          <span style="color:var(--yw)">#${i.referencia}</span> · ${i.descricao}
+          ${i.cancelado?`<span class="chip cr" style="margin-left:6px">Cancelado</span>`:''}
+          ${i.cancelado&&i.justificativa_cancelamento?`<div style="font-size:10px;color:var(--rd);margin-top:3px">Motivo: ${i.justificativa_cancelamento}</div>`:''}
         </div>
         <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-weight:700;color:var(--gn)">${fR(i.valor)}</span>
+          <span style="font-weight:700;color:${i.cancelado?'var(--rd)':'var(--gn)'}${i.cancelado?';text-decoration:line-through':''}">${fR(i.valor)}</span>
           ${!i.cancelado?`<button class="btn br bsm" onclick="cancelarItem('${i.id}','${pgtoId}','${data}',${total})">Cancelar</button>`:''}
         </div>
       </div>`);
@@ -1036,15 +1135,30 @@ async function verDetalhePgto(pgtoId,data,total){
   }catch(e){toast('Erro: '+e.message,'err');}
 }
 
-async function cancelarItem(itemId,pgtoId,data,total){
-  if(!confirm('Cancelar este item e devolver para fila de pagamento?'))return;
+function cancelarItem(itemId,pgtoId,data,total){
+  document.getElementById('cancel-item-id').value=itemId;
+  document.getElementById('cancel-pgto-id').value=pgtoId;
+  document.getElementById('cancel-pgto-data').value=data;
+  document.getElementById('cancel-pgto-total').value=total;
+  document.getElementById('cancel-justif').value='';
+  abrirModal('mo-cancel');
+}
+
+async function confirmarCancelamento(){
+  const justif=document.getElementById('cancel-justif').value.trim();
+  if(!justif){toast('Justificativa obrigatória','err');return;}
+  const itemId=document.getElementById('cancel-item-id').value;
+  const pgtoId=document.getElementById('cancel-pgto-id').value;
+  const data=document.getElementById('cancel-pgto-data').value;
+  const total=parseFloat(document.getElementById('cancel-pgto-total').value)||0;
   try{
     const[item]=await db('itens_pagamento?id=eq.'+itemId+'&select=*');
-    await db('itens_pagamento?id=eq.'+itemId,'PATCH',{cancelado:true,data_cancelamento:hoje()});
+    await db('itens_pagamento?id=eq.'+itemId,'PATCH',{cancelado:true,data_cancelamento:hoje(),justificativa_cancelamento:justif});
     if(item.corte_id)await db('cortes?id=eq.'+item.corte_id,'PATCH',{status:'Concluído / Ag. Pagamento',pgto_pendente:true});
     if(item.grupo_id)await db('grupos_peca?id=eq.'+item.grupo_id,'PATCH',{status:'OK'});
-    toast('Item cancelado e devolvido para fila!');
-    fecharModal('mo-detpgto');
+    toast('Pagamento cancelado!');
+    fecharModal('mo-cancel');
+    verDetalhePgto(pgtoId,data,total);
     loadPagamentos();
   }catch(e){toast('Erro: '+e.message,'err');}
 }
