@@ -629,9 +629,7 @@ async function salvarEnvio(){
   if(!data.faccao||!data.qtd_enviada||!data.valor_peca||!data.data_envio){toast('Preencha todos os campos','err');return;}
   try{
     await db('lotes_faccao?id=eq.'+id,'PATCH',data);
-    const l=facData.find(f=>f.id===id);
-    if(l?.corte_id)await db('cortes?id=eq.'+l.corte_id,'PATCH',{status:'Em Produção'});
-    toast('Enviado para facção!');fecharModal('mo-envfac');loadFaccoes();loadCortes();
+    toast('Enviado para facção!');fecharModal('mo-envfac');loadFaccoes();
   }catch(e){toast('Erro: '+e.message,'err');}
 }
 
