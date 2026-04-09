@@ -6,462 +6,437 @@
 <title>Gestão de Produção</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg: #0a0a0a;
-  --surface: #141414;
-  --surface2: #1e1e1e;
-  --surface3: #282828;
-  --border: #2e2e2e;
-  --accent: #e8c547;
-  --green: #4ade80;
-  --red: #f87171;
-  --blue: #60a5fa;
-  --orange: #fb923c;
-  --purple: #a78bfa;
-  --text: #f0f0f0;
-  --text2: #888;
-  --text3: #444;
-  --r: 8px;
-  --font: 'Inter', sans-serif;
-}
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: var(--bg); color: var(--text); font-family: var(--font); font-size: 13px; min-height: 100vh; }
-
-/* TOPBAR */
-.topbar { background: var(--surface); border-bottom: 1px solid var(--border); height: 50px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; position: sticky; top: 0; z-index: 100; }
-.brand { font-weight: 800; font-size: 15px; color: var(--accent); letter-spacing: -0.3px; }
-.brand span { color: var(--text3); font-weight: 400; font-size: 11px; margin-left: 6px; }
-.nav { display: flex; gap: 2px; }
-.nb { background: none; border: none; color: var(--text2); font-family: var(--font); font-size: 12px; padding: 6px 12px; border-radius: 6px; cursor: pointer; transition: all .15s; white-space: nowrap; }
-.nb:hover { color: var(--text); background: var(--surface2); }
-.nb.active { color: var(--accent); background: rgba(232,197,71,0.1); }
-.mobnav { display: none; overflow-x: auto; gap: 2px; padding: 6px 16px; background: var(--surface); border-bottom: 1px solid var(--border); }
-
-/* LAYOUT */
-.content { max-width: 1200px; margin: 0 auto; padding: 24px 20px; }
-.page { display: none; }
-.page.active { display: block; }
-
-/* SECTION HEADER */
-.sh { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
-.sh-title { font-size: 20px; font-weight: 800; }
-.sh-sub { font-size: 11px; color: var(--text3); margin-top: 3px; }
-
-/* CARDS */
-.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 20px; margin-bottom: 14px; }
-.card-title { font-size: 13px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
-.dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
-
-/* STATS */
-.stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); gap: 10px; margin-bottom: 18px; }
-.stat { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r); padding: 14px; }
-.stat-l { font-size: 9px; color: var(--text3); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 6px; }
-.stat-v { font-size: 24px; font-weight: 800; line-height: 1; }
-
-/* TABLE */
-.tw { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; }
-th { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: .5px; padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
-td { padding: 10px; border-bottom: 1px solid rgba(46,46,46,0.5); font-size: 12px; vertical-align: middle; }
-tr:last-child td { border-bottom: none; }
-tr:hover td { background: rgba(255,255,255,0.015); }
-.no-data { text-align: center; color: var(--text3); padding: 32px; font-size: 12px; }
-
-/* CHIPS */
-.chip { display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; white-space: nowrap; }
-.c-yellow { background: rgba(232,197,71,.15); color: var(--accent); }
-.c-green { background: rgba(74,222,128,.15); color: var(--green); }
-.c-red { background: rgba(248,113,113,.15); color: var(--red); }
-.c-blue { background: rgba(96,165,250,.15); color: var(--blue); }
-.c-orange { background: rgba(251,146,60,.15); color: var(--orange); }
-.c-purple { background: rgba(167,139,250,.15); color: var(--purple); }
-.c-gray { background: rgba(136,136,136,.15); color: var(--text2); }
-
-/* BUTTONS */
-.btn { border: none; border-radius: 6px; font-family: var(--font); font-size: 12px; padding: 8px 16px; cursor: pointer; transition: all .15s; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
-.btn-primary { background: var(--accent); color: #000; }
-.btn-primary:hover { background: #f0d060; }
-.btn-primary:disabled { opacity: .4; cursor: not-allowed; }
-.btn-ghost { background: transparent; color: var(--text2); border: 1px solid var(--border); }
-.btn-ghost:hover { color: var(--text); border-color: var(--text2); }
-.btn-danger { background: rgba(248,113,113,.12); color: var(--red); border: 1px solid rgba(248,113,113,.25); }
-.btn-danger:hover { background: rgba(248,113,113,.2); }
-.btn-success { background: rgba(74,222,128,.12); color: var(--green); border: 1px solid rgba(74,222,128,.25); }
-.btn-blue { background: rgba(96,165,250,.12); color: var(--blue); border: 1px solid rgba(96,165,250,.25); }
-.btn-sm { padding: 4px 10px; font-size: 11px; }
-.btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
-
-/* FORM */
-.fg { display: grid; grid-template-columns: repeat(auto-fill, minmax(175px,1fr)); gap: 12px; }
-.fi { display: flex; flex-direction: column; gap: 4px; }
-.fi label { font-size: 10px; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; }
-.fi input, .fi select, .fi textarea { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: var(--font); font-size: 12px; padding: 8px 10px; outline: none; transition: border-color .15s; width: 100%; }
-.fi input:focus, .fi select:focus, .fi textarea:focus { border-color: var(--accent); }
-.fi select option { background: var(--surface2); }
-.fi.full { grid-column: 1/-1; }
-
-/* FILTERS */
-.filters { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; }
-.filters input, .filters select { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: var(--font); font-size: 12px; padding: 6px 10px; outline: none; }
-.filters input:focus, .filters select:focus { border-color: var(--accent); }
-
-/* MODAL */
-.mo { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.85); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
-.mo.open { display: flex; }
-.modal { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; width: 100%; max-width: 580px; max-height: 90vh; overflow-y: auto; }
-.modal-lg { max-width: 720px; }
-.modal h2 { font-size: 15px; font-weight: 700; color: var(--accent); margin-bottom: 18px; }
-.modal-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
-
-/* TOAST */
-.toast { position: fixed; bottom: 20px; right: 20px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; font-size: 12px; z-index: 999; transform: translateY(80px); opacity: 0; transition: all .3s; max-width: 320px; }
-.toast.show { transform: translateY(0); opacity: 1; }
-.toast.ok { border-color: var(--green); color: var(--green); }
-.toast.err { border-color: var(--red); color: var(--red); }
-
-/* GROUP HEADER */
-.gh { background: var(--surface2); padding: 8px 12px; border-radius: 6px; margin: 10px 0 4px; display: flex; align-items: center; justify-content: space-between; }
-.gh-t { font-size: 11px; color: var(--text2); font-weight: 600; text-transform: uppercase; letter-spacing: .4px; }
-.gh-v { font-size: 12px; color: var(--accent); font-weight: 600; }
-
-/* TABS */
-.tabs { display: flex; gap: 2px; background: var(--surface2); border-radius: 8px; padding: 4px; margin-bottom: 18px; }
-.tab { flex: 1; text-align: center; padding: 7px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 500; color: var(--text3); transition: all .15s; border: none; background: none; font-family: var(--font); }
-.tab.active { background: var(--surface); color: var(--text); }
-
-/* TIMELINE */
-.timeline { padding: 8px 0; }
-.tl-item { display: flex; gap: 14px; padding: 10px 0; border-bottom: 1px solid var(--border); }
-.tl-item:last-child { border-bottom: none; }
-.tl-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 3px; }
-.tl-content { flex: 1; }
-.tl-title { font-size: 12px; font-weight: 600; margin-bottom: 2px; }
-.tl-sub { font-size: 11px; color: var(--text2); }
-
-/* SPINNER */
-.sp { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .6s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* DIVIDER */
-hr { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
-
-/* 2-col grid */
-.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-
-@media(max-width:700px) {
-  .nav { display: none; }
-  .mobnav { display: flex; }
-  .fg { grid-template-columns: 1fr 1fr; }
-  .stats { grid-template-columns: 1fr 1fr; }
-  .grid2 { grid-template-columns: 1fr; }
-}
+:root{--bg:#0a0a0a;--s1:#141414;--s2:#1e1e1e;--s3:#282828;--bd:#2e2e2e;--tx:#f0f0f0;--t2:#888;--t3:#444;--yw:#e8c547;--gn:#4ade80;--rd:#f87171;--bl:#60a5fa;--pu:#c084fc;--or:#fb923c;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--tx);font-family:'Inter',sans-serif;font-size:13px;min-height:100vh;}
+.topbar{background:var(--s1);border-bottom:1px solid var(--bd);padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:50px;position:sticky;top:0;z-index:100;}
+.brand{font-weight:800;font-size:15px;color:var(--yw);}
+.brand span{color:var(--t3);font-weight:400;font-size:11px;margin-left:6px;}
+.nav{display:flex;gap:2px;}
+.nb{background:none;border:none;color:var(--t2);font-family:'Inter',sans-serif;font-size:12px;padding:6px 12px;border-radius:6px;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.nb:hover{color:var(--tx);background:var(--s2);}
+.nb.active{color:var(--yw);background:rgba(232,197,71,.1);}
+.mn{display:none;overflow-x:auto;gap:4px;padding:8px 16px;background:var(--s1);border-bottom:1px solid var(--bd);}
+@media(max-width:640px){.nav{display:none}.mn{display:flex}.fg{grid-template-columns:1fr 1fr!important}}
+.ct{padding:20px;max-width:1200px;margin:0 auto;}
+.card{background:var(--s1);border:1px solid var(--bd);border-radius:8px;padding:18px;margin-bottom:14px;}
+.card0{background:var(--s1);border:1px solid var(--bd);border-radius:8px;padding:0;margin-bottom:14px;overflow:hidden;}
+.sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;}
+.st{font-size:18px;font-weight:800;}
+.ss{font-size:11px;color:var(--t3);margin-top:2px;}
+.btn{border:none;border-radius:6px;font-family:'Inter',sans-serif;font-size:12px;font-weight:600;padding:8px 14px;cursor:pointer;transition:all .15s;}
+.by{background:var(--yw);color:#000;}.by:hover{background:#f0d060;}.by:disabled{opacity:.4;cursor:not-allowed;}
+.bg{background:transparent;color:var(--t2);border:1px solid var(--bd);}.bg:hover{color:var(--tx);border-color:var(--t2);}
+.br{background:rgba(248,113,113,.12);color:var(--rd);border:1px solid rgba(248,113,113,.25);}.br:hover{background:rgba(248,113,113,.2);}
+.bgr{background:rgba(74,222,128,.12);color:var(--gn);border:1px solid rgba(74,222,128,.25);}
+.bbl{background:rgba(96,165,250,.12);color:var(--bl);border:1px solid rgba(96,165,250,.25);}
+.bor{background:rgba(251,146,60,.12);color:var(--or);border:1px solid rgba(251,146,60,.25);}
+.bsm{padding:4px 9px;font-size:11px;}
+.tw{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+th{font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;padding:10px 12px;text-align:left;border-bottom:1px solid var(--bd);white-space:nowrap;font-weight:600;}
+td{padding:11px 12px;border-bottom:1px solid rgba(46,46,46,.5);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(255,255,255,.015);}
+.nd{text-align:center;color:var(--t3);padding:32px;}
+.chip{display:inline-block;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:600;white-space:nowrap;}
+.cy{background:rgba(232,197,71,.15);color:var(--yw);}
+.cb{background:rgba(96,165,250,.15);color:var(--bl);}
+.cg{background:rgba(74,222,128,.15);color:var(--gn);}
+.cr{background:rgba(248,113,113,.15);color:var(--rd);}
+.cp{background:rgba(192,132,252,.15);color:var(--pu);}
+.co{background:rgba(251,146,60,.15);color:var(--or);}
+.cgr{background:rgba(136,136,136,.15);color:var(--t2);}
+.fg{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px;}
+.fi{display:flex;flex-direction:column;gap:4px;}
+.fi label{font-size:10px;color:var(--t2);text-transform:uppercase;letter-spacing:.5px;font-weight:600;}
+.fi input,.fi select,.fi textarea{background:var(--s2);border:1px solid var(--bd);border-radius:6px;color:var(--tx);font-family:'Inter',sans-serif;font-size:12px;padding:8px 10px;outline:none;transition:border-color .15s;width:100%;}
+.fi input:focus,.fi select:focus{border-color:var(--yw);}
+.fi select option{background:var(--s2);}
+.flt{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+.flt input,.flt select{background:var(--s2);border:1px solid var(--bd);border-radius:6px;color:var(--tx);font-family:'Inter',sans-serif;font-size:12px;padding:6px 10px;outline:none;}
+.flt input:focus,.flt select:focus{border-color:var(--yw);}
+.mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200;align-items:center;justify-content:center;padding:16px;}
+.mo.open{display:flex;}
+.md{background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:22px;width:100%;max-width:580px;max-height:92vh;overflow-y:auto;}
+.md-t{font-size:15px;font-weight:700;margin-bottom:18px;color:var(--yw);}
+.md-f{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--s2);border:1px solid var(--bd);border-radius:8px;padding:11px 15px;font-size:12px;z-index:999;transform:translateY(80px);opacity:0;transition:all .25s;max-width:300px;font-weight:500;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast.ok{border-color:var(--gn);color:var(--gn);}
+.toast.err{border-color:var(--rd);color:var(--rd);}
+.stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:10px;margin-bottom:18px;}
+.stat{background:var(--s2);border:1px solid var(--bd);border-radius:8px;padding:14px;}
+.sl{font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;font-weight:600;}
+.sv{font-size:24px;font-weight:800;line-height:1;}
+.tabs{display:flex;gap:2px;margin-bottom:18px;background:var(--s2);border-radius:8px;padding:4px;}
+.tab{flex:1;text-align:center;padding:7px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:600;color:var(--t3);transition:all .15s;border:none;background:none;font-family:'Inter',sans-serif;}
+.tab.active{background:var(--s1);color:var(--tx);}
+.tl{position:relative;padding-left:20px;}
+.tl::before{content:'';position:absolute;left:6px;top:0;bottom:0;width:1px;background:var(--bd);}
+.tli{position:relative;margin-bottom:14px;}
+.tli::before{content:'';position:absolute;left:-17px;top:5px;width:8px;height:8px;border-radius:50%;background:var(--yw);}
+.tld{font-size:10px;color:var(--t3);margin-bottom:2px;}
+.tlt{font-size:12px;font-weight:600;margin-bottom:2px;}
+.tlb{font-size:11px;color:var(--t2);}
+.sp{display:inline-block;width:14px;height:14px;border:2px solid var(--bd);border-top-color:var(--yw);border-radius:50%;animation:spin .6s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.gc2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media(max-width:640px){.gc2{grid-template-columns:1fr}}
+.gh{background:var(--s2);padding:8px 12px;border-radius:6px;margin:10px 0 4px;display:flex;justify-content:space-between;align-items:center;}
+.gh-t{font-size:11px;color:var(--t2);text-transform:uppercase;font-weight:600;letter-spacing:.5px;}
+.gh-v{font-size:12px;color:var(--yw);font-weight:600;}
+.divider{border:none;border-top:1px solid var(--bd);margin:12px 0;}
 </style>
 </head>
 <body>
 <div class="topbar">
   <div class="brand">PRODUÇÃO <span>gestão de confecção</span></div>
   <nav class="nav">
-    <button class="nb active" onclick="go('dash')">Dashboard</button>
-    <button class="nb" onclick="go('cortes')">Cortes</button>
-    <button class="nb" onclick="go('faccoes')">Facções</button>
-    <button class="nb" onclick="go('pagamentos')">Pagamentos</button>
-    <button class="nb" onclick="go('relatorios')">Relatórios</button>
+    <button class="nb active" onclick="P('dash')">Dashboard</button>
+    <button class="nb" onclick="P('cortes')">Cortes</button>
+    <button class="nb" onclick="P('faccoes')">Facções</button>
+    <button class="nb" onclick="P('pagamentos')">Pagamentos</button>
+    <button class="nb" onclick="P('relatorios')">Relatórios</button>
   </nav>
 </div>
-<div class="mobnav">
-  <button class="nb active" onclick="go('dash')">Dashboard</button>
-  <button class="nb" onclick="go('cortes')">Cortes</button>
-  <button class="nb" onclick="go('faccoes')">Facções</button>
-  <button class="nb" onclick="go('pagamentos')">Pagamentos</button>
-  <button class="nb" onclick="go('relatorios')">Relatórios</button>
+<div class="mn">
+  <button class="nb active" onclick="P('dash')">Dashboard</button>
+  <button class="nb" onclick="P('cortes')">Cortes</button>
+  <button class="nb" onclick="P('faccoes')">Facções</button>
+  <button class="nb" onclick="P('pagamentos')">Pagamentos</button>
+  <button class="nb" onclick="P('relatorios')">Relatórios</button>
 </div>
-
-<div class="content">
+<div class="ct">
 
 <!-- DASHBOARD -->
-<div id="page-dash" class="page active">
+<div id="pg-dash">
   <div class="sh">
-    <div><div class="sh-title">Dashboard</div><div class="sh-sub" id="d-mes"></div></div>
-    <button class="btn btn-ghost btn-sm" onclick="loadDash()">↻ Atualizar</button>
+    <div><div class="st">Dashboard</div><div class="ss" id="d-mes"></div></div>
+    <button class="btn bg bsm" onclick="loadDash()">↻ Atualizar</button>
   </div>
   <div class="stats">
-    <div class="stat"><div class="stat-l">Peças Cortadas/Mês</div><div class="stat-v" id="s1" style="color:var(--accent)">—</div></div>
-    <div class="stat"><div class="stat-l">Aguard. Facção</div><div class="stat-v" id="s2">—</div></div>
-    <div class="stat"><div class="stat-l">Em Produção</div><div class="stat-v" id="s3" style="color:var(--blue)">—</div></div>
-    <div class="stat"><div class="stat-l">Lotes em Atraso</div><div class="stat-v" id="s4" style="color:var(--red)">—</div></div>
-    <div class="stat"><div class="stat-l">A Pagar (R$)</div><div class="stat-v" id="s5" style="color:var(--green)">—</div></div>
-    <div class="stat"><div class="stat-l">Coleções Ativas</div><div class="stat-v" id="s6">—</div></div>
+    <div class="stat"><div class="sl">Peças Cortadas/Mês</div><div class="sv" style="color:var(--yw)" id="d1">—</div></div>
+    <div class="stat"><div class="sl">Ag. Facção</div><div class="sv" id="d2">—</div></div>
+    <div class="stat"><div class="sl">Lotes em Atraso</div><div class="sv" style="color:var(--rd)" id="d3">—</div></div>
+    <div class="stat"><div class="sl">A Pagar — Cortes</div><div class="sv" style="color:var(--gn)" id="d4">—</div></div>
+    <div class="stat"><div class="sl">A Pagar — Facções</div><div class="sv" style="color:var(--gn)" id="d5">—</div></div>
+    <div class="stat"><div class="sl">Lotes Ativos</div><div class="sv" id="d6">—</div></div>
   </div>
-  <div class="grid2">
-    <div class="card"><div class="card-title"><span class="dot"></span>Cortes Aguardando Facção</div><div id="d-aguardando"><div class="no-data"><span class="sp"></span></div></div></div>
-    <div class="card"><div class="card-title"><span class="dot" style="background:var(--red)"></span>Lotes com Pendências</div><div id="d-pendentes"><div class="no-data"><span class="sp"></span></div></div></div>
+  <div class="gc2">
+    <div class="card">
+      <div style="font-size:12px;font-weight:700;margin-bottom:12px">⏳ Cortes Aguardando Facção</div>
+      <div id="d-ag"></div>
+    </div>
+    <div class="card">
+      <div style="font-size:12px;font-weight:700;margin-bottom:12px">🔴 Lotes com Pendências</div>
+      <div id="d-pend"></div>
+    </div>
   </div>
 </div>
 
 <!-- CORTES -->
-<div id="page-cortes" class="page">
+<div id="pg-cortes" style="display:none">
   <div class="sh">
-    <div><div class="sh-title">Cortes</div><div class="sh-sub">Registro de cortes e retorno do cortador</div></div>
-    <button class="btn btn-primary" onclick="abrirNovoCorte()">+ Novo Corte</button>
+    <div><div class="st">Cortes</div><div class="ss">Registro de cortes de produção</div></div>
+    <button class="btn by" onclick="abrirCorte()">+ Novo Corte</button>
   </div>
-  <div class="filters">
+  <div class="flt">
     <select id="fc-mes" onchange="renderCortes()"><option value="">Todos os meses</option></select>
-    <input id="fc-col" placeholder="Coleção..." oninput="renderCortes()" style="width:130px">
+    <input type="text" id="fc-col" placeholder="Coleção..." oninput="renderCortes()" style="width:130px">
     <select id="fc-st" onchange="renderCortes()">
       <option value="">Todos os status</option>
-      <option>Aguardando retorno</option>
-      <option>Aguardando Facção</option>
+      <option>Aguardando Retorno</option>
+      <option>Concluído / Ag. Pagamento</option>
+      <option>Concluído / Pago</option>
       <option>Em Produção</option>
       <option>Concluído</option>
     </select>
   </div>
-  <div class="card" style="padding:0"><div class="tw">
-    <table>
-      <thead><tr><th>#</th><th>Data</th><th>Coleção</th><th>Modelo</th><th>Tipo</th><th>Prev.</th><th>Cortado</th><th>Custo</th><th>Cortador</th><th>Status</th><th></th></tr></thead>
-      <tbody id="cortes-tb"><tr><td colspan="11" class="no-data"><span class="sp"></span></td></tr></tbody>
-    </table>
-  </div></div>
-  <div id="cortes-tot" style="text-align:right;color:var(--text3);font-size:11px;margin-top:6px"></div>
+  <div class="card0"><div class="tw"><table>
+    <thead><tr><th>#</th><th>Data</th><th>Coleção</th><th>Modelo</th><th>Tipo</th><th>Prev.</th><th>Cortado</th><th>Custo</th><th>Cortador</th><th>Status</th><th></th></tr></thead>
+    <tbody id="tb-cortes"><tr><td colspan="11" class="nd"><span class="sp"></span></td></tr></tbody>
+  </table></div></div>
+  <div id="cortes-tot" style="text-align:right;color:var(--t3);font-size:11px;margin-top:6px"></div>
 </div>
 
 <!-- FACCOES -->
-<div id="page-faccoes" class="page">
+<div id="pg-faccoes" style="display:none">
   <div class="sh">
-    <div><div class="sh-title">Facções</div><div class="sh-sub">Lotes em produção nas facções</div></div>
+    <div><div class="st">Facções</div><div class="ss">Lotes em produção externa</div></div>
   </div>
-  <div class="filters">
+  <div class="flt">
     <select id="ff-st" onchange="renderFaccoes()">
       <option value="">Todos</option>
       <option>Aguardando Facção</option>
       <option>Em Produção</option>
-      <option>Entrega Parcial</option>
-      <option>Retorno p/ Conserto</option>
+      <option>Parc. Concluída / Ret. Conserto</option>
       <option>Concluído</option>
     </select>
-    <input id="ff-fac" placeholder="Facção..." oninput="renderFaccoes()" style="width:130px">
+    <input type="text" id="ff-fac" placeholder="Facção..." oninput="renderFaccoes()" style="width:130px">
   </div>
-  <div class="card" style="padding:0"><div class="tw">
-    <table>
-      <thead><tr><th>Ref/Corte</th><th>Modelo</th><th>Tipo</th><th>Cortado</th><th>Enviado</th><th>Facção</th><th>Vlr/Peça</th><th>Prazo</th><th>Status</th><th></th></tr></thead>
-      <tbody id="faccoes-tb"><tr><td colspan="10" class="no-data"><span class="sp"></span></td></tr></tbody>
-    </table>
-  </div></div>
+  <div class="card0"><div class="tw"><table>
+    <thead><tr><th>Modelo</th><th>Coleção</th><th>Tipo</th><th>Cortado</th><th>Enviado</th><th>Facção</th><th>Vlr/Pç</th><th>Envio</th><th>Retorno Prev.</th><th>Prazo</th><th>Status</th><th></th></tr></thead>
+    <tbody id="tb-faccoes"><tr><td colspan="12" class="nd"><span class="sp"></span></td></tr></tbody>
+  </table></div></div>
 </div>
 
 <!-- PAGAMENTOS -->
-<div id="page-pagamentos" class="page">
-  <div class="sh"><div><div class="sh-title">Pagamentos</div><div class="sh-sub">Cortes e facções aguardando pagamento</div></div></div>
+<div id="pg-pagamentos" style="display:none">
+  <div class="sh"><div><div class="st">Pagamentos</div><div class="ss">Cortes e facções aprovados</div></div></div>
   <div class="tabs">
     <button class="tab active" onclick="showPayTab('pagar')">Aguardando Pagamento</button>
     <button class="tab" onclick="showPayTab('historico')">Histórico de Lotes</button>
   </div>
   <div id="pt-pagar">
-    <div id="pay-lista"><div class="no-data"><span class="sp"></span></div></div>
+    <div id="pay-lista"><div class="nd"><span class="sp"></span></div></div>
     <div class="card" style="margin-top:14px">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
         <div>
-          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Total Selecionado</div>
-          <div style="font-size:28px;font-weight:800;color:var(--green)" id="pay-total">R$ 0,00</div>
+          <div style="font-size:10px;color:var(--t3);text-transform:uppercase;font-weight:600">TOTAL SELECIONADO</div>
+          <div style="font-size:26px;font-weight:800;color:var(--gn);margin-top:4px" id="pay-total">R$ 0,00</div>
         </div>
-        <button class="btn btn-primary" id="btn-gerar" onclick="gerarLotePgto()" disabled>Gerar Lote de Pagamento</button>
+        <button class="btn by" onclick="gerarLotePgto()" id="btn-gerar" disabled>Gerar Lote de Pagamento</button>
       </div>
     </div>
   </div>
   <div id="pt-historico" style="display:none">
-    <div id="pay-hist"><div class="no-data"><span class="sp"></span></div></div>
+    <div id="pay-hist"><div class="nd"><span class="sp"></span></div></div>
   </div>
 </div>
 
 <!-- RELATORIOS -->
-<div id="page-relatorios" class="page">
-  <div class="sh"><div><div class="sh-title">Relatórios</div><div class="sh-sub">Lead time, custos e pontualidade</div></div></div>
-  <div class="grid2">
-    <div class="card"><div class="card-title"><span class="dot"></span>Lead Time Médio por Tipo</div><div id="lt-tipo"><div class="no-data">Carregando...</div></div></div>
-    <div class="card"><div class="card-title"><span class="dot" style="background:var(--blue)"></span>Lead Time Médio por Facção</div><div id="lt-fac"><div class="no-data">Carregando...</div></div></div>
+<div id="pg-relatorios" style="display:none">
+  <div class="sh">
+    <div><div class="st">Relatórios</div></div>
+    <button class="btn bg bsm" onclick="loadRel()">↻ Atualizar</button>
   </div>
-  <div class="card"><div class="card-title"><span class="dot" style="background:var(--green)"></span>Preço Médio por Tipo de Peça (Facção)</div><div id="lt-preco"><div class="no-data">Carregando...</div></div></div>
+  <div class="gc2">
+    <div class="card"><div style="font-size:12px;font-weight:700;margin-bottom:14px">Lead Time por Tipo de Peça</div><div id="rel-tipo"></div></div>
+    <div class="card"><div style="font-size:12px;font-weight:700;margin-bottom:14px">Lead Time por Facção</div><div id="rel-fac"></div></div>
+  </div>
+  <div class="card"><div style="font-size:12px;font-weight:700;margin-bottom:14px">Preço Médio por Tipo de Peça (Facção)</div><div id="rel-preco"></div></div>
+  <div class="card"><div style="font-size:12px;font-weight:700;margin-bottom:14px">Histórico de Pagamentos</div><div id="rel-pgtos"></div></div>
 </div>
 
-</div><!-- /content -->
+</div><!-- /ct -->
 
-<!-- MODAL CORTE -->
-<div class="mo" id="m-corte">
-<div class="modal">
-  <h2 id="m-corte-title">Novo Corte</h2>
-  <div class="fg">
-    <div class="fi"><label>Data *</label><input type="date" id="cc-data"></div>
-    <div class="fi"><label>Nº Corte *</label><input type="text" id="cc-num" placeholder="001"></div>
-    <div class="fi"><label>Coleção *</label><input type="text" id="cc-col" placeholder="Verão 2026"></div>
-    <div class="fi"><label>Modelo/Ref *</label><input type="text" id="cc-mod" placeholder="REF-001"></div>
-    <div class="fi"><label>Tipo de Peça *</label>
-      <select id="cc-tipo"><option value="">Selecione...</option><option>Blusa</option><option>Vestido</option><option>Calça</option><option>Saia</option><option>Conjunto</option><option>Shorts</option><option>Blazer</option><option>Outro</option></select>
+<!-- MODAL CORTE (criar/editar) -->
+<div class="mo" id="mo-corte">
+  <div class="md">
+    <div class="md-t" id="mo-corte-titulo">Novo Corte</div>
+    <input type="hidden" id="cc-id">
+    <div class="fg">
+      <div class="fi"><label>Data *</label><input type="date" id="cc-data"></div>
+      <div class="fi"><label>Número do Corte *</label><input type="text" id="cc-num" placeholder="001"></div>
+      <div class="fi"><label>Coleção *</label><input type="text" id="cc-col" placeholder="Verão 2026"></div>
+      <div class="fi"><label>Modelo/Referência *</label><input type="text" id="cc-mod" placeholder="REF-001"></div>
+      <div class="fi"><label>Tipo de Peça *</label>
+        <select id="cc-tipo"><option value="">Selecione...</option><option>Blusa</option><option>Vestido</option><option>Calça</option><option>Saia</option><option>Conjunto</option><option>Shorts</option><option>Blazer</option><option>Outro</option></select>
+      </div>
+      <div class="fi"><label>Qtd Pretendida *</label><input type="number" id="cc-qtdp" min="1"></div>
+      <div class="fi"><label>Cortador</label><input type="text" id="cc-cort" placeholder="Nome..."></div>
     </div>
-    <div class="fi"><label>Qtd Pretendida *</label><input type="number" id="cc-qtdp" min="1"></div>
-    <div class="fi"><label>Cortador *</label><input type="text" id="cc-cort" placeholder="Nome..."></div>
+    <div class="md-f">
+      <button class="btn bg" onclick="fecharModal('mo-corte')">Cancelar</button>
+      <button class="btn by" onclick="salvarCorte()">Salvar</button>
+    </div>
   </div>
-  <div class="modal-footer">
-    <button class="btn btn-ghost" onclick="fecharModal('m-corte')">Cancelar</button>
-    <button class="btn btn-primary" onclick="salvarCorte()">Salvar</button>
-  </div>
-</div></div>
+</div>
 
 <!-- MODAL RETORNO CORTE -->
-<div class="mo" id="m-retcorte">
-<div class="modal">
-  <h2 id="m-retcorte-title">Registrar Retorno do Corte</h2>
-  <input type="hidden" id="rc-id">
-  <p style="font-size:12px;color:var(--text2);margin-bottom:16px">Confirme a quantidade cortada e o custo. Ao finalizar, o cortador irá para pagamentos e as peças para a fila de facção.</p>
-  <div class="fg">
-    <div class="fi"><label>Qtd Cortada *</label><input type="number" id="rc-qtd" min="0"></div>
-    <div class="fi"><label>Custo Total (R$) *</label><input type="number" id="rc-custo" step="0.01" min="0" placeholder="0,00"></div>
-    <div class="fi full"><label>Observação</label><input type="text" id="rc-obs" placeholder="Observações sobre o corte..."></div>
+<div class="mo" id="mo-retcorte">
+  <div class="md">
+    <div class="md-t" id="mo-retcorte-titulo">Retorno do Corte</div>
+    <input type="hidden" id="rc-id">
+    <p style="font-size:12px;color:var(--t2);margin-bottom:16px">Confirme a quantidade real cortada e o custo. O cortador será enviado para pagamento e as peças migram automaticamente para a aba Facções.</p>
+    <div class="fg">
+      <div class="fi"><label>Qtd Real Cortada *</label><input type="number" id="rc-qtd" min="1"></div>
+      <div class="fi"><label>Data de Retorno *</label><input type="date" id="rc-data"></div>
+      <div class="fi"><label>Custo Total do Corte (R$) *</label><input type="number" id="rc-custo" step="0.01" min="0"></div>
+      <div class="fi" style="grid-column:1/-1"><label>Observação</label><input type="text" id="rc-obs" placeholder="Observações..."></div>
+    </div>
+    <div class="md-f">
+      <button class="btn bg" onclick="fecharModal('mo-retcorte')">Cancelar</button>
+      <button class="btn by" onclick="finalizarCorte()">Finalizar Corte</button>
+    </div>
   </div>
-  <div class="modal-footer">
-    <button class="btn btn-ghost" onclick="fecharModal('m-retcorte')">Cancelar</button>
-    <button class="btn btn-primary" onclick="finalizarCorte()">Finalizar Corte</button>
-  </div>
-</div></div>
+</div>
 
 <!-- MODAL ENVIO FACCAO -->
-<div class="mo" id="m-faccao">
-<div class="modal">
-  <h2 id="m-faccao-title">Enviar para Facção</h2>
-  <input type="hidden" id="mf-corte-id">
-  <p style="font-size:12px;color:var(--text2);margin-bottom:16px" id="mf-info"></p>
-  <div class="fg">
-    <div class="fi"><label>Data Envio *</label><input type="date" id="mf-data"></div>
-    <div class="fi"><label>Facção *</label><input type="text" id="mf-fac" placeholder="Nome da facção"></div>
-    <div class="fi"><label>Qtd Enviada *</label><input type="number" id="mf-qtd" min="1"></div>
-    <div class="fi"><label>Valor por Peça (R$) *</label><input type="number" id="mf-vlr" step="0.01" min="0"></div>
-    <div class="fi"><label>Prazo (dias) *</label><input type="number" id="mf-prazo" min="1" value="7"></div>
+<div class="mo" id="mo-envfac">
+  <div class="md">
+    <div class="md-t" id="mo-envfac-titulo">Enviar para Facção</div>
+    <input type="hidden" id="ef-id">
+    <p style="font-size:12px;color:var(--t2);margin-bottom:16px" id="ef-info"></p>
+    <div class="fg">
+      <div class="fi"><label>Data de Envio *</label><input type="date" id="ef-data"></div>
+      <div class="fi"><label>Facção *</label><input type="text" id="ef-fac" placeholder="Nome da facção"></div>
+      <div class="fi"><label>Qtd Enviada *</label><input type="number" id="ef-qtd" min="1"></div>
+      <div class="fi"><label>Valor por Peça (R$) *</label><input type="number" id="ef-vlr" step="0.01" min="0"></div>
+      <div class="fi"><label>Prazo (dias) *</label><input type="number" id="ef-prazo" min="1" value="7"></div>
+    </div>
+    <div class="md-f">
+      <button class="btn bg" onclick="fecharModal('mo-envfac')">Cancelar</button>
+      <button class="btn by" onclick="salvarEnvio()">Enviar</button>
+    </div>
   </div>
-  <div class="modal-footer">
-    <button class="btn btn-ghost" onclick="fecharModal('m-faccao')">Cancelar</button>
-    <button class="btn btn-primary" onclick="salvarEnvioFaccao()">Enviar</button>
-  </div>
-</div></div>
+</div>
 
 <!-- MODAL RETORNO FACCAO -->
-<div class="mo" id="m-retfac">
-<div class="modal modal-lg">
-  <h2 id="m-retfac-title">Registrar Retorno da Facção</h2>
-  <input type="hidden" id="rf-lote-id">
-  <input type="hidden" id="rf-vlr-peca">
-  <p style="font-size:12px;color:var(--text2);margin-bottom:14px">Registre os grupos de peças retornadas. Peças OK vão imediatamente para pagamento.</p>
-  <div id="rf-grupos"></div>
-  <button class="btn btn-ghost btn-sm" onclick="addGrupoRetorno()" style="margin-top:8px">+ Grupo</button>
-  <div class="modal-footer">
-    <button class="btn btn-ghost" onclick="fecharModal('m-retfac')">Cancelar</button>
-    <button class="btn btn-primary" onclick="salvarRetornoFaccao()">Salvar Retorno</button>
+<div class="mo" id="mo-retfac">
+  <div class="md">
+    <div class="md-t" id="mo-retfac-titulo">Registrar Retorno da Facção</div>
+    <input type="hidden" id="rf-lote-id">
+    <input type="hidden" id="rf-vlr-peca">
+    <input type="hidden" id="rf-qtd-enviada">
+    <div id="rf-info" style="font-size:12px;color:var(--t2);margin-bottom:14px;background:var(--s2);padding:10px;border-radius:6px"></div>
+    <div class="fg" style="margin-bottom:14px">
+      <div class="fi"><label>Qtd OK (aprovadas) *</label><input type="number" id="rf-qtd-ok" min="0" value="0" oninput="calcRetorno()"></div>
+      <div class="fi"><label>Qtd Ret. Conserto</label><input type="number" id="rf-qtd-cons" min="0" value="0" oninput="calcRetorno()" readonly style="opacity:.6"></div>
+      <div class="fi"><label>Data de Retorno *</label><input type="date" id="rf-data"></div>
+      <div class="fi"><label>Desconto Total (R$)</label><input type="number" id="rf-desc" step="0.01" min="0" value="0" oninput="calcRetorno()"></div>
+      <div class="fi" style="grid-column:1/-1"><label>Observação</label><input type="text" id="rf-obs" placeholder="Ex: frete R$20, conserto de 5 peças..."></div>
+    </div>
+    <div id="rf-calc" style="background:var(--s2);border-radius:8px;padding:12px;font-size:12px;margin-bottom:4px"></div>
+    <div class="md-f">
+      <button class="btn bg" onclick="fecharModal('mo-retfac')">Cancelar</button>
+      <button class="btn by" onclick="salvarRetornoFac()">Salvar Retorno</button>
+    </div>
   </div>
-</div></div>
+</div>
 
 <!-- MODAL DETALHE REFERENCIA -->
-<div class="mo" id="m-detalhe">
-<div class="modal modal-lg">
-  <h2 id="m-det-title">Vida da Referência</h2>
-  <div id="m-det-content"></div>
-  <div class="modal-footer">
-    <button class="btn btn-ghost" onclick="fecharModal('m-detalhe')">Fechar</button>
+<div class="mo" id="mo-detalhe">
+  <div class="md" style="max-width:640px">
+    <div class="md-t" id="mo-det-titulo">Vida da Referência</div>
+    <div id="mo-det-content"></div>
+    <div class="md-f"><button class="btn bg" onclick="fecharModal('mo-detalhe')">Fechar</button></div>
   </div>
-</div></div>
+</div>
+
+<!-- MODAL DETALHE PAGAMENTO -->
+<div class="mo" id="mo-detpgto">
+  <div class="md" style="max-width:640px">
+    <div class="md-t" id="mo-detpgto-titulo">Detalhe do Pagamento</div>
+    <div id="mo-detpgto-content"></div>
+    <div class="md-f">
+      <button class="btn bg" onclick="fecharModal('mo-detpgto')">Fechar</button>
+      <button class="btn by" onclick="imprimirLote()">Imprimir</button>
+    </div>
+  </div>
+</div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-const SB = 'https://lrtphrdqyeoblbwwnujv.supabase.co';
-const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxydHBocmRxeWVvYmxid3dudWp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1NDc3MDUsImV4cCI6MjA5MTEyMzcwNX0.0UbgGWrllHXWrK3AW8o4lG-OsHX8vWxI-N9PmGdjjnk';
-const H = {'Content-Type':'application/json','apikey':KEY,'Authorization':'Bearer '+KEY,'Prefer':'return=representation'};
+const SB='https://lrtphrdqyeoblbwwnujv.supabase.co';
+const KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxydHBocmRxeWVvYmxid3dudWp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1NDc3MDUsImV4cCI6MjA5MTEyMzcwNX0.0UbgGWrllHXWrK3AW8o4lG-OsHX8vWxI-N9PmGdjjnk';
+const H={'Content-Type':'application/json','apikey':KEY,'Authorization':'Bearer '+KEY,'Prefer':'return=representation'};
 
 async function db(path,method='GET',body=null){
   const o={method,headers:H};
-  if(body) o.body=JSON.stringify(body);
+  if(body)o.body=JSON.stringify(body);
   const r=await fetch(SB+'/rest/v1/'+path,o);
-  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.message||r.statusText);}
+  if(!r.ok){const e=await r.json();throw new Error(e.message||r.statusText);}
   if(r.status===204)return[];
   return r.json();
 }
 
-const fD=d=>{if(!d)return'—';const[y,m,dd]=d.split('-');return`${dd}/${m}/${y}`;};
+const fD=d=>d?new Date(d+'T00:00:00').toLocaleDateString('pt-BR'):'—';
 const fR=v=>'R$ '+Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2});
 const hoje=()=>new Date().toISOString().split('T')[0];
-const diffDias=(d1,d2)=>Math.round((new Date(d2)-new Date(d1))/(864e5));
+const diffD=(a,b)=>a&&b?Math.ceil((new Date(b)-new Date(a))/(864e5)):null;
 
 function toast(msg,type='ok'){
   const t=document.getElementById('toast');
   t.textContent=msg;t.className='toast show '+type;
   setTimeout(()=>t.className='toast',3000);
 }
-function abrirModal(id){document.getElementById(id).classList.add('open');}
-function fecharModal(id){document.getElementById(id).classList.remove('open');}
+const abrirModal=id=>document.getElementById(id).classList.add('open');
+const fecharModal=id=>document.getElementById(id).classList.remove('open');
 
-// NAVEGAÇÃO
-function go(page){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.getElementById('page-'+page).classList.add('active');
+function P(page){
+  document.querySelectorAll('[id^="pg-"]').forEach(e=>e.style.display='none');
+  document.getElementById('pg-'+page).style.display='block';
   document.querySelectorAll('.nb').forEach(b=>b.classList.toggle('active',b.getAttribute('onclick')?.includes("'"+page+"'")));
-  if(page==='dash')loadDash();
-  else if(page==='cortes')loadCortes();
-  else if(page==='faccoes')loadFaccoes();
-  else if(page==='pagamentos')loadPagamentos();
-  else if(page==='relatorios')loadRelatorios();
+  const map={dash:loadDash,cortes:loadCortes,faccoes:loadFaccoes,pagamentos:loadPagamentos,relatorios:loadRel};
+  map[page]?.();
 }
 
-// ===================== DASHBOARD =====================
-let dashData={};
+// ===== STATUS HELPERS =====
+function chipCorte(s){
+  const m={'Aguardando Retorno':'cy','Concluído / Ag. Pagamento':'co','Concluído / Pago':'cg','Em Produção':'cb','Concluído':'cg'};
+  return`<span class="chip ${m[s]||'cgr'}">${s}</span>`;
+}
+function chipFac(s){
+  const m={'Aguardando Facção':'cy','Em Produção':'cb','Parc. Concluída / Ret. Conserto':'co','Concluído':'cg'};
+  return`<span class="chip ${m[s]||'cgr'}">${s}</span>`;
+}
+function chipPrazo(dataEnvio,prazo,status){
+  if(!dataEnvio||!prazo||status==='Concluído')return'<span class="chip cg">OK</span>';
+  if(status==='Aguardando Facção')return'<span class="chip cgr">—</span>';
+  const prev=new Date(dataEnvio);prev.setDate(prev.getDate()+parseInt(prazo));
+  const diff=Math.ceil((prev-new Date())/(864e5));
+  if(diff<0)return`<span class="chip cr">Atrasado ${Math.abs(diff)}d</span>`;
+  if(diff===0)return'<span class="chip cy">Vence hoje</span>';
+  return`<span class="chip cg">No Prazo ${diff}d</span>`;
+}
+function dataPrevRetorno(dataEnvio,prazo){
+  if(!dataEnvio||!prazo)return'—';
+  const d=new Date(dataEnvio);d.setDate(d.getDate()+parseInt(prazo));
+  return d.toLocaleDateString('pt-BR');
+}
+
+// ===== DASHBOARD =====
 async function loadDash(){
   const now=new Date();
-  const m=String(now.getMonth()+1).padStart(2,'0'),y=now.getFullYear();
-  document.getElementById('d-mes').textContent=now.toLocaleString('pt-BR',{month:'long'})+' '+y;
+  const mes=String(now.getMonth()+1).padStart(2,'0'),ano=now.getFullYear();
+  document.getElementById('d-mes').textContent=now.toLocaleString('pt-BR',{month:'long'})+' '+ano;
   try{
     const[cortes,lotes,grupos]=await Promise.all([
       db('cortes?select=*'),
       db('lotes_faccao?select=*'),
       db('grupos_peca?select=*')
     ]);
-    dashData={cortes,lotes,grupos};
-    const mc=cortes.filter(c=>c.data_corte?.startsWith(y+'-'+m));
-    document.getElementById('s1').textContent=mc.reduce((s,c)=>s+(c.qtd_cortada||c.qtd_pretendida||0),0);
-    document.getElementById('s2').textContent=lotes.filter(l=>l.status==='Aguardando Facção').length;
-    document.getElementById('s3').textContent=lotes.filter(l=>l.status==='Em Produção'||l.status==='Entrega Parcial').length;
-    const hj=new Date();
-    document.getElementById('s4').textContent=lotes.filter(l=>{
+    const mc=cortes.filter(c=>c.data_corte?.startsWith(ano+'-'+mes));
+    document.getElementById('d1').textContent=mc.reduce((s,c)=>s+(c.qtd_cortada||c.qtd_pretendida||0),0);
+    document.getElementById('d2').textContent=lotes.filter(l=>l.status==='Aguardando Facção').length;
+    document.getElementById('d3').textContent=lotes.filter(l=>{
       if(['Concluído','Aguardando Facção'].includes(l.status))return false;
-      const p=new Date(l.data_envio);p.setDate(p.getDate()+l.prazo_dias);return p<hj;
-    }).length;
-    const disp=grupos.filter(g=>g.aprovado&&g.status==='OK').reduce((s,g)=>s+g.valor_liquido,0)
-      +cortes.filter(c=>c.status==='Ag. Pagamento Corte').reduce((s,c)=>s+(c.custo_corte||0),0);
-    document.getElementById('s5').textContent=fR(disp);
-    document.getElementById('s6').textContent=[...new Set(mc.map(c=>c.colecao))].length;
-    // listas
-    const ag=lotes.filter(l=>l.status==='Aguardando Facção').slice(0,6);
-    document.getElementById('d-aguardando').innerHTML=ag.length?ag.map(l=>`
-      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px">
-        <span style="color:var(--accent)">#${l.numero_corte||'—'}</span> <span>${l.modelo||'—'}</span>
-        <span style="color:var(--text2)">${l.qtd_enviada||l.qtd_cortada||0} pç</span>
-      </div>`).join(''):'<div class="no-data">Nenhum aguardando</div>';
-    const pend=lotes.filter(l=>!['Concluído','Aguardando Facção'].includes(l.status)).slice(0,6);
-    document.getElementById('d-pendentes').innerHTML=pend.length?pend.map(l=>{
+      if(!l.data_envio||!l.prazo_dias)return false;
       const p=new Date(l.data_envio);p.setDate(p.getDate()+l.prazo_dias);
-      const d=Math.ceil((p-new Date())/(864e5));
-      const cc=d<0?'c-red':d<=2?'c-yellow':'c-blue';
-      return`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px">
+      return p<new Date();
+    }).length;
+    const pgCorte=cortes.filter(c=>c.status==='Concluído / Ag. Pagamento').reduce((s,c)=>s+(c.custo_corte||0),0);
+    document.getElementById('d4').textContent=fR(pgCorte);
+    const pgFac=grupos.filter(g=>g.aprovado&&g.status==='OK').reduce((s,g)=>s+g.valor_liquido,0);
+    document.getElementById('d5').textContent=fR(pgFac);
+    document.getElementById('d6').textContent=lotes.filter(l=>['Em Produção','Parc. Concluída / Ret. Conserto'].includes(l.status)).length;
+    const ag=lotes.filter(l=>l.status==='Aguardando Facção').slice(0,5);
+    document.getElementById('d-ag').innerHTML=ag.length?ag.map(l=>`
+      <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bd);font-size:12px">
+        <span style="color:var(--yw)">${l.modelo||'—'}</span>
+        <span style="color:var(--t2)">${l.qtd_cortada||0} pçs</span>
+      </div>`).join(''):'<div class="nd">Nenhum</div>';
+    const pend=lotes.filter(l=>!['Concluído','Aguardando Facção'].includes(l.status)).slice(0,5);
+    document.getElementById('d-pend').innerHTML=pend.length?pend.map(l=>`
+      <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bd);font-size:12px;align-items:center">
         <span><b>${l.faccao||'—'}</b> · ${l.modelo||'—'}</span>
-        <span class="chip ${cc}">${d<0?Math.abs(d)+'d atraso':d===0?'hoje':d+'d'}</span>
-      </div>`;}).join(''):'<div class="no-data">Sem pendências</div>';
+        ${chipPrazo(l.data_envio,l.prazo_dias,l.status)}
+      </div>`).join(''):'<div class="nd">Sem pendências</div>';
   }catch(e){toast('Erro dashboard: '+e.message,'err');}
 }
 
-// ===================== CORTES =====================
+// ===== CORTES =====
 let cortesData=[];
 async function loadCortes(){
   try{
     cortesData=await db('cortes?select=*&order=data_corte.desc');
-    // popular filtro de meses
-    const sel=document.getElementById('fc-mes'),val=sel.value;
+    const sel=document.getElementById('fc-mes'),v=sel.value;
     const meses=[...new Set(cortesData.map(c=>c.data_corte?.substring(0,7)).filter(Boolean))].sort().reverse();
     sel.innerHTML='<option value="">Todos os meses</option>'+meses.map(m=>`<option value="${m}">${m}</option>`).join('');
-    sel.value=val;
+    sel.value=v;
     renderCortes();
   }catch(e){toast('Erro cortes: '+e.message,'err');}
 }
@@ -474,40 +449,53 @@ function renderCortes(){
   if(mes)d=d.filter(c=>c.data_corte?.startsWith(mes));
   if(col)d=d.filter(c=>c.colecao?.toLowerCase().includes(col));
   if(st)d=d.filter(c=>c.status===st);
-  document.getElementById('cortes-tot').textContent=`${d.length} corte(s) · ${d.reduce((s,c)=>s+(c.qtd_cortada||c.qtd_pretendida||0),0)} peças`;
-  if(!d.length){document.getElementById('cortes-tb').innerHTML='<tr><td colspan="11" class="no-data">Nenhum corte</td></tr>';return;}
-  const sc={'Aguardando retorno':'c-yellow','Aguardando Facção':'c-blue','Em Produção':'c-green','Ag. Pagamento Corte':'c-purple','Concluído':'c-gray'};
-  document.getElementById('cortes-tb').innerHTML=d.map(c=>{
-    const btns=[];
-    if(c.status==='Aguardando retorno') btns.push(`<button class="btn btn-success btn-sm" onclick="abrirRetornoCorte('${c.id}')">↩ Retorno</button>`);
-    if(c.status==='Aguardando Facção') btns.push(`<button class="btn btn-blue btn-sm" onclick="abrirEnvioFaccao('${c.id}')">→ Facção</button>`);
-    btns.push(`<button class="btn btn-ghost btn-sm" onclick="verDetalhe('${c.id}')">📋</button>`);
-    btns.push(`<button class="btn btn-danger btn-sm" onclick="delCorte('${c.id}')">✕</button>`);
-    return`<tr>
-      <td style="color:var(--accent);font-weight:600">#${c.numero_corte}</td>
-      <td>${fD(c.data_corte)}</td><td>${c.colecao||'—'}</td><td>${c.modelo||'—'}</td>
-      <td><span class="chip c-gray">${c.tipo_peca||'—'}</span></td>
-      <td>${c.qtd_pretendida||0}</td>
-      <td>${c.qtd_cortada!=null?c.qtd_cortada:'—'}</td>
-      <td>${c.custo_corte?fR(c.custo_corte):'—'}</td>
-      <td>${c.cortador||'—'}</td>
-      <td><span class="chip ${sc[c.status]||'c-gray'}">${c.status}</span></td>
-      <td style="white-space:nowrap;display:flex;gap:4px;flex-wrap:wrap">${btns.join('')}</td>
-    </tr>`;
-  }).join('');
+  document.getElementById('cortes-tot').textContent=d.length+' corte(s) · '+d.reduce((s,c)=>s+(c.qtd_cortada||c.qtd_pretendida||0),0)+' peças';
+  if(!d.length){document.getElementById('tb-cortes').innerHTML='<tr><td colspan="11" class="nd">Nenhum corte</td></tr>';return;}
+  document.getElementById('tb-cortes').innerHTML=d.map(c=>`<tr>
+    <td style="color:var(--yw);font-weight:600">${c.numero_corte}</td>
+    <td>${fD(c.data_corte)}</td>
+    <td>${c.colecao||'—'}</td>
+    <td>${c.modelo||'—'}</td>
+    <td><span class="chip cgr">${c.tipo_peca||'—'}</span></td>
+    <td>${c.qtd_pretendida||0}</td>
+    <td>${c.qtd_cortada??'—'}</td>
+    <td>${c.custo_corte?fR(c.custo_corte):'—'}</td>
+    <td>${c.cortador||'—'}</td>
+    <td>${chipCorte(c.status)}</td>
+    <td style="white-space:nowrap;display:flex;gap:4px;flex-wrap:wrap">
+      ${c.status==='Aguardando Retorno'?`<button class="btn bgr bsm" onclick="abrirRetCorte('${c.id}')">↩ Retorno</button>`:''}
+      <button class="btn bbl bsm" onclick="abrirCorteEdit('${c.id}')">✎</button>
+      <button class="btn bg bsm" onclick="verDetalhe('${c.id}')">📋</button>
+      <button class="btn br bsm" onclick="delCorte('${c.id}')">✕</button>
+    </td>
+  </tr>`).join('');
 }
 
-function abrirNovoCorte(){
-  document.getElementById('m-corte-title').textContent='Novo Corte';
-  ['cc-data','cc-num','cc-col','cc-mod','cc-qtdp','cc-cort'].forEach(id=>document.getElementById(id).value='');
+function abrirCorte(){
+  document.getElementById('cc-id').value='';
+  ['cc-num','cc-col','cc-mod','cc-qtdp','cc-cort'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('cc-tipo').value='';
   document.getElementById('cc-data').value=hoje();
-  document.getElementById('cc-data').dataset.editId='';
-  abrirModal('m-corte');
+  document.getElementById('mo-corte-titulo').textContent='Novo Corte';
+  abrirModal('mo-corte');
+}
+
+function abrirCorteEdit(id){
+  const c=cortesData.find(x=>x.id===id);if(!c)return;
+  document.getElementById('cc-id').value=id;
+  document.getElementById('cc-data').value=c.data_corte||'';
+  document.getElementById('cc-num').value=c.numero_corte||'';
+  document.getElementById('cc-col').value=c.colecao||'';
+  document.getElementById('cc-mod').value=c.modelo||'';
+  document.getElementById('cc-tipo').value=c.tipo_peca||'';
+  document.getElementById('cc-qtdp').value=c.qtd_pretendida||'';
+  document.getElementById('cc-cort').value=c.cortador||'';
+  document.getElementById('mo-corte-titulo').textContent='Editar Corte';
+  abrirModal('mo-corte');
 }
 
 async function salvarCorte(){
-  const editId=document.getElementById('cc-data').dataset.editId;
+  const id=document.getElementById('cc-id').value;
   const data={
     data_corte:document.getElementById('cc-data').value,
     numero_corte:document.getElementById('cc-num').value,
@@ -515,44 +503,46 @@ async function salvarCorte(){
     modelo:document.getElementById('cc-mod').value,
     tipo_peca:document.getElementById('cc-tipo').value,
     qtd_pretendida:parseInt(document.getElementById('cc-qtdp').value)||0,
-    cortador:document.getElementById('cc-cort').value||null,
-    status:'Aguardando retorno'
+    cortador:document.getElementById('cc-cort').value||null
   };
   if(!data.data_corte||!data.numero_corte||!data.colecao||!data.modelo||!data.tipo_peca||!data.qtd_pretendida){toast('Preencha os campos obrigatórios','err');return;}
+  if(!id)data.status='Aguardando Retorno';
   try{
-    if(editId) await db('cortes?id=eq.'+editId,'PATCH',data);
+    if(id)await db('cortes?id=eq.'+id,'PATCH',data);
     else await db('cortes','POST',data);
-    toast('Corte salvo!');fecharModal('m-corte');loadCortes();
+    toast(id?'Corte atualizado!':'Corte salvo!');
+    fecharModal('mo-corte');loadCortes();
   }catch(e){toast('Erro: '+e.message,'err');}
 }
 
-function abrirRetornoCorte(id){
+function abrirRetCorte(id){
   const c=cortesData.find(x=>x.id===id);if(!c)return;
   document.getElementById('rc-id').value=id;
-  document.getElementById('m-retcorte-title').textContent=`Retorno — #${c.numero_corte} · ${c.modelo}`;
+  document.getElementById('mo-retcorte-titulo').textContent='Retorno — #'+c.numero_corte+' · '+c.modelo;
   document.getElementById('rc-qtd').value=c.qtd_pretendida||'';
+  document.getElementById('rc-data').value=hoje();
   document.getElementById('rc-custo').value='';
   document.getElementById('rc-obs').value='';
-  abrirModal('m-retcorte');
+  abrirModal('mo-retcorte');
 }
 
 async function finalizarCorte(){
   const id=document.getElementById('rc-id').value;
   const qtd=parseInt(document.getElementById('rc-qtd').value)||0;
+  const dataRet=document.getElementById('rc-data').value;
   const custo=parseFloat(document.getElementById('rc-custo').value)||0;
   const obs=document.getElementById('rc-obs').value;
-  if(!qtd||!custo){toast('Informe quantidade e custo','err');return;}
+  if(!qtd||!custo||!dataRet){toast('Preencha quantidade, data e custo','err');return;}
+  const c=cortesData.find(x=>x.id===id);
   try{
-    // Atualiza corte
     await db('cortes?id=eq.'+id,'PATCH',{
       qtd_cortada:qtd,
       custo_corte:custo,
       obs_corte:obs,
-      status:'Ag. Pagamento Corte',
-      data_retorno_corte:hoje()
+      data_retorno_corte:dataRet,
+      status:'Concluído / Ag. Pagamento'
     });
-    // Cria registro na faccao automaticamente
-    const c=cortesData.find(x=>x.id===id);
+    // Cria lote na faccao automaticamente
     await db('lotes_faccao','POST',{
       corte_id:id,
       numero_corte:c.numero_corte,
@@ -560,215 +550,239 @@ async function finalizarCorte(){
       modelo:c.modelo,
       tipo_peca:c.tipo_peca,
       qtd_cortada:qtd,
-      status:'Aguardando Facção',
-      data_envio:hoje(),
-      data_criacao:hoje(),
-      faccao:'',
-      pecas_enviadas:0,
-      valor_por_peca:0,
-      prazo_dias:0
+      status:'Aguardando Facção'
     });
-    toast('Corte finalizado! Cortador na fila de pagamento.');
-    fecharModal('m-retcorte');loadCortes();
+    toast('Corte finalizado! Cortador em pagamentos, peças em Facções.');
+    fecharModal('mo-retcorte');loadCortes();
   }catch(e){toast('Erro: '+e.message,'err');}
 }
 
 async function delCorte(id){
   if(!confirm('Excluir este corte?'))return;
-  try{await db('cortes?id=eq.'+id,'DELETE');toast('Corte excluído');loadCortes();}
+  try{await db('cortes?id=eq.'+id,'DELETE');toast('Excluído');loadCortes();}
   catch(e){toast('Erro: '+e.message,'err');}
 }
 
-// ===================== FACCOES =====================
-let faccoesData=[];
+// ===== FACCOES =====
+let facData=[];
 async function loadFaccoes(){
   try{
-    faccoesData=await db('lotes_faccao?select=*&order=data_criacao.desc');
+    facData=await db('lotes_faccao?select=*&order=created_at.desc');
     renderFaccoes();
   }catch(e){toast('Erro facções: '+e.message,'err');}
 }
 
 function renderFaccoes(){
-  let d=[...faccoesData];
+  let d=[...facData];
   const st=document.getElementById('ff-st').value;
   const fac=document.getElementById('ff-fac').value.toLowerCase();
   if(st)d=d.filter(f=>f.status===st);
+  else d=d.filter(f=>f.status!=='Concluído');
   if(fac)d=d.filter(f=>f.faccao?.toLowerCase().includes(fac));
-  if(!d.length){document.getElementById('faccoes-tb').innerHTML='<tr><td colspan="10" class="no-data">Nenhum lote</td></tr>';return;}
-  const hj=new Date();
-  const sc={'Aguardando Facção':'c-yellow','Em Produção':'c-blue','Entrega Parcial':'c-orange','Retorno p/ Conserto':'c-purple','Concluído':'c-green'};
-  document.getElementById('faccoes-tb').innerHTML=d.map(f=>{
-    const prazoOk=f.data_envio&&f.prazo_dias;
-    let prazoChip='<span class="chip c-gray">—</span>';
-    if(prazoOk&&f.status!=='Concluído'&&f.status!=='Aguardando Facção'){
-      const p=new Date(f.data_envio);p.setDate(p.getDate()+f.prazo_dias);
-      const dif=Math.ceil((p-hj)/(864e5));
-      const cc=dif<0?'c-red':dif<=2?'c-yellow':'c-green';
-      prazoChip=`<span class="chip ${cc}">${dif<0?Math.abs(dif)+'d atraso':dif===0?'hoje':dif+'d'}</span>`;
-    }
+  if(!d.length){document.getElementById('tb-faccoes').innerHTML='<tr><td colspan="12" class="nd">Nenhum lote</td></tr>';return;}
+  document.getElementById('tb-faccoes').innerHTML=d.map(f=>{
     const btns=[];
-    if(f.status==='Aguardando Facção') btns.push(`<button class="btn btn-blue btn-sm" onclick="abrirEnvioFaccaoFromLote('${f.id}')">→ Enviar</button>`);
-    if(['Em Produção','Entrega Parcial','Retorno p/ Conserto'].includes(f.status)) btns.push(`<button class="btn btn-success btn-sm" onclick="abrirRetornoFaccao('${f.id}')">↩ Retorno</button>`);
-    btns.push(`<button class="btn btn-ghost btn-sm" onclick="verDetalhe(null,'${f.id}')">📋</button>`);
-    btns.push(`<button class="btn btn-danger btn-sm" onclick="delLote('${f.id}')">✕</button>`);
+    if(f.status==='Aguardando Facção')btns.push(`<button class="btn bbl bsm" onclick="abrirEnvio('${f.id}')">→ Enviar</button>`);
+    if(['Em Produção','Parc. Concluída / Ret. Conserto'].includes(f.status))btns.push(`<button class="btn bgr bsm" onclick="abrirRetFac('${f.id}')">↩ Retorno</button>`);
+    btns.push(`<button class="btn bg bsm" onclick="verDetalhe('${f.corte_id}')">📋</button>`);
+    btns.push(`<button class="btn br bsm" onclick="delLote('${f.id}')">✕</button>`);
     return`<tr>
-      <td style="color:var(--accent);font-weight:600">#${f.numero_corte||'—'}</td>
-      <td>${f.modelo||'—'}</td>
-      <td><span class="chip c-gray">${f.tipo_peca||'—'}</span></td>
-      <td>${f.qtd_cortada||0}</td>
+      <td style="color:var(--yw);font-weight:600">${f.modelo||'—'}</td>
+      <td>${f.colecao||'—'}</td>
+      <td><span class="chip cgr">${f.tipo_peca||'—'}</span></td>
+      <td>${f.qtd_cortada||'—'}</td>
       <td>${f.qtd_enviada||'—'}</td>
       <td><b>${f.faccao||'—'}</b></td>
       <td>${f.valor_peca?fR(f.valor_peca):'—'}</td>
-      <td>${prazoChip}</td>
-      <td><span class="chip ${sc[f.status]||'c-gray'}">${f.status}</span></td>
+      <td>${fD(f.data_envio)}</td>
+      <td>${dataPrevRetorno(f.data_envio,f.prazo_dias)}</td>
+      <td>${chipPrazo(f.data_envio,f.prazo_dias,f.status)}</td>
+      <td>${chipFac(f.status)}</td>
       <td style="white-space:nowrap;display:flex;gap:4px;flex-wrap:wrap">${btns.join('')}</td>
     </tr>`;
   }).join('');
 }
 
-function abrirEnvioFaccao(corteId){
-  const c=cortesData.find(x=>x.id===corteId);if(!c)return;
-  // buscar lote vinculado
-  loadFaccoes().then(()=>{
-    const lote=faccoesData.find(f=>f.corte_id===corteId&&f.status==='Aguardando Facção');
-    if(lote) _abrirEnvioModal(lote);
-    else toast('Lote não encontrado','err');
-  });
+function abrirEnvio(loteId){
+  const l=facData.find(f=>f.id===loteId);if(!l)return;
+  document.getElementById('ef-id').value=loteId;
+  document.getElementById('mo-envfac-titulo').textContent='Enviar — '+l.modelo;
+  document.getElementById('ef-info').textContent=l.qtd_cortada+' peças disponíveis para envio';
+  document.getElementById('ef-data').value=hoje();
+  document.getElementById('ef-fac').value='';
+  document.getElementById('ef-qtd').value=l.qtd_cortada||'';
+  document.getElementById('ef-vlr').value='';
+  document.getElementById('ef-prazo').value='7';
+  abrirModal('mo-envfac');
 }
 
-function abrirEnvioFaccaoFromLote(loteId){
-  const lote=faccoesData.find(f=>f.id===loteId);
-  if(lote) _abrirEnvioModal(lote);
-}
-
-function _abrirEnvioModal(lote){
-  document.getElementById('mf-corte-id').value=lote.id;
-  document.getElementById('m-faccao-title').textContent=`Enviar p/ Facção — #${lote.numero_corte} · ${lote.modelo}`;
-  document.getElementById('mf-info').textContent=`${lote.qtd_cortada} peças disponíveis para envio`;
-  document.getElementById('mf-data').value=hoje();
-  document.getElementById('mf-fac').value='';
-  document.getElementById('mf-qtd').value=lote.qtd_cortada||'';
-  document.getElementById('mf-vlr').value='';
-  document.getElementById('mf-prazo').value='7';
-  abrirModal('m-faccao');
-}
-
-async function salvarEnvioFaccao(){
-  const loteId=document.getElementById('mf-corte-id').value;
+async function salvarEnvio(){
+  const id=document.getElementById('ef-id').value;
   const data={
-    data_envio:document.getElementById('mf-data').value,
-    faccao:document.getElementById('mf-fac').value,
-    qtd_enviada:parseInt(document.getElementById('mf-qtd').value)||0,
-    valor_peca:parseFloat(document.getElementById('mf-vlr').value)||0,
-    prazo_dias:parseInt(document.getElementById('mf-prazo').value)||7,
+    data_envio:document.getElementById('ef-data').value,
+    faccao:document.getElementById('ef-fac').value,
+    qtd_enviada:parseInt(document.getElementById('ef-qtd').value)||0,
+    valor_peca:parseFloat(document.getElementById('ef-vlr').value)||0,
+    prazo_dias:parseInt(document.getElementById('ef-prazo').value)||7,
     status:'Em Produção'
   };
-  if(!data.faccao||!data.qtd_enviada||!data.valor_peca){toast('Preencha os campos obrigatórios','err');return;}
+  if(!data.faccao||!data.qtd_enviada||!data.valor_peca||!data.data_envio){toast('Preencha todos os campos','err');return;}
   try{
-    await db('lotes_faccao?id=eq.'+loteId,'PATCH',data);
-    // Atualizar corte vinculado
-    const lote=faccoesData.find(f=>f.id===loteId);
-    if(lote?.corte_id) await db('cortes?id=eq.'+lote.corte_id,'PATCH',{status:'Em Produção'});
-    toast('Enviado para facção!');fecharModal('m-faccao');loadFaccoes();loadCortes();
-  }catch(e){toast('Erro: '+e.message,'err');}
-}
-
-// RETORNO FACCAO
-let rfGrupos=0;
-function abrirRetornoFaccao(loteId){
-  const l=faccoesData.find(f=>f.id===loteId);if(!l)return;
-  document.getElementById('rf-lote-id').value=loteId;
-  document.getElementById('rf-vlr-peca').value=l.valor_peca||0;
-  document.getElementById('m-retfac-title').textContent=`Retorno — ${l.faccao} · ${l.modelo}`;
-  rfGrupos=0;
-  document.getElementById('rf-grupos').innerHTML='';
-  addGrupoRetorno();
-  abrirModal('m-retfac');
-}
-
-function addGrupoRetorno(){
-  const i=rfGrupos++;
-  const div=document.createElement('div');
-  div.style.cssText='background:var(--surface2);border-radius:8px;padding:14px;margin-bottom:10px';
-  div.innerHTML=`
-    <div style="font-size:10px;color:var(--text2);margin-bottom:10px;text-transform:uppercase;font-weight:600">Grupo ${i+1}</div>
-    <div class="fg" style="grid-template-columns:repeat(auto-fill,minmax(130px,1fr))">
-      <div class="fi"><label>Quantidade *</label><input type="number" id="rg-qtd-${i}" min="1"></div>
-      <div class="fi"><label>Status *</label>
-        <select id="rg-st-${i}" onchange="toggleGrupoFields(${i})">
-          <option value="OK">OK — Aprovado</option>
-          <option value="Conserto Interno">Conserto Interno (desconto)</option>
-          <option value="Retrabalho">Retrabalho (volta p/ facção)</option>
-          <option value="Perdida">Perdida</option>
-        </select>
-      </div>
-      <div class="fi" id="rg-desc-w-${i}"><label>Desconto/Custo (R$)</label><input type="number" id="rg-desc-${i}" step="0.01" min="0" value="0"></div>
-    </div>`;
-  document.getElementById('rf-grupos').appendChild(div);
-}
-
-function toggleGrupoFields(i){
-  const st=document.getElementById('rg-st-'+i).value;
-  document.getElementById('rg-desc-w-'+i).style.display=(st==='Retrabalho'||st==='Perdida')?'none':'flex';
-}
-
-async function salvarRetornoFaccao(){
-  const loteId=document.getElementById('rf-lote-id').value;
-  const vlrPeca=parseFloat(document.getElementById('rf-vlr-peca').value)||0;
-  const grupos=[];
-  for(let i=0;i<rfGrupos;i++){
-    const qtdEl=document.getElementById('rg-qtd-'+i);if(!qtdEl)continue;
-    const qtd=parseInt(qtdEl.value)||0;if(!qtd)continue;
-    const st=document.getElementById('rg-st-'+i).value;
-    const desc=parseFloat(document.getElementById('rg-desc-'+i)?.value)||0;
-    const bruto=qtd*vlrPeca;
-    const liquido=st==='Perdida'?0:Math.max(0,bruto-desc);
-    grupos.push({lote_id:loteId,quantidade:qtd,status:st,desconto:desc,valor_bruto:bruto,valor_liquido:liquido,aprovado:st==='OK',data_retorno:hoje()});
-  }
-  if(!grupos.length){toast('Informe ao menos um grupo','err');return;}
-  try{
-    for(const g of grupos) await db('grupos_peca','POST',g);
-    const lote=faccoesData.find(f=>f.id===loteId);
-    const temRetrabalho=grupos.some(g=>g.status==='Retrabalho');
-    const todosOk=grupos.every(g=>g.status==='OK'||g.status==='Perdida'||g.status==='Conserto Interno');
-    let novoStatus=todosOk?'Concluído':temRetrabalho?'Retorno p/ Conserto':'Entrega Parcial';
-    await db('lotes_faccao?id=eq.'+loteId,'PATCH',{status:novoStatus});
-    if(novoStatus==='Concluído'&&lote?.corte_id){
-      await db('cortes?id=eq.'+lote.corte_id,'PATCH',{status:'Concluído'});
-    }
-    toast('Retorno registrado!');fecharModal('m-retfac');loadFaccoes();
+    await db('lotes_faccao?id=eq.'+id,'PATCH',data);
+    const l=facData.find(f=>f.id===id);
+    if(l?.corte_id)await db('cortes?id=eq.'+l.corte_id,'PATCH',{status:'Em Produção'});
+    toast('Enviado para facção!');fecharModal('mo-envfac');loadFaccoes();loadCortes();
   }catch(e){toast('Erro: '+e.message,'err');}
 }
 
 async function delLote(id){
   if(!confirm('Excluir este lote?'))return;
-  try{await db('lotes_faccao?id=eq.'+id,'DELETE');toast('Lote excluído');loadFaccoes();}
+  try{await db('lotes_faccao?id=eq.'+id,'DELETE');toast('Excluído');loadFaccoes();}
   catch(e){toast('Erro: '+e.message,'err');}
 }
 
-// ===================== PAGAMENTOS =====================
+// RETORNO FACCAO
+function abrirRetFac(loteId){
+  const l=facData.find(f=>f.id===loteId);if(!l)return;
+  document.getElementById('rf-lote-id').value=loteId;
+  document.getElementById('rf-vlr-peca').value=l.valor_peca||0;
+  document.getElementById('rf-qtd-enviada').value=l.qtd_enviada||0;
+  document.getElementById('mo-retfac-titulo').textContent='Retorno — '+l.faccao+' · '+l.modelo;
+  document.getElementById('rf-info').textContent=`Enviadas: ${l.qtd_enviada} pçs · Valor: ${fR(l.valor_peca)}/pç · Total bruto: ${fR((l.qtd_enviada||0)*(l.valor_peca||0))}`;
+  document.getElementById('rf-data').value=hoje();
+  document.getElementById('rf-qtd-ok').value='';
+  document.getElementById('rf-qtd-cons').value='0';
+  document.getElementById('rf-desc').value='0';
+  document.getElementById('rf-obs').value='';
+  document.getElementById('rf-calc').innerHTML='';
+  abrirModal('mo-retfac');
+}
+
+function calcRetorno(){
+  const env=parseInt(document.getElementById('rf-qtd-enviada').value)||0;
+  const ok=parseInt(document.getElementById('rf-qtd-ok').value)||0;
+  const vlr=parseFloat(document.getElementById('rf-vlr-peca').value)||0;
+  const desc=parseFloat(document.getElementById('rf-desc').value)||0;
+  const cons=Math.max(0,env-ok);
+  document.getElementById('rf-qtd-cons').value=cons;
+  const bruto=ok*vlr;
+  const liquido=Math.max(0,bruto-desc);
+  document.getElementById('rf-calc').innerHTML=`
+    <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:var(--t2)">Peças OK</span><span>${ok}</span></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:var(--t2)">Ret. Conserto</span><span>${cons}</span></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:var(--t2)">Valor Bruto (${ok} × ${fR(vlr)})</span><span>${fR(bruto)}</span></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:var(--rd)">Desconto</span><span>- ${fR(desc)}</span></div>
+    <div style="border-top:1px solid var(--bd);padding-top:8px;display:flex;justify-content:space-between;font-weight:700"><span>Valor Líquido</span><span style="color:var(--gn)">${fR(liquido)}</span></div>`;
+}
+
+async function salvarRetornoFac(){
+  const loteId=document.getElementById('rf-lote-id').value;
+  const vlrPeca=parseFloat(document.getElementById('rf-vlr-peca').value)||0;
+  const env=parseInt(document.getElementById('rf-qtd-enviada').value)||0;
+  const ok=parseInt(document.getElementById('rf-qtd-ok').value)||0;
+  const dataRet=document.getElementById('rf-data').value;
+  const desc=parseFloat(document.getElementById('rf-desc').value)||0;
+  const obs=document.getElementById('rf-obs').value;
+  if(!ok||!dataRet){toast('Informe qtd OK e data de retorno','err');return;}
+  if(ok>env){toast('Qtd OK não pode ser maior que enviado','err');return;}
+  const cons=env-ok;
+  const bruto=ok*vlrPeca;
+  const liquido=Math.max(0,bruto-desc);
+  try{
+    await db('grupos_peca','POST',{
+      lote_id:loteId,
+      quantidade:ok,
+      status:'OK',
+      desconto:desc,
+      obs:obs,
+      valor_bruto:bruto,
+      valor_liquido:liquido,
+      aprovado:true,
+      data_retorno:dataRet
+    });
+    const novoSt=cons>0?'Parc. Concluída / Ret. Conserto':'Concluído';
+    await db('lotes_faccao?id=eq.'+loteId,'PATCH',{status:novoSt});
+    const lote=facData.find(f=>f.id===loteId);
+    if(novoSt==='Concluído'&&lote?.corte_id){
+      await db('cortes?id=eq.'+lote.corte_id,'PATCH',{status:'Concluído'});
+    }
+    toast('Retorno registrado! '+ok+' peças aprovadas para pagamento.'+(cons>0?' '+cons+' peças em conserto.':''));
+    fecharModal('mo-retfac');loadFaccoes();
+  }catch(e){toast('Erro: '+e.message,'err');}
+}
+
+// ===== DETALHE REFERENCIA =====
+async function verDetalhe(corteId){
+  if(!corteId){toast('Sem corte vinculado','err');return;}
+  try{
+    const[cortes,lotes]=await Promise.all([
+      db('cortes?id=eq.'+corteId),
+      db('lotes_faccao?corte_id=eq.'+corteId+'&select=*')
+    ]);
+    const c=cortes[0];if(!c)return;
+    let grupos=[];
+    if(lotes.length){
+      const ids=lotes.map(l=>l.id).join(',');
+      grupos=await db('grupos_peca?lote_id=in.('+ids+')&select=*');
+    }
+    document.getElementById('mo-det-titulo').textContent=c.modelo+' — '+c.colecao;
+    const ltCorte=diffD(c.data_corte,c.data_retorno_corte);
+    let html=`<div style="background:var(--s2);border-radius:8px;padding:12px;margin-bottom:14px;font-size:12px">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+        <div><div style="color:var(--t3);font-size:10px;font-weight:600;text-transform:uppercase;margin-bottom:3px">Tipo</div>${c.tipo_peca||'—'}</div>
+        <div><div style="color:var(--t3);font-size:10px;font-weight:600;text-transform:uppercase;margin-bottom:3px">Pretendido</div>${c.qtd_pretendida} pçs</div>
+        <div><div style="color:var(--t3);font-size:10px;font-weight:600;text-transform:uppercase;margin-bottom:3px">Cortado</div>${c.qtd_cortada??'—'} pçs</div>
+      </div>
+    </div>
+    <div class="tl">
+      <div class="tli"><div class="tld">${fD(c.data_corte)}</div><div class="tlt">✂️ Corte criado</div><div class="tlb">Cortador: ${c.cortador||'—'} · ${c.qtd_pretendida} peças pretendidas</div></div>`;
+    if(c.data_retorno_corte){
+      html+=`<div class="tli"><div class="tld">${fD(c.data_retorno_corte)}</div><div class="tlt">✅ Retorno do corte${ltCorte?' ('+ltCorte+'d)':''}</div><div class="tlb">${c.qtd_cortada} peças · Custo: ${fR(c.custo_corte)}${c.obs_corte?' · '+c.obs_corte:''}</div></div>`;
+    }
+    lotes.forEach(l=>{
+      html+=`<div class="tli"><div class="tld">${fD(l.data_envio)}</div><div class="tlt">🚚 Enviado → ${l.faccao||'—'}</div><div class="tlb">${l.qtd_enviada} pçs · ${fR(l.valor_peca)}/pç · Prazo: ${l.prazo_dias}d</div></div>`;
+      grupos.filter(g=>g.lote_id===l.id).forEach(g=>{
+        html+=`<div class="tli"><div class="tld">${fD(g.data_retorno)}</div><div class="tlt">📦 Retorno: ${g.quantidade} pçs OK</div><div class="tlb">Bruto: ${fR(g.valor_bruto)}${g.desconto>0?' · Desc: -'+fR(g.desconto):''}${g.obs?' · '+g.obs:''} · <b>Líquido: ${fR(g.valor_liquido)}</b></div></div>`;
+      });
+    });
+    html+='</div>';
+    const totalFac=grupos.reduce((s,g)=>s+g.valor_liquido,0);
+    const totalGeral=(c.custo_corte||0)+totalFac;
+    html+=`<div style="background:var(--s2);border-radius:8px;padding:14px;margin-top:14px;font-size:12px">
+      <div style="font-weight:700;margin-bottom:10px;font-size:11px;text-transform:uppercase;letter-spacing:.5px">Resumo de Custos</div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:var(--t2)">Corte</span><span>${fR(c.custo_corte)}</span></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:var(--t2)">Facções</span><span>${fR(totalFac)}</span></div>
+      <div class="divider"></div>
+      <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:800"><span>Total</span><span style="color:var(--yw)">${fR(totalGeral)}</span></div>
+    </div>`;
+    document.getElementById('mo-det-content').innerHTML=html;
+    abrirModal('mo-detalhe');
+  }catch(e){toast('Erro: '+e.message,'err');}
+}
+
+// ===== PAGAMENTOS =====
 let payItems=[];
 let selPay=new Set();
-let lastLotePgto=null;
+let ultimoLote=null;
 
 async function loadPagamentos(){
   try{
     const[cortes,grupos,lotes]=await Promise.all([
-      db('cortes?status=eq.Ag. Pagamento Corte&select=*'),
+      db('cortes?status=eq.Concluído / Ag. Pagamento&select=*'),
       db('grupos_peca?aprovado=eq.true&status=eq.OK&select=*'),
-      db('lotes_faccao?select=id,faccao,modelo,numero_corte,tipo_peca')
+      db('lotes_faccao?select=id,faccao,modelo,numero_corte,tipo_peca,colecao')
     ]);
     const loteMap=Object.fromEntries(lotes.map(l=>[l.id,l]));
     payItems=[
-      ...cortes.map(c=>({id:'c-'+c.id,tipo:'Corte',ref:c.numero_corte,desc:`${c.modelo} · ${c.cortador||'—'}`,valor:c.custo_corte||0,raw:c})),
-      ...grupos.map(g=>({id:'g-'+g.id,tipo:'Facção',ref:loteMap[g.lote_id]?.numero_corte||'—',desc:`${loteMap[g.lote_id]?.modelo||'—'} · ${loteMap[g.lote_id]?.faccao||'—'} · ${g.quantidade}pç`,valor:g.valor_liquido||0,raw:g,lote:loteMap[g.lote_id]}))
+      ...cortes.map(c=>({key:'c-'+c.id,tipo:'Corte',ref:c.numero_corte,desc:c.modelo+' · Cortador: '+(c.cortador||'—'),valor:c.custo_corte||0,raw_id:c.id,raw_tipo:'corte'})),
+      ...grupos.map(g=>({key:'g-'+g.id,tipo:'Facção',ref:loteMap[g.lote_id]?.numero_corte||'—',desc:(loteMap[g.lote_id]?.modelo||'—')+' · '+(loteMap[g.lote_id]?.faccao||'—')+' · '+g.quantidade+'pç',valor:g.valor_liquido||0,raw_id:g.id,raw_tipo:'grupo',lote_id:g.lote_id}))
     ];
     renderPayLista();
   }catch(e){toast('Erro pagamentos: '+e.message,'err');}
 }
 
 function renderPayLista(){
-  if(!payItems.length){document.getElementById('pay-lista').innerHTML='<div class="no-data">Nenhum item aguardando pagamento</div>';return;}
+  if(!payItems.length){document.getElementById('pay-lista').innerHTML='<div class="nd">Nenhum item aguardando pagamento</div>';return;}
   const byTipo={'Corte':[],'Facção':[]};
   payItems.forEach(p=>byTipo[p.tipo]?.push(p));
   let html='';
@@ -776,16 +790,16 @@ function renderPayLista(){
     if(!items.length)continue;
     const tot=items.reduce((s,i)=>s+i.valor,0);
     html+=`<div class="gh"><span class="gh-t">${tipo}s</span><span class="gh-v">${fR(tot)}</span></div>`;
-    items.forEach(item=>{
-      const chk=selPay.has(item.id)?'checked':'';
-      html+=`<div style="display:flex;align-items:center;gap:12px;padding:10px 4px;border-bottom:1px solid var(--border)">
-        <input type="checkbox" ${chk} onchange="togglePay('${item.id}',this.checked)" style="accent-color:var(--accent);width:16px;height:16px;flex-shrink:0">
+    items.forEach(it=>{
+      const chk=selPay.has(it.key)?'checked':'';
+      html+=`<div style="display:flex;align-items:center;gap:12px;padding:10px 4px;border-bottom:1px solid var(--bd)">
+        <input type="checkbox" ${chk} onchange="togglePay('${it.key}',this.checked)" style="accent-color:var(--yw);width:16px;height:16px;flex-shrink:0">
         <div style="flex:1;font-size:12px">
-          <span style="color:var(--accent);font-weight:600">#${item.ref}</span>
-          <span class="chip ${item.tipo==='Corte'?'c-purple':'c-blue'}" style="margin:0 6px">${item.tipo}</span>
-          ${item.desc}
+          <span style="color:var(--yw);font-weight:600">#${it.ref}</span>
+          <span class="chip ${it.tipo==='Corte'?'cp':'cb'}" style="margin:0 6px">${it.tipo}</span>
+          ${it.desc}
         </div>
-        <div style="font-weight:700;color:var(--green)">${fR(item.valor)}</div>
+        <div style="font-weight:700;color:var(--gn)">${fR(it.valor)}</div>
       </div>`;
     });
   }
@@ -793,33 +807,38 @@ function renderPayLista(){
   updatePayTotal();
 }
 
-function togglePay(id,checked){
-  if(checked)selPay.add(id);else selPay.delete(id);
+function togglePay(key,checked){
+  if(checked)selPay.add(key);else selPay.delete(key);
   updatePayTotal();
 }
 
 function updatePayTotal(){
-  const total=payItems.filter(p=>selPay.has(p.id)).reduce((s,p)=>s+p.valor,0);
+  const total=payItems.filter(p=>selPay.has(p.key)).reduce((s,p)=>s+p.valor,0);
   document.getElementById('pay-total').textContent=fR(total);
   document.getElementById('btn-gerar').disabled=selPay.size===0;
 }
 
 async function gerarLotePgto(){
   if(!selPay.size)return;
-  const selecionados=payItems.filter(p=>selPay.has(p.id));
+  const selecionados=payItems.filter(p=>selPay.has(p.key));
   const total=selecionados.reduce((s,p)=>s+p.valor,0);
   try{
     const[lote]=await db('lotes_pagamento','POST',{data_pgto:hoje(),valor_total:total});
-    for(const item of selecionados){
-      if(item.tipo==='Corte'){
-        await db('itens_pagamento','POST',{lote_pgto_id:lote.id,tipo:'Corte',ref:item.ref,desc:item.desc,valor:item.valor});
-        await db('cortes?id=eq.'+item.raw.id,'PATCH',{status:'Concluído'});
-      } else {
-        await db('itens_pagamento','POST',{lote_pgto_id:lote.id,tipo:'Facção',ref:item.ref,desc:item.desc,valor:item.valor});
-        await db('grupos_peca?id=eq.'+item.raw.id,'PATCH',{status:'Pago'});
-      }
+    for(const it of selecionados){
+      await db('itens_pagamento','POST',{
+        lote_pgto_id:lote.id,
+        tipo:it.tipo,
+        referencia:it.ref,
+        descricao:it.desc,
+        valor:it.valor,
+        corte_id:it.raw_tipo==='corte'?it.raw_id:null,
+        grupo_id:it.raw_tipo==='grupo'?it.raw_id:null,
+        cancelado:false
+      });
+      if(it.raw_tipo==='corte')await db('cortes?id=eq.'+it.raw_id,'PATCH',{status:'Concluído / Pago'});
+      else await db('grupos_peca?id=eq.'+it.raw_id,'PATCH',{status:'Pago'});
     }
-    lastLotePgto={lote,selecionados,total};
+    ultimoLote={...lote,itens:selecionados};
     selPay.clear();
     toast('Lote de pagamento gerado!');
     loadPagamentos();
@@ -827,184 +846,121 @@ async function gerarLotePgto(){
   }catch(e){toast('Erro: '+e.message,'err');}
 }
 
-async function loadHistoricoPgto(){
+async function loadHistPgto(){
   try{
     const pgtos=await db('lotes_pagamento?select=*&order=created_at.desc');
-    if(!pgtos.length){document.getElementById('pay-hist').innerHTML='<div class="no-data">Nenhum pagamento realizado</div>';return;}
+    if(!pgtos.length){document.getElementById('pay-hist').innerHTML='<div class="nd">Nenhum pagamento</div>';return;}
     document.getElementById('pay-hist').innerHTML=pgtos.map(p=>`
-      <div class="card" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;cursor:pointer" onclick="verDetalhePgto('${p.id}')">
-        <div>
-          <div style="font-size:10px;color:var(--text3);text-transform:uppercase">Lote · ${fD(p.data_pgto)}</div>
-          <div style="font-size:14px;font-weight:700;margin-top:2px">${fD(p.data_pgto)}</div>
-          ${p.obs?`<div style="font-size:11px;color:var(--text2)">${p.obs}</div>`:''}
-        </div>
-        <div style="text-align:right">
-          <div style="font-size:22px;font-weight:800;color:var(--green)">${fR(p.valor_total)}</div>
-          <div style="font-size:10px;color:var(--text3)">clique para detalhes</div>
+      <div class="card" style="cursor:pointer" onclick="verDetalhePgto('${p.id}','${fD(p.data_pgto)}',${p.valor_total})">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+          <div>
+            <div style="font-size:10px;color:var(--t3);text-transform:uppercase;font-weight:600">Lote</div>
+            <div style="font-size:14px;font-weight:700;margin-top:2px">${fD(p.data_pgto)}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:22px;font-weight:800;color:var(--gn)">${fR(p.valor_total)}</div>
+            <div style="font-size:10px;color:var(--t3)">clique para detalhes</div>
+          </div>
         </div>
       </div>`).join('');
   }catch(e){}
 }
 
-async function verDetalhePgto(pgtoId){
+async function verDetalhePgto(pgtoId,data,total){
   try{
     const itens=await db('itens_pagamento?lote_pgto_id=eq.'+pgtoId+'&select=*');
     const byTipo={'Corte':[],'Facção':[]};
-    itens.forEach(i=>byTipo[i.tipo]?.push(i));
+    itens.forEach(i=>(byTipo[i.tipo]||[]).push(i));
     let html='';
     for(const[tipo,its] of Object.entries(byTipo)){
       if(!its.length)continue;
       const tot=its.reduce((s,i)=>s+i.valor,0);
       html+=`<div class="gh"><span class="gh-t">${tipo}s</span><span class="gh-v">${fR(tot)}</span></div>`;
-      its.forEach(i=>html+=`<div style="display:flex;justify-content:space-between;padding:8px 4px;border-bottom:1px solid var(--border);font-size:12px">
-        <span><span style="color:var(--accent)">#${i.ref}</span> · ${i.desc}</span>
-        <span style="font-weight:600;color:var(--green)">${fR(i.valor)}</span>
+      its.forEach(i=>html+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 4px;border-bottom:1px solid var(--bd);font-size:12px;gap:10px">
+        <div style="flex:1"><span style="color:var(--yw)">#${i.referencia}</span> · ${i.descricao}
+          ${i.cancelado?'<span class="chip cr" style="margin-left:6px">Cancelado</span>':''}
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-weight:700;color:var(--gn)">${fR(i.valor)}</span>
+          ${!i.cancelado?`<button class="btn br bsm" onclick="cancelarItem('${i.id}','${pgtoId}','${data}',${total})">Cancelar</button>`:''}
+        </div>
       </div>`);
     }
-    const total=itens.reduce((s,i)=>s+i.valor,0);
-    html+=`<div style="text-align:right;padding:12px 4px;font-size:16px;font-weight:800;color:var(--green)">Total: ${fR(total)}</div>`;
-    document.getElementById('m-det-title').textContent='Detalhe do Pagamento';
-    document.getElementById('m-det-content').innerHTML=html;
-    abrirModal('m-detalhe');
+    html+=`<div style="text-align:right;padding:12px 4px;font-size:16px;font-weight:800;color:var(--gn)">Total: ${fR(total)}</div>`;
+    document.getElementById('mo-detpgto-titulo').textContent='Pagamento — '+data;
+    document.getElementById('mo-detpgto-content').innerHTML=html;
+    ultimoLote={data_pgto:data,valor_total:total,itens};
+    abrirModal('mo-detpgto');
   }catch(e){toast('Erro: '+e.message,'err');}
+}
+
+async function cancelarItem(itemId,pgtoId,data,total){
+  if(!confirm('Cancelar este item e devolver para fila de pagamento?'))return;
+  try{
+    const[item]=await db('itens_pagamento?id=eq.'+itemId+'&select=*');
+    await db('itens_pagamento?id=eq.'+itemId,'PATCH',{cancelado:true,data_cancelamento:hoje()});
+    if(item.corte_id)await db('cortes?id=eq.'+item.corte_id,'PATCH',{status:'Concluído / Ag. Pagamento'});
+    if(item.grupo_id)await db('grupos_peca?id=eq.'+item.grupo_id,'PATCH',{status:'OK'});
+    toast('Item cancelado e devolvido para fila!');
+    fecharModal('mo-detpgto');
+    loadPagamentos();
+  }catch(e){toast('Erro: '+e.message,'err');}
+}
+
+function imprimirLote(){
+  if(!ultimoLote)return;
+  const w=window.open('','_blank');
+  const rows=(ultimoLote.itens||[]).map(i=>`<tr><td>${i.tipo||i.key?.split('-')[0]}</td><td>#${i.referencia||i.ref}</td><td>${i.descricao||i.desc}</td><td>R$ ${Number(i.valor).toLocaleString('pt-BR',{minimumFractionDigits:2})}</td></tr>`).join('');
+  w.document.write(`<html><head><title>Pagamento</title><style>body{font-family:sans-serif;padding:20px}table{width:100%;border-collapse:collapse}td,th{border:1px solid #ccc;padding:8px}tfoot td{font-weight:bold}@media print{button{display:none}}</style></head><body>
+    <h2>Lote de Pagamento — ${ultimoLote.data_pgto}</h2>
+    <table><thead><tr><th>Tipo</th><th>Ref</th><th>Descrição</th><th>Valor</th></tr></thead>
+    <tbody>${rows}</tbody>
+    <tfoot><tr><td colspan="3">TOTAL</td><td>R$ ${Number(ultimoLote.valor_total).toLocaleString('pt-BR',{minimumFractionDigits:2})}</td></tr></tfoot>
+    </table><br><button onclick="window.print()">Imprimir</button></body></html>`);
+  w.document.close();
 }
 
 function showPayTab(tab){
   document.getElementById('pt-pagar').style.display=tab==='pagar'?'block':'none';
   document.getElementById('pt-historico').style.display=tab==='historico'?'block':'none';
   document.querySelectorAll('.tabs .tab').forEach((b,i)=>b.classList.toggle('active',(i===0&&tab==='pagar')||(i===1&&tab==='historico')));
-  if(tab==='historico')loadHistoricoPgto();
+  if(tab==='historico')loadHistPgto();
+  if(tab==='pagar')loadPagamentos();
 }
 
-// ===================== DETALHE REFERENCIA =====================
-async function verDetalhe(corteId, loteId=null){
+// ===== RELATORIOS =====
+async function loadRel(){
   try{
-    let corte=null,lotes=[],grupos=[];
-    if(corteId){
-      corte=cortesData.find(c=>c.id===corteId)||await db('cortes?id=eq.'+corteId).then(r=>r[0]);
-      lotes=await db('lotes_faccao?corte_id=eq.'+corteId+'&select=*');
-    } else if(loteId){
-      const l=faccoesData.find(f=>f.id===loteId)||await db('lotes_faccao?id=eq.'+loteId).then(r=>r[0]);
-      if(l?.corte_id){
-        corte=await db('cortes?id=eq.'+l.corte_id).then(r=>r[0]);
-        lotes=await db('lotes_faccao?corte_id=eq.'+l.corte_id+'&select=*');
-      } else { lotes=[l]; }
-    }
-    if(lotes.length){
-      const ids=lotes.map(l=>l.id);
-      grupos=await db('grupos_peca?lote_id=in.('+ids.join(',')+')'+'&select=*');
-    }
-    let html='<div class="timeline">';
-    // CORTE
-    if(corte){
-      const leadCorte=corte.data_retorno_corte?diffDias(corte.data_corte,corte.data_retorno_corte):null;
-      html+=`<div class="tl-item">
-        <div class="tl-dot" style="background:var(--accent)"></div>
-        <div class="tl-content">
-          <div class="tl-title">✂️ Corte #${corte.numero_corte} · ${corte.modelo}</div>
-          <div class="tl-sub">
-            Coleção: ${corte.colecao} · Tipo: ${corte.tipo_peca}<br>
-            Cortador: ${corte.cortador||'—'} · Pretendido: ${corte.qtd_pretendida} pç<br>
-            Cortado: ${corte.qtd_cortada!=null?corte.qtd_cortada+'pç':'aguardando'} · Custo: ${corte.custo_corte?fR(corte.custo_corte):'—'}<br>
-            Data corte: ${fD(corte.data_corte)} → Retorno: ${fD(corte.data_retorno_corte)}
-            ${leadCorte!=null?`· <b>${leadCorte} dias no corte</b>`:''}
-          </div>
-        </div>
-      </div>`;
-    }
-    // LOTES
-    lotes.forEach(l=>{
-      const gLote=grupos.filter(g=>g.lote_id===l.id);
-      const leadFac=l.data_envio&&gLote.length?diffDias(l.data_envio,gLote[gLote.length-1].data_retorno):null;
-      html+=`<div class="tl-item">
-        <div class="tl-dot" style="background:var(--blue)"></div>
-        <div class="tl-content">
-          <div class="tl-title">🏭 Facção: ${l.faccao||'Aguardando'}</div>
-          <div class="tl-sub">
-            Enviado: ${fD(l.data_envio)||'—'} · Prazo: ${l.prazo_dias||'—'}d · Enviado: ${l.qtd_enviada||'—'} pç<br>
-            Valor/pç: ${l.valor_peca?fR(l.valor_peca):'—'} · Status: <span class="chip c-blue" style="font-size:10px">${l.status}</span>
-            ${leadFac!=null?`<br><b>Lead time facção: ${leadFac} dias</b>`:''}
-          </div>
-          ${gLote.length?'<div style="margin-top:8px">'+gLote.map(g=>`
-            <div style="font-size:11px;padding:4px 8px;background:var(--surface3);border-radius:4px;margin-bottom:4px;display:flex;justify-content:space-between">
-              <span>${g.quantidade} pç · <span class="chip ${g.status==='OK'?'c-green':g.status==='Retrabalho'?'c-orange':'c-red'}" style="font-size:9px">${g.status}</span></span>
-              <span style="color:var(--green)">${fR(g.valor_liquido)}</span>
-            </div>`).join('')+'</div>':''}
-        </div>
-      </div>`;
-    });
-    html+='</div>';
-    // LEAD TIME TOTAL
-    if(corte?.data_corte&&lotes.some(l=>l.status==='Concluído')){
-      const lastRet=grupos.filter(g=>g.data_retorno).sort((a,b)=>b.data_retorno.localeCompare(a.data_retorno))[0];
-      if(lastRet){
-        const total=diffDias(corte.data_corte,lastRet.data_retorno);
-        html+=`<div style="background:var(--surface2);border-radius:8px;padding:14px;text-align:center;margin-top:10px">
-          <div style="font-size:10px;color:var(--text3);text-transform:uppercase">Lead Time Total da Referência</div>
-          <div style="font-size:28px;font-weight:800;color:var(--accent);margin-top:4px">${total} dias</div>
-        </div>`;
-      }
-    }
-    document.getElementById('m-det-title').textContent=`Referência ${corte?.numero_corte||'—'} · ${corte?.modelo||'—'}`;
-    document.getElementById('m-det-content').innerHTML=html;
-    abrirModal('m-detalhe');
-  }catch(e){toast('Erro: '+e.message,'err');}
-}
-
-// ===================== RELATORIOS =====================
-async function loadRelatorios(){
-  try{
-    const lotes=await db('lotes_faccao?status=eq.Concluído&select=*');
-    const grupos=await db('grupos_peca?select=*');
-    if(!lotes.length){
-      ['lt-tipo','lt-fac','lt-preco'].forEach(id=>document.getElementById(id).innerHTML='<div class="no-data">Dados insuficientes — conclua lotes para ver análise</div>');
-      return;
-    }
-    // Lead time por tipo
+    const[lotes,grupos,pgtos,pgItens]=await Promise.all([
+      db('lotes_faccao?status=eq.Concluído&select=*'),
+      db('grupos_peca?select=*'),
+      db('lotes_pagamento?select=*&order=created_at.desc'),
+      db('itens_pagamento?cancelado=eq.false&select=*')
+    ]);
     const byTipo={};
-    lotes.forEach(l=>{
-      if(!l.data_envio)return;
-      const gs=grupos.filter(g=>g.lote_id===l.id&&g.data_retorno);
-      if(!gs.length)return;
-      const ultimo=gs.sort((a,b)=>b.data_retorno.localeCompare(a.data_retorno))[0];
-      const dias=diffDias(l.data_envio,ultimo.data_retorno);
-      if(!byTipo[l.tipo_peca])byTipo[l.tipo_peca]=[];
-      byTipo[l.tipo_peca].push(dias);
-    });
-    document.getElementById('lt-tipo').innerHTML=Object.keys(byTipo).length?`<table><thead><tr><th>Tipo</th><th>Lead Time Médio</th><th>Lotes</th></tr></thead><tbody>${
-      Object.entries(byTipo).map(([t,d])=>`<tr><td>${t}</td><td>${(d.reduce((a,b)=>a+b,0)/d.length).toFixed(1)} dias</td><td>${d.length}</td></tr>`).join('')
-    }</tbody></table>`:'<div class="no-data">Sem dados</div>';
-    // Lead time por faccao
+    lotes.forEach(l=>{if(!byTipo[l.tipo_peca])byTipo[l.tipo_peca]=[];byTipo[l.tipo_peca].push(l.prazo_dias||0);});
+    document.getElementById('rel-tipo').innerHTML=Object.keys(byTipo).length?
+      `<table><thead><tr><th>Tipo</th><th>Lead Time Médio</th><th>Lotes</th></tr></thead><tbody>${Object.entries(byTipo).map(([t,d])=>`<tr><td>${t}</td><td>${(d.reduce((a,b)=>a+b,0)/d.length).toFixed(1)} dias</td><td>${d.length}</td></tr>`).join('')}</tbody></table>`
+      :'<div class="nd">Dados insuficientes</div>';
     const byFac={};
-    lotes.forEach(l=>{
-      if(!l.data_envio||!l.faccao)return;
-      const gs=grupos.filter(g=>g.lote_id===l.id&&g.data_retorno);
-      if(!gs.length)return;
-      const ultimo=gs.sort((a,b)=>b.data_retorno.localeCompare(a.data_retorno))[0];
-      const dias=diffDias(l.data_envio,ultimo.data_retorno);
-      if(!byFac[l.faccao])byFac[l.faccao]={dias:[],pontual:0,total:0};
-      byFac[l.faccao].dias.push(dias);
-      byFac[l.faccao].total++;
-      if(dias<=l.prazo_dias)byFac[l.faccao].pontual++;
-    });
-    document.getElementById('lt-fac').innerHTML=Object.keys(byFac).length?`<table><thead><tr><th>Facção</th><th>LT Médio</th><th>Pontualidade</th><th>Lotes</th></tr></thead><tbody>${
-      Object.entries(byFac).map(([f,v])=>{
-        const avg=(v.dias.reduce((a,b)=>a+b,0)/v.dias.length).toFixed(1);
-        const pct=Math.round(v.pontual/v.total*100);
-        const cc=pct>=80?'c-green':pct>=60?'c-yellow':'c-red';
-        return`<tr><td>${f}</td><td>${avg}d</td><td><span class="chip ${cc}">${pct}%</span></td><td>${v.total}</td></tr>`;
-      }).join('')
-    }</tbody></table>`:'<div class="no-data">Sem dados</div>';
-    // Preco medio por tipo
-    const byPreco={};
-    lotes.forEach(l=>{if(l.tipo_peca&&l.valor_peca){if(!byPreco[l.tipo_peca])byPreco[l.tipo_peca]=[];byPreco[l.tipo_peca].push(l.valor_peca);}});
-    document.getElementById('lt-preco').innerHTML=Object.keys(byPreco).length?`<table><thead><tr><th>Tipo de Peça</th><th>Preço Médio/Peça</th><th>Lotes</th></tr></thead><tbody>${
-      Object.entries(byPreco).map(([t,v])=>`<tr><td>${t}</td><td style="color:var(--green);font-weight:600">${fR(v.reduce((a,b)=>a+b,0)/v.length)}</td><td>${v.length}</td></tr>`).join('')
-    }</tbody></table>`:'<div class="no-data">Sem dados</div>';
+    lotes.forEach(l=>{if(!byFac[l.faccao])byFac[l.faccao]=[];byFac[l.faccao].push(l.prazo_dias||0);});
+    document.getElementById('rel-fac').innerHTML=Object.keys(byFac).length?
+      `<table><thead><tr><th>Facção</th><th>Lead Time Médio</th><th>Lotes</th></tr></thead><tbody>${Object.entries(byFac).map(([f,d])=>`<tr><td>${f}</td><td>${(d.reduce((a,b)=>a+b,0)/d.length).toFixed(1)} dias</td><td>${d.length}</td></tr>`).join('')}</tbody></table>`
+      :'<div class="nd">Dados insuficientes</div>';
+    const precoTipo={};
+    lotes.forEach(l=>{if(!precoTipo[l.tipo_peca])precoTipo[l.tipo_peca]=[];precoTipo[l.tipo_peca].push(l.valor_peca||0);});
+    document.getElementById('rel-preco').innerHTML=Object.keys(precoTipo).length?
+      `<table><thead><tr><th>Tipo</th><th>Preço Médio/Pç</th><th>Lotes</th></tr></thead><tbody>${Object.entries(precoTipo).map(([t,v])=>`<tr><td>${t}</td><td>${fR(v.reduce((a,b)=>a+b,0)/v.length)}</td><td>${v.length}</td></tr>`).join('')}</tbody></table>`
+      :'<div class="nd">Dados insuficientes</div>';
+    document.getElementById('rel-pgtos').innerHTML=pgtos.length?
+      pgtos.map(p=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--bd);cursor:pointer" onclick="verDetalhePgto('${p.id}','${fD(p.data_pgto)}',${p.valor_total})">
+        <div><div style="font-size:13px;font-weight:600">${fD(p.data_pgto)}</div><div style="font-size:11px;color:var(--t3)">${pgItens.filter(i=>i.lote_pgto_id===p.id).length} itens · clique para ver</div></div>
+        <div style="font-size:15px;font-weight:800;color:var(--gn)">${fR(p.valor_total)}</div>
+      </div>`).join('')
+      :'<div class="nd">Nenhum pagamento</div>';
   }catch(e){toast('Erro relatórios: '+e.message,'err');}
 }
 
-// INIT
 loadDash();
 </script>
 </body>
