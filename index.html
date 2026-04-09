@@ -172,8 +172,11 @@ tr:hover td{background:rgba(255,255,255,.015);}
       <option value="">Todos</option>
       <option>Aguardando Facção</option>
       <option>Em Produção</option>
-      <option>Parc. Concluída / Ret. Conserto</option>
-      <option>Concluído</option>
+      <option>Ret. Conserto / Ag. Pagamento</option>
+      <option>Ret. Conserto / Pag. Parcial</option>
+      <option>Concluído / Ag. Pagamento</option>
+      <option>Concluído / Pag. Parcial</option>
+      <option>Concluído / Pago</option>
     </select>
     <input type="text" id="ff-fac" placeholder="Facção..." oninput="renderFaccoes()" style="width:130px">
   </div>
@@ -372,7 +375,15 @@ function chipCorte(s){
   return`<span class="chip ${m[s]||'cgr'}">${s}</span>`;
 }
 function chipFac(s){
-  const m={'Aguardando Facção':'cy','Em Produção':'cb','Parc. Concluída / Ret. Conserto':'co','Concluído':'cg'};
+  const m={
+    'Aguardando Facção':'cy',
+    'Em Produção':'cb',
+    'Ret. Conserto / Ag. Pagamento':'co',
+    'Ret. Conserto / Pag. Parcial':'cp',
+    'Concluído / Ag. Pagamento':'co',
+    'Concluído / Pag. Parcial':'cp',
+    'Concluído / Pago':'cg'
+  };
   return`<span class="chip ${m[s]||'cgr'}">${s}</span>`;
 }
 function chipPrazo(dataEnvio,prazo,status){
@@ -598,13 +609,13 @@ function renderFaccoes(){
   const st=document.getElementById('ff-st').value;
   const fac=document.getElementById('ff-fac').value.toLowerCase();
   if(st)d=d.filter(f=>f.status===st);
-  else d=d.filter(f=>f.status!=='Concluído');
+  // sem filtro = mostra TODOS
   if(fac)d=d.filter(f=>f.faccao?.toLowerCase().includes(fac));
   if(!d.length){document.getElementById('tb-faccoes').innerHTML='<tr><td colspan="14" class="nd">Nenhum lote</td></tr>';return;}
   document.getElementById('tb-faccoes').innerHTML=d.map(f=>{
     const btns=[];
     if(f.status==='Aguardando Facção')btns.push(`<button class="btn bbl bsm" onclick="abrirEnvio('${f.id}')">→ Enviar</button>`);
-    if(['Em Produção','Parc. Concluída / Ret. Conserto'].includes(f.status))btns.push(`<button class="btn bgr bsm" onclick="abrirRetFac('${f.id}')">↩ Retorno</button>`);
+    if(['Em Produção','Ret. Conserto / Ag. Pagamento','Ret. Conserto / Pag. Parcial'].includes(f.status))btns.push(`<button class="btn bgr bsm" onclick="abrirRetFac('${f.id}')">↩ Retorno</button>`);
     btns.push(`<button class="btn bg bsm" onclick="verDetalhe('${f.corte_id}')">📋</button>`);
     btns.push(`<button class="btn br bsm" onclick="delLote('${f.id}')">✕</button>`);
     const g=facGrupos[f.id]||{retorno:0};
@@ -762,13 +773,21 @@ async function salvarRetornoFac(){
       aprovado:true,
       data_retorno:dataRet
     });
-    const novoSt=cons>0?'Parc. Concluída / Ret. Conserto':'Concluído';
-    await db('lotes_faccao?id=eq.'+loteId,'PATCH',{status:novoSt});
-    const lote=facData.find(f=>f.id===loteId);
-    if(novoSt==='Concluído'&&lote?.corte_id){
-      await db('cortes?id=eq.'+lote.corte_id,'PATCH',{status:'Concluído'});
+    // Calcula novo status do lote independentemente do pagamento
+    // Busca todos os grupos deste lote para saber se há algum já pago
+    const todosGrupos=await db('grupos_peca?lote_id=eq.'+loteId+'&select=status,quantidade');
+    const temPago=todosGrupos.some(g=>g.status==='Pago');
+    let novoSt;
+    if(cons>0){
+      // Ainda tem peças em conserto
+      novoSt=temPago?'Ret. Conserto / Pag. Parcial':'Ret. Conserto / Ag. Pagamento';
+    } else {
+      // Todas as peças retornaram
+      novoSt=temPago?'Concluído / Pag. Parcial':'Concluído / Ag. Pagamento';
     }
-    toast('Retorno registrado! '+ok+' peças aprovadas para pagamento.'+(cons>0?' '+cons+' peças em conserto.':''));
+    await db('lotes_faccao?id=eq.'+loteId,'PATCH',{status:novoSt});
+    // NÃO muda o status do corte — são independentes
+    toast('Retorno registrado! '+ok+' peças aprovadas para pagamento.'+(cons>0?' '+cons+' peças ainda em conserto.':''));
     fecharModal('mo-retfac');loadFaccoes();
   }catch(e){toast('Erro: '+e.message,'err');}
 }
@@ -897,8 +916,26 @@ async function gerarLotePgto(){
         grupo_id:it.raw_tipo==='grupo'?it.raw_id:null,
         cancelado:false
       });
-      if(it.raw_tipo==='corte')await db('cortes?id=eq.'+it.raw_id,'PATCH',{status:'Concluído / Pago'});
-      else await db('grupos_peca?id=eq.'+it.raw_id,'PATCH',{status:'Pago'});
+      if(it.raw_tipo==='corte'){
+        await db('cortes?id=eq.'+it.raw_id,'PATCH',{status:'Concluído / Pago'});
+      } else {
+        await db('grupos_peca?id=eq.'+it.raw_id,'PATCH',{status:'Pago'});
+        // Recalcula status do lote de facção
+        if(it.lote_id){
+          const todosGrupos=await db('grupos_peca?lote_id=eq.'+it.lote_id+'&select=status,quantidade');
+          const temOK=todosGrupos.some(g=>g.status==='OK');
+          const temPago=todosGrupos.some(g=>g.status==='Pago')||true; // acabamos de pagar
+          const loteAtual=facData.find(f=>f.id===it.lote_id);
+          const temConserto=loteAtual&&['Ret. Conserto / Ag. Pagamento','Ret. Conserto / Pag. Parcial'].includes(loteAtual.status);
+          let novoStFac;
+          if(temConserto){
+            novoStFac=temOK?'Ret. Conserto / Pag. Parcial':'Ret. Conserto / Pag. Parcial';
+          } else {
+            novoStFac=temOK?'Concluído / Pag. Parcial':'Concluído / Pago';
+          }
+          await db('lotes_faccao?id=eq.'+it.lote_id,'PATCH',{status:novoStFac});
+        }
+      }
     }
     ultimoLote={...lote,itens:selecionados};
     selPay.clear();
