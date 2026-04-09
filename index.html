@@ -670,15 +670,24 @@ async function delLote(id){
 }
 
 // RETORNO FACCAO
-function abrirRetFac(loteId){
+async function abrirRetFac(loteId){
   const l=facData.find(f=>f.id===loteId);if(!l)return;
+  // Calcula quantas peças já foram retornadas
+  let jaRetornadas=0;
+  try{
+    const grupos=await db('grupos_peca?lote_id=eq.'+loteId+'&select=quantidade,status');
+    jaRetornadas=grupos.filter(g=>g.status==='OK'||g.status==='Pago').reduce((s,g)=>s+g.quantidade,0);
+  }catch(e){}
+  const pendentes=Math.max(0,(l.qtd_enviada||0)-jaRetornadas);
+  if(pendentes===0){toast('Todas as peças já foram retornadas','err');return;}
   document.getElementById('rf-lote-id').value=loteId;
   document.getElementById('rf-vlr-peca').value=l.valor_peca||0;
-  document.getElementById('rf-qtd-enviada').value=l.qtd_enviada||0;
+  document.getElementById('rf-qtd-enviada').value=pendentes;
   document.getElementById('mo-retfac-titulo').textContent='Retorno — '+l.faccao+' · '+l.modelo;
-  document.getElementById('rf-info').textContent=`Enviadas: ${l.qtd_enviada} pçs · Valor: ${fR(l.valor_peca)}/pç · Total bruto: ${fR((l.qtd_enviada||0)*(l.valor_peca||0))}`;
+  document.getElementById('rf-info').innerHTML=`Enviadas: <b>${l.qtd_enviada}</b> · Já retornadas: <b style="color:var(--gn)">${jaRetornadas}</b> · <b style="color:var(--yw)">Pendentes: ${pendentes}</b> · Valor: ${fR(l.valor_peca)}/pç`;
   document.getElementById('rf-data').value=hoje();
   document.getElementById('rf-qtd-ok').value='';
+  document.getElementById('rf-qtd-ok').max=pendentes;
   document.getElementById('rf-qtd-cons').value='0';
   document.getElementById('rf-desc').value='0';
   document.getElementById('rf-obs').value='';
@@ -687,17 +696,19 @@ function abrirRetFac(loteId){
 }
 
 function calcRetorno(){
-  const env=parseInt(document.getElementById('rf-qtd-enviada').value)||0;
-  const ok=parseInt(document.getElementById('rf-qtd-ok').value)||0;
+  const pendentes=parseInt(document.getElementById('rf-qtd-enviada').value)||0;
+  const okInput=document.getElementById('rf-qtd-ok');
+  let ok=parseInt(okInput.value)||0;
+  if(ok>pendentes){ok=pendentes;okInput.value=pendentes;}
   const vlr=parseFloat(document.getElementById('rf-vlr-peca').value)||0;
   const desc=parseFloat(document.getElementById('rf-desc').value)||0;
-  const cons=Math.max(0,env-ok);
+  const cons=Math.max(0,pendentes-ok);
   document.getElementById('rf-qtd-cons').value=cons;
   const bruto=ok*vlr;
   const liquido=Math.max(0,bruto-desc);
   document.getElementById('rf-calc').innerHTML=`
-    <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:var(--t2)">Peças OK</span><span>${ok}</span></div>
-    <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:var(--t2)">Ret. Conserto</span><span>${cons}</span></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:var(--t2)">Peças OK neste retorno</span><span style="color:var(--gn);font-weight:600">${ok}</span></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:var(--t2)">Ainda em conserto</span><span style="color:var(--rd);font-weight:600">${cons}</span></div>
     <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:var(--t2)">Valor Bruto (${ok} × ${fR(vlr)})</span><span>${fR(bruto)}</span></div>
     <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:var(--rd)">Desconto</span><span>- ${fR(desc)}</span></div>
     <div style="border-top:1px solid var(--bd);padding-top:8px;display:flex;justify-content:space-between;font-weight:700"><span>Valor Líquido</span><span style="color:var(--gn)">${fR(liquido)}</span></div>`;
@@ -706,14 +717,14 @@ function calcRetorno(){
 async function salvarRetornoFac(){
   const loteId=document.getElementById('rf-lote-id').value;
   const vlrPeca=parseFloat(document.getElementById('rf-vlr-peca').value)||0;
-  const env=parseInt(document.getElementById('rf-qtd-enviada').value)||0;
+  const pendentes=parseInt(document.getElementById('rf-qtd-enviada').value)||0;
   const ok=parseInt(document.getElementById('rf-qtd-ok').value)||0;
   const dataRet=document.getElementById('rf-data').value;
   const desc=parseFloat(document.getElementById('rf-desc').value)||0;
   const obs=document.getElementById('rf-obs').value;
   if(!ok||!dataRet){toast('Informe qtd OK e data de retorno','err');return;}
-  if(ok>env){toast('Qtd OK não pode ser maior que enviado','err');return;}
-  const cons=env-ok;
+  if(ok>pendentes){toast('Qtd OK não pode ser maior que as peças pendentes ('+pendentes+')','err');return;}
+  const cons=pendentes-ok;
   const bruto=ok*vlrPeca;
   const liquido=Math.max(0,bruto-desc);
   try{
