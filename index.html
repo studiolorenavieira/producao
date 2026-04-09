@@ -665,8 +665,31 @@ async function salvarEnvio(){
 
 async function delLote(id){
   if(!confirm('Excluir este lote?'))return;
-  try{await db('lotes_faccao?id=eq.'+id,'DELETE');toast('Excluído');loadFaccoes();}
-  catch(e){toast('Erro: '+e.message,'err');}
+  try{
+    const lote=facData.find(f=>f.id===id);
+    await db('lotes_faccao?id=eq.'+id,'DELETE');
+    toast('Lote excluído');
+    // Verifica se era o único lote deste corte
+    if(lote?.corte_id){
+      const restantes=await db('lotes_faccao?corte_id=eq.'+lote.corte_id+'&select=id');
+      if(restantes.length===0){
+        const reenviar=confirm('Não há mais lotes para este corte. Deseja reenviar para a fila de Facção?');
+        if(reenviar){
+          await db('lotes_faccao','POST',{
+            corte_id:lote.corte_id,
+            numero_corte:lote.numero_corte,
+            colecao:lote.colecao,
+            modelo:lote.modelo,
+            tipo_peca:lote.tipo_peca,
+            qtd_cortada:lote.qtd_cortada,
+            status:'Aguardando Facção'
+          });
+          toast('Corte de volta na fila de Facção!');
+        }
+      }
+    }
+    loadFaccoes();
+  }catch(e){toast('Erro: '+e.message,'err');}
 }
 
 // RETORNO FACCAO
