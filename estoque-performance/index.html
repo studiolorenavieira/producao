@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lorena Vieira — Performance</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0f0e0d;--bg2:#181614;--bg3:#221f1c;--bg4:#2d2926;
+    --gold:#c9a96e;--gold2:#e8c98a;--cream:#f5ede0;--muted:#7a6e63;
+    --text:#f0e8dc;--red:#c0614a;--green:#6a9e6f;--blue:#5b8fa8;
+    --border:rgba(201,169,110,0.15);--radius:8px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;min-height:100vh;}
+  .header{padding:22px 40px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+  .logo{font-family:'DM Serif Display',serif;font-size:20px;color:var(--gold2);}
+  .logo span{color:var(--muted);font-size:12px;font-family:'DM Sans',sans-serif;margin-left:10px;font-weight:300;}
+  .container{padding:24px 40px;max-width:1500px;}
+  .section-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:10px;font-weight:500;}
+  .top-row{display:flex;gap:14px;align-items:flex-end;margin-bottom:24px;flex-wrap:wrap;}
+  .field-group{display:flex;flex-direction:column;gap:5px;}
+  .field-label{font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;}
+  .colecao-select,.input-text{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:8px 13px;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;cursor:pointer;min-width:220px;}
+  .colecao-select:focus,.input-text:focus{border-color:var(--gold);}
+  .btn{padding:8px 16px;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all 0.15s;}
+  .btn-gold{background:var(--gold);color:#1a1410;}.btn-gold:hover{background:var(--gold2);}
+  .btn-outline{background:transparent;border:1px solid var(--border);color:var(--muted);}.btn-outline:hover{border-color:var(--gold);color:var(--gold);}
+  .btn-sm{padding:6px 12px;font-size:12px;}
+  .btn-danger{background:transparent;border:1px solid rgba(192,97,74,0.3);color:var(--red);font-size:12px;padding:7px 12px;}.btn-danger:hover{background:rgba(192,97,74,0.1);}
+
+  /* UPLOAD */
+  .upload-section{margin-bottom:24px;}
+  .upload-period-block{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;}
+  .upload-period-title{font-size:12px;font-weight:600;color:var(--text);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+  .period-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;letter-spacing:.5px;background:rgba(201,169,110,0.12);color:var(--gold);}
+  .upload-trio{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+  .upload-card{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:12px;}
+  .upload-card-title{font-size:11px;font-weight:600;color:var(--gold);margin-bottom:8px;}
+  .upload-zone{border:1px dashed rgba(201,169,110,0.2);border-radius:5px;padding:9px;text-align:center;cursor:pointer;transition:all 0.15s;position:relative;}
+  .upload-zone:hover{border-color:var(--gold);background:rgba(201,169,110,0.04);}
+  .upload-zone input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;}
+  .upload-zone-text{font-size:10px;color:var(--muted);}
+  .upload-status{margin-top:6px;font-size:10px;display:flex;align-items:center;gap:5px;}
+  .status-dot{width:5px;height:5px;border-radius:50%;background:var(--muted);flex-shrink:0;}
+  .status-dot.ok{background:var(--green);}.status-dot.err{background:var(--red);}
+
+  /* BASE UPLOADS */
+  .upload-base-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:24px;}
+  .upload-base-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;}
+  .upload-base-title{font-size:12px;font-weight:600;color:var(--gold);margin-bottom:3px;}
+  .upload-base-desc{font-size:11px;color:var(--muted);margin-bottom:10px;line-height:1.5;}
+
+  /* PRODUZIDO */
+  .prod-section{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:24px;}
+  .prod-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+  .prod-peca-block{border:1px solid var(--border);border-radius:6px;margin-bottom:8px;overflow:hidden;}
+  .prod-peca-header{padding:9px 12px;background:var(--bg3);font-size:12px;font-weight:600;color:var(--text);display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;}
+  .prod-peca-header:hover{background:var(--bg4);}
+  .prod-grade{padding:10px 12px;display:none;}
+  .prod-grade.open{display:block;}
+  .prod-grade-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;}
+  .prod-grade-row{display:flex;flex-direction:column;gap:4px;}
+  .prod-grade-label{font-size:10px;color:var(--muted);letter-spacing:.5px;}
+  .prod-grade-inputs{display:flex;gap:4px;flex-wrap:wrap;}
+  .prod-tam-input{display:flex;flex-direction:column;align-items:center;gap:3px;}
+  .prod-tam-label{font-size:9px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;}
+  .prod-tam-field{width:44px;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:4px;border-radius:4px;font-family:'DM Sans',sans-serif;font-size:12px;text-align:center;outline:none;}
+  .prod-tam-field:focus{border-color:var(--gold);}
+
+  /* SUMMARY */
+  .summary-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+  .summary-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;}
+  .summary-card-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+  .summary-card-val{font-size:22px;font-family:'DM Serif Display',serif;color:var(--gold2);}
+  .summary-card-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+
+  /* PERIOD TABS */
+  .period-tabs{display:flex;gap:2px;margin-bottom:14px;background:var(--bg2);padding:3px;border-radius:var(--radius);width:fit-content;border:1px solid var(--border);}
+  .period-tab{padding:6px 20px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;color:var(--muted);border:none;background:transparent;font-family:'DM Sans',sans-serif;transition:all 0.15s;}
+  .period-tab.active{background:var(--gold);color:#1a1410;}.period-tab:not(.active):hover{color:var(--text);}
+
+  /* TABLE */
+  .table-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+  .table-toolbar{padding:12px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;}
+  .search-input{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:6px 11px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:12px;width:200px;outline:none;}
+  .search-input:focus{border-color:var(--gold);}
+  table{width:100%;border-collapse:collapse;}
+  thead th{padding:9px 12px;text-align:left;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);font-weight:500;border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none;}
+  thead th:hover{color:var(--gold);}thead th.sorted{color:var(--gold);}
+  tbody tr.main-row{border-bottom:1px solid rgba(201,169,110,0.08);cursor:pointer;transition:background 0.1s;}
+  tbody tr.main-row:hover{background:rgba(201,169,110,0.05);}
+  tbody tr.main-row.expanded{background:rgba(201,169,110,0.04);}
+  tbody tr.sub-row{border-bottom:1px solid rgba(201,169,110,0.04);background:rgba(0,0,0,0.2);}
+  td{padding:10px 12px;white-space:nowrap;}
+  .td-name{color:var(--text);font-weight:500;display:flex;align-items:center;gap:8px;}
+  .expand-btn{width:18px;height:18px;border-radius:4px;border:1px solid var(--border);background:var(--bg3);color:var(--gold);font-size:13px;line-height:1;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-weight:700;transition:all 0.15s;}
+  .expand-btn:hover{background:var(--gold);color:#1a1410;border-color:var(--gold);}
+  .td-num{color:var(--cream);font-variant-numeric:tabular-nums;}
+  .td-muted{color:var(--muted);}
+  .td-diff-neg{color:var(--red);font-weight:500;}
+  .td-diff-ok{color:var(--green);}
+  .td-bazar{color:var(--blue);}
+  .perf-bar-wrap{display:flex;align-items:center;gap:8px;min-width:110px;}
+  .perf-bar{height:3px;border-radius:2px;background:var(--bg4);flex:1;overflow:hidden;}
+  .perf-bar-fill{height:100%;border-radius:2px;}
+  .perf-val{font-size:12px;font-weight:500;white-space:nowrap;min-width:36px;text-align:right;}
+  .totals-row td{border-top:1px solid var(--border);background:var(--bg3);font-weight:600;font-size:12px;color:var(--gold);padding:10px 12px;}
+  .empty-state{text-align:center;padding:50px 20px;color:var(--muted);}
+  .divider{height:1px;background:var(--border);margin:22px 0;}
+
+  /* MODAL */
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:100;opacity:0;pointer-events:none;transition:opacity 0.2s;}
+  .modal-overlay.open{opacity:1;pointer-events:all;}
+  .modal{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:26px;width:380px;transform:translateY(8px);transition:transform 0.2s;}
+  .modal-overlay.open .modal{transform:translateY(0);}
+  .modal-title{font-family:'DM Serif Display',serif;font-size:18px;color:var(--gold2);margin-bottom:18px;}
+  .modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;}
+  .msg{font-size:11px;padding:7px 11px;border-radius:6px;margin-top:8px;}
+  .msg-err{background:rgba(192,97,74,0.15);color:var(--red);border:1px solid rgba(192,97,74,0.3);}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="logo">Lorena Vieira <span>— Estoque & Performance</span></div>
+  <div style="display:flex;gap:8px;align-items:center;">
+    <span id="colecao-badge" style="font-size:12px;color:var(--muted)">Nenhuma coleção selecionada</span>
+    <button class="btn btn-outline btn-sm" onclick="openModal()">+ Nova coleção</button>
+  </div>
+</div>
+
+<div class="container">
+  <div class="top-row">
+    <div class="field-group">
+      <span class="field-label">Coleção ativa</span>
+      <select class="colecao-select" id="colecaoSelect" onchange="onColecaoChange()">
+        <option value="">— Selecione uma coleção —</option>
+      </select>
+    </div>
+    <button class="btn btn-danger btn-sm" onclick="deletarColecao()" id="btnDeletar" style="display:none">Excluir coleção</button>
+  </div>
+
+  <div id="main" style="display:none">
+
+    <!-- UPLOADS BASE -->
+    <div class="section-label">Dados base da coleção</div>
+    <div class="upload-base-grid">
+      <div class="upload-base-card">
+        <div class="upload-base-title">Estoque Produção</div>
+        <div class="upload-base-desc">Movimentação de estoque DAPIC. Apenas entradas via Finalização da programação de produção.</div>
+        <div class="upload-zone"><input type="file" accept=".xlsx,.xls" onchange="handleUpload('estoque',this)"><div class="upload-zone-text">↓ clique ou arraste .xlsx</div></div>
+        <div class="upload-status"><div class="status-dot" id="dot-estoque"></div><span id="txt-estoque" style="color:var(--muted)">Nenhum arquivo</span></div>
+      </div>
+      <div class="upload-base-card">
+        <div class="upload-base-title">Transferência para Bazar</div>
+        <div class="upload-base-desc">Transferência entre armazenadores com destino Bazar. Peças com defeito ou sem condição de venda na loja.</div>
+        <div class="upload-zone"><input type="file" accept=".xlsx,.xls" onchange="handleUpload('bazar',this)"><div class="upload-zone-text">↓ clique ou arraste .xlsx</div></div>
+        <div class="upload-status"><div class="status-dot" id="dot-bazar"></div><span id="txt-bazar" style="color:var(--muted)">Nenhum arquivo</span></div>
+      </div>
+    </div>
+
+    <!-- UPLOADS POR PERÍODO -->
+    <div class="section-label">Vendas por período</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:14px">Suba os 3 arquivos juntos em cada período. Se não subir consignado, o sistema considera zero. Cada upload substitui o anterior.</div>
+
+    <div id="periodo-blocks"></div>
+
+    <!-- PRODUZIDO -->
+    <div class="prod-section">
+      <div class="prod-header">
+        <div>
+          <div class="section-label" style="margin:0 0 3px">Quantidade produzida (cortado)</div>
+          <div style="font-size:11px;color:var(--muted)">Total cortado por peça, cor e tamanho. Preenchido uma vez por coleção.</div>
+        </div>
+        <button class="btn btn-gold btn-sm" onclick="salvarProduzido()">Salvar</button>
+      </div>
+      <div id="produzido-container"><div style="padding:12px;font-size:12px;color:var(--muted)">Carregue o relatório de estoque primeiro.</div></div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- PAINEL -->
+    <div class="section-label">Painel de performance</div>
+    <div class="summary-row">
+      <div class="summary-card"><div class="summary-card-label">Total produzido</div><div class="summary-card-val" id="sum-produzido">—</div><div class="summary-card-sub">peças cortadas</div></div>
+      <div class="summary-card"><div class="summary-card-label">Entrada no sistema</div><div class="summary-card-val" id="sum-entrada">—</div><div class="summary-card-sub">finalizadas no DAPIC</div></div>
+      <div class="summary-card"><div class="summary-card-label">Total vendido</div><div class="summary-card-val" id="sum-vendas">—</div><div class="summary-card-sub">vendas + consignados</div></div>
+      <div class="summary-card"><div class="summary-card-label">Performance geral</div><div class="summary-card-val" id="sum-perf">—</div><div class="summary-card-sub">vendas / entrada DAPIC</div></div>
+    </div>
+
+    <div class="period-tabs">
+      <button class="period-tab active" onclick="setPeriod('total',this)">Coleção toda</button>
+      <button class="period-tab" onclick="setPeriod('7',this)">7 dias</button>
+      <button class="period-tab" onclick="setPeriod('30',this)">30 dias</button>
+      <button class="period-tab" onclick="setPeriod('60',this)">60 dias</button>
+    </div>
+
+    <div class="table-wrap">
+      <div class="table-toolbar">
+        <input class="search-input" type="text" placeholder="Buscar peça..." oninput="renderTable()" id="searchInput">
+        <span style="font-size:11px;color:var(--muted)" id="table-info"></span>
+      </div>
+      <div id="table-container"><div class="empty-state"><div style="font-size:28px;opacity:.3;margin-bottom:10px">✦</div><div>Carregue os relatórios para visualizar o painel.</div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-title">Nova coleção</div>
+    <div class="field-group" style="width:100%">
+      <span class="field-label">Nome da coleção</span>
+      <input type="text" class="input-text" id="novaColecaoInput" placeholder="Ex: Prumo Março/2026" style="width:100%" onkeydown="if(event.key==='Enter')criarColecao()">
+    </div>
+    <div id="modal-msg"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline btn-sm" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-gold btn-sm" onclick="criarColecao()">Criar</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let db = JSON.parse(localStorage.getItem('lv_db4') || '{}');
+let currentColecao = null, currentPeriod = 'total', sortCol = 'perf', sortDir = -1;
+let expandedRows = new Set();
+
+const PERIODOS = ['7','30','60'];
+const TAM_ORDER = ['PP','P','M','G','GG','EG','XG','XGG'];
+
+function saveDb(){ localStorage.setItem('lv_db4', JSON.stringify(db)); }
+function getCol(){ return db[currentColecao] || emptyCol(); }
+function emptyCol(){
+  const c = { estoque:[], bazar:[], produzido:{} };
+  PERIODOS.forEach(p => { c['vendas'+p]=[]; c['consigpend'+p]=[]; c['consigab'+p]=[]; });
+  return c;
+}
+
+// ── COLEÇÕES ──────────────────────────────────────────────────────────────────
+function renderColecoes(){
+  const sel = document.getElementById('colecaoSelect');
+  sel.innerHTML = '<option value="">— Selecione uma coleção —</option>';
+  Object.keys(db).forEach(c => {
+    const o = document.createElement('option');
+    o.value = c; o.textContent = c;
+    if(c === currentColecao) o.selected = true;
+    sel.appendChild(o);
+  });
+}
+function onColecaoChange(){
+  const val = document.getElementById('colecaoSelect').value;
+  currentColecao = val || null;
+  document.getElementById('main').style.display = val ? 'block' : 'none';
+  document.getElementById('btnDeletar').style.display = val ? '' : 'none';
+  document.getElementById('colecao-badge').textContent = val || 'Nenhuma coleção selecionada';
+  expandedRows.clear();
+  if(val){ renderPeriodoBlocks(); syncStatus(); renderProduzidoForm(); renderTable(); updateSummary(); }
+}
+function openModal(){ document.getElementById('modal').classList.add('open'); document.getElementById('novaColecaoInput').value=''; document.getElementById('modal-msg').innerHTML=''; setTimeout(()=>document.getElementById('novaColecaoInput').focus(),100); }
+function closeModal(){ document.getElementById('modal').classList.remove('open'); }
+function criarColecao(){
+  const nome = document.getElementById('novaColecaoInput').value.trim();
+  if(!nome){ document.getElementById('modal-msg').innerHTML='<div class="msg msg-err">Informe o nome.</div>'; return; }
+  if(db[nome]){ document.getElementById('modal-msg').innerHTML='<div class="msg msg-err">Já existe.</div>'; return; }
+  db[nome] = emptyCol(); saveDb(); renderColecoes();
+  document.getElementById('colecaoSelect').value = nome; onColecaoChange(); closeModal();
+}
+function deletarColecao(){
+  if(!currentColecao || !confirm(`Excluir "${currentColecao}"?`)) return;
+  delete db[currentColecao]; saveDb(); currentColecao = null; renderColecoes();
+  document.getElementById('colecaoSelect').value = ''; onColecaoChange();
+}
+
+// ── PERIOD BLOCKS HTML ────────────────────────────────────────────────────────
+// tracks which slots were uploaded in current session per period
+let pendingUploads = {};
+
+function renderPeriodoBlocks(){
+  const c = document.getElementById('periodo-blocks');
+  c.innerHTML = PERIODOS.map(p => `
+    <div class="upload-period-block" id="block-${p}">
+      <div class="upload-period-title" style="justify-content:space-between">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="period-badge">${p} dias</span>
+          Lançamento de vendas
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span id="block-status-${p}" style="font-size:11px;color:var(--muted)"></span>
+          <button class="btn btn-gold btn-sm" onclick="confirmarLancamento('${p}')">Confirmar lançamento</button>
+        </div>
+      </div>
+      <div class="upload-trio">
+        <div class="upload-card">
+          <div class="upload-card-title">Vendas — Fatura + PDV</div>
+          <div class="upload-zone"><input type="file" accept=".xlsx,.xls" onchange="handleUpload('vendas${p}',this,'${p}')"><div class="upload-zone-text">↓ clique ou arraste .xlsx</div></div>
+          <div class="upload-status"><div class="status-dot" id="dot-vendas${p}"></div><span id="txt-vendas${p}" style="color:var(--muted)">Nenhum arquivo</span></div>
+        </div>
+        <div class="upload-card">
+          <div class="upload-card-title">Consignado Pendente</div>
+          <div class="upload-zone"><input type="file" accept=".xlsx,.xls" onchange="handleUpload('consigpend${p}',this,'${p}')"><div class="upload-zone-text">↓ clique ou arraste .xlsx</div></div>
+          <div class="upload-status"><div class="status-dot" id="dot-consigpend${p}"></div><span id="txt-consigpend${p}" style="color:var(--muted)">Nenhum arquivo</span></div>
+        </div>
+        <div class="upload-card">
+          <div class="upload-card-title">Consignado em Aberto</div>
+          <div class="upload-zone"><input type="file" accept=".xlsx,.xls" onchange="handleUpload('consigab${p}',this,'${p}')"><div class="upload-zone-text">↓ clique ou arraste .xlsx</div></div>
+          <div class="upload-status"><div class="status-dot" id="dot-consigab${p}"></div><span id="txt-consigab${p}" style="color:var(--muted)">Nenhum arquivo</span></div>
+        </div>
+      </div>
+      <div id="pending-warning-${p}" style="display:none;margin-top:10px;padding:8px 12px;background:rgba(201,169,110,0.08);border:1px solid rgba(201,169,110,0.2);border-radius:6px;font-size:11px;color:var(--gold)">
+        ⚠ Arquivos carregados mas não confirmados. Clique em "Confirmar lançamento" para aplicar.
+      </div>
+    </div>`).join('');
+}
+
+function confirmarLancamento(p){
+  if(!currentColecao) return;
+  const pending = pendingUploads[p] || new Set();
+  const slots = ['vendas'+p, 'consigpend'+p, 'consigab'+p];
+  slots.forEach(slot => {
+    if(!pending.has(slot)){
+      db[currentColecao][slot] = [];
+      setStatus(slot, '', 'Zerado neste lançamento');
+    }
+  });
+  pendingUploads[p] = new Set();
+  const w = document.getElementById('pending-warning-'+p);
+  if(w) w.style.display = 'none';
+  const countSubidos = pending.size;
+  const el = document.getElementById('block-status-'+p);
+  if(el) el.textContent = '✓ Confirmado em ' + nowLabel() + ' · ' + countSubidos + ' arquivo' + (countSubidos!==1?'s':'') + ' subido' + (countSubidos!==1?'s':'');
+  saveDb(); renderTable(); updateSummary();
+  const btn = event.target, orig = btn.textContent;
+  btn.textContent = '✓ Confirmado'; btn.style.background = 'var(--green)';
+  setTimeout(()=>{ btn.textContent = orig; btn.style.background = ''; }, 2000);
+}
+
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function normName(str){
+  if(!str) return '';
+  const m = String(str).trim().match(/^\d[\d.]*\s*[-–]\s*(.+)$/);
+  return m ? m[1].trim() : String(str).trim();
+}
+function findColIdx(row, keywords){
+  for(let i=0;i<row.length;i++){
+    const c = String(row[i]||'').trim().toLowerCase();
+    if(keywords.every(k=>c.includes(k))) return i;
+  }
+  return -1;
+}
+function tamSort(a, b){
+  const ia = TAM_ORDER.indexOf(a.toUpperCase());
+  const ib = TAM_ORDER.indexOf(b.toUpperCase());
+  if(ia===-1 && ib===-1) return a.localeCompare(b);
+  if(ia===-1) return 1; if(ib===-1) return -1;
+  return ia - ib;
+}
+function nowLabel(){
+  const n=new Date();
+  return `${String(n.getDate()).padStart(2,'0')}/${String(n.getMonth()+1).padStart(2,'0')}/${n.getFullYear()}`;
+}
+
+// ── UPLOAD ────────────────────────────────────────────────────────────────────
+function handleUpload(tipo, input, periodo){
+  if(!currentColecao){ alert('Selecione uma coleção primeiro.'); return; }
+  const file = input.files[0]; if(!file) return;
+  setStatus(tipo, '', 'Processando...');
+  const reader = new FileReader();
+  reader.onload = e => {
+    try{
+      const wb = XLSX.read(e.target.result, {type:'array'});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+      if(tipo==='estoque') parseEstoque(rows);
+      else if(tipo==='bazar') parseBazar(rows);
+      else if(tipo.startsWith('vendas')) parseVendas(rows, tipo);
+      else parseConsignado(rows, tipo);
+      saveDb(); renderProduzidoForm(); renderTable(); updateSummary();
+    } catch(err){ setStatus(tipo,'err','Erro ao processar.'); console.error(err); }
+    input.value='';
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function parseEstoque(rows){
+  let hi=-1;
+  for(let i=0;i<Math.min(rows.length,20);i++){
+    const j=rows[i].map(c=>String(c||'').toLowerCase()).join('|');
+    if(j.includes('produto')&&j.includes('origem')&&j.includes('quantidade')){hi=i;break;}
+  }
+  if(hi===-1){setStatus('estoque','err','Cabeçalho não encontrado.');return;}
+  const h=rows[hi];
+  const iP=findColIdx(h,['produto']),iC=findColIdx(h,['cor']),iT=findColIdx(h,['tamanho']),
+        iO=findColIdx(h,['origem']),iOp=findColIdx(h,['opera']),iQ=findColIdx(h,['quantidade']);
+  if(iP===-1||iO===-1||iQ===-1){setStatus('estoque','err','Colunas não mapeadas.');return;}
+  const res=[];
+  for(let i=hi+1;i<rows.length;i++){
+    const r=rows[i];
+    const prod=String(r[iP]||'').trim(); if(!prod||!/^\d/.test(prod)) continue;
+    const orig=String(r[iO]||'').toLowerCase(), op=String(r[iOp]||'').toLowerCase();
+    if(!orig.includes('finaliza')||!op.includes('entrada')) continue;
+    res.push({produto:prod, nome:normName(prod), cor:iC>=0?String(r[iC]||'').trim():'', tam:iT>=0?String(r[iT]||'').trim():'', qtd:parseInt(r[iQ])||0});
+  }
+  db[currentColecao].estoque=res;
+  setStatus('estoque','ok',`${res.length} entradas · atualizado ${nowLabel()}`);
+}
+
+function parseBazar(rows){
+  // Same structure as estoque but filter by Transferência entre armazenadores + Saída
+  let hi=-1;
+  for(let i=0;i<Math.min(rows.length,20);i++){
+    const j=rows[i].map(c=>String(c||'').toLowerCase()).join('|');
+    if(j.includes('produto')&&j.includes('origem')&&j.includes('quantidade')){hi=i;break;}
+  }
+  if(hi===-1){setStatus('bazar','err','Cabeçalho não encontrado.');return;}
+  const h=rows[hi];
+  const iP=findColIdx(h,['produto']),iC=findColIdx(h,['cor']),iT=findColIdx(h,['tamanho']),
+        iO=findColIdx(h,['origem']),iOp=findColIdx(h,['opera']),iQ=findColIdx(h,['quantidade']);
+  if(iP===-1||iO===-1||iQ===-1){setStatus('bazar','err','Colunas não mapeadas.');return;}
+  const res=[];
+  for(let i=hi+1;i<rows.length;i++){
+    const r=rows[i];
+    const prod=String(r[iP]||'').trim(); if(!prod||!/^\d/.test(prod)) continue;
+    const orig=String(r[iO]||'').toLowerCase(), op=String(r[iOp]||'').toLowerCase();
+    if(!orig.includes('transfer')||!op.includes('saída')&&!op.includes('saida')) continue;
+    res.push({produto:prod, nome:normName(prod), cor:iC>=0?String(r[iC]||'').trim():'', tam:iT>=0?String(r[iT]||'').trim():'', qtd:parseInt(r[iQ])||0});
+  }
+  db[currentColecao].bazar=res;
+  setStatus('bazar','ok',`${res.length} itens · atualizado ${nowLabel()}`);
+}
+
+function parseVendas(rows, tipo){
+  let hi=-1;
+  for(let i=0;i<Math.min(rows.length,20);i++){
+    const j=rows[i].map(c=>String(c||'').toLowerCase()).join('|');
+    if(j.includes('produto')&&j.includes('vendida')){hi=i;break;}
+  }
+  if(hi===-1){setStatus(tipo,'err','Cabeçalho não encontrado.');return;}
+  const h=rows[hi];
+  const iP=findColIdx(h,['produto']),iC=findColIdx(h,['cor']),iT=findColIdx(h,['tamanho']),
+        iQV=findColIdx(h,['qtd','vendid']),iQD=findColIdx(h,['qtd','devolv']);
+  if(iP===-1||iQV===-1){setStatus(tipo,'err','Colunas não mapeadas.');return;}
+  const res=[];
+  for(let i=hi+1;i<rows.length;i++){
+    const r=rows[i];
+    const prod=String(r[iP]||'').trim(); if(!prod||!/^\d/.test(prod)) continue;
+    const qv=parseFloat(r[iQV])||0, qd=iQD>=0?parseFloat(r[iQD])||0:0;
+    res.push({produto:prod, nome:normName(prod), cor:iC>=0?String(r[iC]||'').trim():'', tam:iT>=0?String(r[iT]||'').trim():'', qtdLiq:qv-qd});
+  }
+  db[currentColecao][tipo]=res;
+  setStatus(tipo,'ok',`${res.length} linhas · atualizado ${nowLabel()}`);
+}
+
+function parseConsignado(rows, tipo){
+  const nomes = getColNomes();
+  const res=[];
+  for(let i=0;i<rows.length;i++){
+    const r=rows[i];
+    const prodCell=r.find(c=>/^\d{4}[\.\-]/.test(String(c).trim())); if(!prodCell) continue;
+    const prod=String(prodCell).trim(), nome=normName(prod);
+    if(nomes.size>0&&!nomes.has(nome.toLowerCase())) continue;
+    const idx=r.indexOf(prodCell);
+    const cor=String(r[idx+1]||'').trim(), tam=String(r[idx+2]||'').trim();
+    const nums=[];
+    for(let j=r.length-1;j>=idx;j--){
+      const v=parseFloat(String(r[j]).replace(',','.'));
+      if(!isNaN(v)&&String(r[j]).trim()!==''){nums.unshift(v);if(nums.length>=2)break;}
+    }
+    const pend=nums.length>=2?nums[0]:nums.length===1?nums[0]:0;
+    if(pend>0) res.push({produto:prod, nome, cor, tam, qtdPendente:pend});
+  }
+  db[currentColecao][tipo]=res;
+  setStatus(tipo,'ok',`${res.length} itens · atualizado ${nowLabel()}`);
+}
+
+function getColNomes(){
+  const d=getCol(); const s=new Set();
+  d.estoque.forEach(r=>s.add(r.nome.toLowerCase()));
+  PERIODOS.forEach(p=>{ (d['vendas'+p]||[]).forEach(r=>s.add(r.nome.toLowerCase())); });
+  return s;
+}
+
+function setStatus(tipo,state,msg){
+  const dot=document.getElementById(`dot-${tipo}`), txt=document.getElementById(`txt-${tipo}`);
+  if(!dot) return;
+  dot.className='status-dot'+(state==='ok'?' ok':state==='err'?' err':'');
+  txt.textContent=msg; txt.style.color=state==='ok'?'var(--green)':state==='err'?'var(--red)':'var(--muted)';
+}
+function syncStatus(){
+  const d=getCol();
+  if(d.estoque.length) setStatus('estoque','ok',`${d.estoque.length} entradas`);
+  if(d.bazar.length) setStatus('bazar','ok',`${d.bazar.length} itens bazar`);
+  PERIODOS.forEach(p=>{
+    ['vendas','consigpend','consigab'].forEach(k=>{
+      const key=k+p; if(d[key]&&d[key].length) setStatus(key,'ok',`${d[key].length} itens`);
+    });
+  });
+}
+
+// ── PRODUZIDO FORM ────────────────────────────────────────────────────────────
+function renderProduzidoForm(){
+  const d=getCol(), c=document.getElementById('produzido-container');
+  // gather all unique peça names + their grades from estoque
+  const pecas={};
+  d.estoque.forEach(r=>{
+    if(!pecas[r.nome]) pecas[r.nome]={nome:r.nome, ref:r.produto, cores:{}};
+    const cor=r.cor||'Sem cor';
+    if(!pecas[r.nome].cores[cor]) pecas[r.nome].cores[cor]=new Set();
+    if(r.tam) pecas[r.nome].cores[cor].add(r.tam);
+  });
+  // also from vendas to catch any not in estoque
+  PERIODOS.forEach(p=>{
+    (d['vendas'+p]||[]).forEach(r=>{
+      if(!pecas[r.nome]) pecas[r.nome]={nome:r.nome, ref:r.produto, cores:{}};
+      const cor=r.cor||'Sem cor';
+      if(!pecas[r.nome].cores[cor]) pecas[r.nome].cores[cor]=new Set();
+      if(r.tam) pecas[r.nome].cores[cor].add(r.tam);
+    });
+  });
+
+  const list=Object.values(pecas).sort((a,b)=>a.nome.localeCompare(b.nome));
+  if(!list.length){ c.innerHTML='<div style="padding:12px;font-size:12px;color:var(--muted)">Carregue o relatório de estoque primeiro.</div>'; return; }
+
+  const produzido=d.produzido||{};
+  let html='';
+  list.forEach(p=>{
+    const cod=p.ref?p.ref.split(/\s*[-–]\s*/)[0].trim():'';
+    const coresKeys=Object.keys(p.cores).sort();
+    let gradeHtml='';
+    coresKeys.forEach(cor=>{
+      const tams=[...p.cores[cor]].sort(tamSort);
+      const tamInputs=tams.map(tam=>{
+        const key=`${p.nome}|${cor}|${tam}`;
+        const val=produzido[key]||'';
+        return `<div class="prod-tam-input"><span class="prod-tam-label">${tam}</span><input type="number" min="0" class="prod-tam-field" data-key="${key.replace(/"/g,'&quot;')}" value="${val}" placeholder="0"></div>`;
+      }).join('');
+      gradeHtml+=`<div class="prod-grade-row"><div class="prod-grade-label">${cor}</div><div class="prod-grade-inputs">${tamInputs}</div></div>`;
+    });
+    html+=`<div class="prod-peca-block">
+      <div class="prod-peca-header" onclick="toggleProdGrade(this)">
+        <span>${p.nome} <span style="color:var(--muted);font-size:11px">${cod?'('+cod+')':''}</span></span>
+        <span style="color:var(--muted);font-size:11px">▼</span>
+      </div>
+      <div class="prod-grade">
+        <div class="prod-grade-grid">${gradeHtml}</div>
+      </div>
+    </div>`;
+  });
+  c.innerHTML=html;
+}
+
+function toggleProdGrade(header){
+  const grade=header.nextElementSibling;
+  const isOpen=grade.classList.contains('open');
+  grade.classList.toggle('open');
+  header.querySelector('span:last-child').textContent=isOpen?'▼':'▲';
+}
+
+function salvarProduzido(){
+  if(!currentColecao) return;
+  document.querySelectorAll('.prod-tam-field[data-key]').forEach(inp=>{
+    db[currentColecao].produzido[inp.getAttribute('data-key')]=parseInt(inp.value)||0;
+  });
+  saveDb(); renderTable(); updateSummary();
+  const btn=event.target, orig=btn.textContent;
+  btn.textContent='✓ Salvo'; btn.style.background='var(--green)';
+  setTimeout(()=>{btn.textContent=orig; btn.style.background='';},1500);
+}
+
+// ── AGGREGATION ───────────────────────────────────────────────────────────────
+function aggregate(){
+  const d=getCol();
+  const period=currentPeriod;
+
+  // pick vendas sources
+  let vendasSrc=[], consigPendSrc=[], consigAbSrc=[];
+  if(period==='total'){
+    // use the most complete available (60 > 30 > 7)
+    for(const p of ['60','30','7']){
+      if(d['vendas'+p]&&d['vendas'+p].length){ vendasSrc=d['vendas'+p]; break; }
+    }
+    for(const p of ['60','30','7']){
+      if(d['consigpend'+p]&&d['consigpend'+p].length){ consigPendSrc=d['consigpend'+p]; break; }
+    }
+    for(const p of ['60','30','7']){
+      if(d['consigab'+p]&&d['consigab'+p].length){ consigAbSrc=d['consigab'+p]; break; }
+    }
+  } else {
+    vendasSrc=d['vendas'+period]||[];
+    consigPendSrc=d['consigpend'+period]||[];
+    consigAbSrc=d['consigab'+period]||[];
+  }
+
+  // Build maps: key = nome|cor|tam
+  function buildMap(arr, field){
+    const m={}, mn={};
+    arr.forEach(r=>{
+      const k=`${r.nome}|${r.cor}|${r.tam}`;
+      const v=r[field]||0;
+      m[k]=(m[k]||0)+v; mn[r.nome]=(mn[r.nome]||0)+v;
+    });
+    return {m, mn};
+  }
+
+  const ent=buildMap(d.estoque,'qtd');
+  const baz=buildMap(d.bazar,'qtd');
+  const ven=buildMap(vendasSrc,'qtdLiq');
+  const cpend=buildMap(consigPendSrc,'qtdPendente');
+  const cab=buildMap(consigAbSrc,'qtdPendente');
+
+  // produzido map: key = nome|cor|tam
+  const prodMap={}, prodNome={};
+  Object.entries(d.produzido||{}).forEach(([k,v])=>{
+    const parts=k.split('|'); const nome=parts[0];
+    prodMap[k]=(prodMap[k]||0)+v;
+    prodNome[nome]=(prodNome[nome]||0)+v;
+  });
+
+  // all nomes
+  const nomes=new Set([
+    ...Object.keys(ent.mn),...Object.keys(ven.mn),
+    ...Object.keys(prodNome).filter(k=>prodNome[k]>0)
+  ]);
+
+  const rows=[];
+  nomes.forEach(nome=>{
+    const produzido=prodNome[nome]||0;
+    const entrada=ent.mn[nome]||0;
+    const bazar=baz.mn[nome]||0;
+    const vendas=(ven.mn[nome]||0)+(cpend.mn[nome]||0)+(cab.mn[nome]||0);
+    const diferenca=produzido>0?produzido-entrada:null;
+    const perf=entrada>0?(vendas/entrada)*100:0;
+    const saldo=entrada-bazar-vendas;
+
+    // sub rows
+    const subKeys=new Set([
+      ...Object.keys(ent.m).filter(k=>k.startsWith(nome+'|')),
+      ...Object.keys(ven.m).filter(k=>k.startsWith(nome+'|')),
+      ...Object.keys(baz.m).filter(k=>k.startsWith(nome+'|')),
+    ]);
+    const subs=[];
+    subKeys.forEach(k=>{
+      const pts=k.split('|'), cor=pts[1], tam=pts[2];
+      const eq=ent.m[k]||0, bq=baz.m[k]||0;
+      const vq=(ven.m[k]||0)+(cpend.m[k]||0)+(cab.m[k]||0);
+      subs.push({cor,tam,entrada:eq,bazar:bq,vendas:vq,perf:eq>0?(vq/eq)*100:0,saldo:eq-bq-vq});
+    });
+    subs.sort((a,b)=>a.cor.localeCompare(b.cor)||tamSort(a.tam,b.tam));
+    rows.push({nome,produzido,entrada,bazar,diferenca,vendas,perf,saldo,subs});
+  });
+
+  rows.sort((a,b)=>{
+    const av=a[sortCol], bv=b[sortCol];
+    if(av===null&&bv===null) return 0; if(av===null) return 1; if(bv===null) return -1;
+    return sortDir*(av>bv?1:av<bv?-1:0);
+  });
+  return rows;
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function setPeriod(p,btn){
+  currentPeriod=p;
+  document.querySelectorAll('.period-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  renderTable(); updateSummary();
+}
+function setSort(col){ if(sortCol===col) sortDir*=-1; else{sortCol=col;sortDir=-1;} renderTable(); }
+function toggleRow(nome){ if(expandedRows.has(nome)) expandedRows.delete(nome); else expandedRows.add(nome); renderTable(); }
+function pc(p){ return p>=80?'var(--green)':p>=50?'var(--gold)':'var(--red)'; }
+
+function renderTable(){
+  if(!currentColecao) return;
+  const search=(document.getElementById('searchInput')?.value||'').toLowerCase();
+  let rows=aggregate();
+  if(search) rows=rows.filter(r=>r.nome.toLowerCase().includes(search));
+  document.getElementById('table-info').textContent=`${rows.length} peça${rows.length!==1?'s':''}`;
+
+  if(!rows.length){
+    document.getElementById('table-container').innerHTML='<div class="empty-state"><div style="font-size:28px;opacity:.3;margin-bottom:10px">✦</div><div>Nenhum dado. Carregue os relatórios acima.</div></div>'; return;
+  }
+
+  const cols=[
+    {key:'nome',label:'Peça'},{key:'produzido',label:'Cortado'},
+    {key:'entrada',label:'Entrada DAPIC'},{key:'bazar',label:'Bazar'},
+    {key:'diferenca',label:'Diferença'},{key:'vendas',label:'Vendas'},
+    {key:'perf',label:'Performance'},{key:'saldo',label:'Saldo'}
+  ];
+  let html='<table><thead><tr>';
+  cols.forEach(c=>{
+    const s=sortCol===c.key?'sorted':''; const arr=sortCol===c.key?(sortDir===1?' ↑':' ↓'):'';
+    html+=`<th class="${s}" onclick="setSort('${c.key}')">${c.label}${arr}</th>`;
+  });
+  html+='</tr></thead><tbody>';
+
+  let totP=0,totE=0,totB=0,totV=0;
+  rows.forEach(r=>{
+    totP+=r.produzido; totE+=r.entrada; totB+=r.bazar; totV+=r.vendas;
+    const exp=expandedRows.has(r.nome), color=pc(r.perf), pw=Math.min(r.perf,100);
+    const diffCls=r.diferenca===null?'td-muted':r.diferenca>0?'td-diff-neg':'td-diff-ok';
+    const diffLbl=r.diferenca===null?'—':r.diferenca>0?`−${r.diferenca}`:r.diferenca<0?`+${Math.abs(r.diferenca)}`:'✓';
+    const safeName=r.nome.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    html+=`<tr class="main-row${exp?' expanded':''}" onclick="toggleRow('${safeName}')">
+      <td><div class="td-name"><span class="expand-btn">${exp?'−':'+'}</span>${r.nome}</div></td>
+      <td class="td-num">${r.produzido||'—'}</td>
+      <td class="td-num">${r.entrada||'—'}</td>
+      <td class="${r.bazar>0?'td-bazar':'td-muted'}">${r.bazar||'—'}</td>
+      <td class="${diffCls}">${diffLbl}</td>
+      <td class="td-num">${r.vendas||'—'}</td>
+      <td><div class="perf-bar-wrap"><div class="perf-bar"><div class="perf-bar-fill" style="width:${pw}%;background:${color}"></div></div><span class="perf-val" style="color:${color}">${r.perf>0?r.perf.toFixed(0)+'%':'—'}</span></div></td>
+      <td class="td-num" style="${r.saldo<0?'color:var(--red)':''}">${r.saldo!==0?r.saldo:'—'}</td>
+    </tr>`;
+    if(exp){
+      r.subs.forEach(s=>{
+        const sc=pc(s.perf), sw=Math.min(s.perf,100);
+        html+=`<tr class="sub-row">
+          <td style="color:var(--muted);font-size:12px;padding-left:40px">${s.cor} · <strong style="color:var(--text)">${s.tam}</strong></td>
+          <td class="td-muted">—</td>
+          <td class="td-num" style="font-size:12px">${s.entrada||'—'}</td>
+          <td class="${s.bazar>0?'td-bazar':'td-muted'}" style="font-size:12px">${s.bazar||'—'}</td>
+          <td class="td-muted">—</td>
+          <td class="td-num" style="font-size:12px">${s.vendas||'—'}</td>
+          <td><div class="perf-bar-wrap"><div class="perf-bar"><div class="perf-bar-fill" style="width:${sw}%;background:${sc}"></div></div><span class="perf-val" style="color:${sc};font-size:11px">${s.perf>0?s.perf.toFixed(0)+'%':'—'}</span></div></td>
+          <td class="td-num" style="font-size:12px;${s.saldo<0?'color:var(--red)':''}">${s.saldo!==0?s.saldo:'—'}</td>
+        </tr>`;
+      });
+    }
+  });
+
+  const tp=totE>0?((totV/totE)*100).toFixed(0)+'%':'—';
+  html+=`<tr class="totals-row"><td>TOTAL</td><td>${totP||'—'}</td><td>${totE||'—'}</td><td>${totB||'—'}</td><td>—</td><td>${totV||'—'}</td><td>${tp}</td><td>${totE-totB-totV||'—'}</td></tr>`;
+  html+='</tbody></table>';
+  document.getElementById('table-container').innerHTML=html;
+}
+
+function updateSummary(){
+  const rows=aggregate();
+  const tP=rows.reduce((s,r)=>s+r.produzido,0);
+  const tE=rows.reduce((s,r)=>s+r.entrada,0);
+  const tV=rows.reduce((s,r)=>s+r.vendas,0);
+  document.getElementById('sum-produzido').textContent=tP||'—';
+  document.getElementById('sum-entrada').textContent=tE||'—';
+  document.getElementById('sum-vendas').textContent=tV||'—';
+  document.getElementById('sum-perf').textContent=tE>0?((tV/tE)*100).toFixed(0)+'%':'—';
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+renderColecoes();
+document.getElementById('modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal();});
+</script>
+</body>
+</html>
