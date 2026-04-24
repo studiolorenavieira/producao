@@ -201,6 +201,7 @@ tr:hover td{background:rgba(255,255,255,.015);}
       <option>Concluído / Ag. Pagamento</option>
       <option>Concluído / Pago</option>
       <option>Em Produção</option>
+      <option>Ag. Fechamento Mensal</option>
       <option>Concluído</option>
     </select>
   </div>
@@ -295,6 +296,20 @@ tr:hover td{background:rgba(255,255,255,.015);}
   </div>
   <div class="card"><div style="font-size:12px;font-weight:700;margin-bottom:14px">Preço Médio por Tipo de Peça (Facção)</div><div id="rel-preco"></div></div>
   <div class="card"><div style="font-size:12px;font-weight:700;margin-bottom:14px">Histórico de Pagamentos</div><div id="rel-pgtos"></div></div>
+  <div class="card">
+    <div style="font-size:13px;font-weight:700;margin-bottom:14px">📅 Fechamento Mensal — Corte Interno</div>
+    <p style="font-size:12px;color:var(--t2);margin-bottom:14px">Informe o salário do mês para distribuir o custo proporcionalmente entre todos os cortes internos do período.</p>
+    <div class="fg" style="margin-bottom:14px">
+      <div class="fi"><label>Mês *</label><input type="month" id="fech-mes"></div>
+      <div class="fi"><label>Salário Total (R$) *</label><input type="number" id="fech-salario" step="0.01" min="0" placeholder="4000.00"></div>
+      <div class="fi" style="justify-content:flex-end;padding-top:18px">
+        <button class="btn by" onclick="executarFechamento()">Fechar Mês</button>
+      </div>
+    </div>
+    <div id="fech-preview" style="font-size:12px;color:var(--t2)"></div>
+    <div style="margin-top:16px;font-size:12px;font-weight:600;color:var(--t3)">HISTÓRICO DE FECHAMENTOS</div>
+    <div id="fech-historico" style="margin-top:8px"></div>
+  </div>
 </div>
 
 </div><!-- /ct -->
@@ -314,6 +329,13 @@ tr:hover td{background:rgba(255,255,255,.015);}
       </div>
       <div class="fi"><label>Qtd Pretendida *</label><input type="number" id="cc-qtdp" min="1"></div>
       <div class="fi"><label>Cortador</label><input type="text" id="cc-cort" placeholder="Nome..."></div>
+      <div class="fi" style="grid-column:1/-1">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+          <input type="checkbox" id="cc-externo" style="width:16px;height:16px;accent-color:var(--yw)">
+          <span>Corte Externo (gera pagamento)</span>
+        </label>
+        <div style="font-size:10px;color:var(--t3);margin-top:3px">Desmarcado = corte interno (custo fechado mensalmente)</div>
+      </div>
     </div>
     <div class="md-f">
       <button class="btn bg" onclick="fecharModal('mo-corte')">Cancelar</button>
@@ -353,6 +375,7 @@ tr:hover td{background:rgba(255,255,255,.015);}
       <div class="fi"><label>Qtd Enviada *</label><input type="number" id="ef-qtd" min="1"></div>
       <div class="fi"><label>Valor por Peça (R$) *</label><input type="number" id="ef-vlr" step="0.01" min="0"></div>
       <div class="fi"><label>Prazo (dias) *</label><input type="number" id="ef-prazo" min="1" value="7"></div>
+      <div class="fi"><label>Frete Ida (R$)</label><input type="number" id="ef-frete-ida" step="0.01" min="0" value="0"></div>
     </div>
     <div class="md-f">
       <button class="btn bg" onclick="fecharModal('mo-envfac')">Cancelar</button>
@@ -375,6 +398,7 @@ tr:hover td{background:rgba(255,255,255,.015);}
       <div class="fi"><label>Data de Retorno *</label><input type="date" id="rf-data"></div>
       <div class="fi"><label>Desconto Total (R$)</label><input type="number" id="rf-desc" step="0.01" min="0" value="0" oninput="calcRetorno();toggleObsRetorno()"></div>
       <div class="fi"><label>Acréscimo (R$)</label><input type="number" id="rf-acres" step="0.01" min="0" value="0" oninput="calcRetorno();toggleObsRetorno()"></div>
+      <div class="fi"><label>Frete Volta (R$)</label><input type="number" id="rf-frete-volta" step="0.01" min="0" value="0"></div>
       <div class="fi" style="grid-column:1/-1"><label id="rf-obs-label">Observação</label><input type="text" id="rf-obs" placeholder="Ex: frete R$20, acréscimo por urgência..."></div>
     </div>
     <div id="rf-calc" style="background:var(--s2);border-radius:8px;padding:12px;font-size:12px;margin-bottom:4px"></div>
@@ -490,7 +514,7 @@ function P(page){
 
 // ===== STATUS HELPERS =====
 function chipCorte(s){
-  const m={'Aguardando Retorno':'cy','Concluído / Ag. Pagamento':'co','Concluído / Pago':'cg','Em Produção':'cb','Concluído':'cg'};
+  const m={'Aguardando Retorno':'cy','Concluído / Ag. Pagamento':'co','Concluído / Pago':'cg','Em Produção':'cb','Concluído':'cg','Ag. Fechamento Mensal':'cp'};
   return`<span class="chip ${m[s]||'cgr'}">${s}</span>`;
 }
 function chipFac(s){
@@ -643,8 +667,8 @@ async function abrirCorte(){
   ['cc-num','cc-col','cc-mod','cc-qtdp','cc-cort'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('cc-tipo').value='';
   document.getElementById('cc-data').value=hoje();
+  document.getElementById('cc-externo').checked=false;
   document.getElementById('mo-corte-titulo').textContent='Novo Corte';
-  // Gera número sequencial automático
   try{
     const todos=await db('cortes?select=numero_corte&order=numero_corte.desc&limit=1');
     const ultimo=todos[0]?.numero_corte;
@@ -664,12 +688,14 @@ function abrirCorteEdit(id){
   document.getElementById('cc-tipo').value=c.tipo_peca||'';
   document.getElementById('cc-qtdp').value=c.qtd_pretendida||'';
   document.getElementById('cc-cort').value=c.cortador||'';
+  document.getElementById('cc-externo').checked=c.externo||false;
   document.getElementById('mo-corte-titulo').textContent='Editar Corte';
   abrirModal('mo-corte');
 }
 
 async function salvarCorte(){
   const id=document.getElementById('cc-id').value;
+  const externo=document.getElementById('cc-externo').checked;
   const data={
     data_corte:document.getElementById('cc-data').value,
     numero_corte:document.getElementById('cc-num').value,
@@ -677,7 +703,8 @@ async function salvarCorte(){
     modelo:document.getElementById('cc-mod').value,
     tipo_peca:document.getElementById('cc-tipo').value,
     qtd_pretendida:parseInt(document.getElementById('cc-qtdp').value)||0,
-    cortador:document.getElementById('cc-cort').value||null
+    cortador:document.getElementById('cc-cort').value||null,
+    externo:externo
   };
   if(!data.data_corte||!data.numero_corte||!data.colecao||!data.modelo||!data.tipo_peca||!data.qtd_pretendida){toast('Preencha os campos obrigatórios','err');return;}
   if(!id)data.status='Aguardando Retorno';
@@ -706,17 +733,20 @@ async function finalizarCorte(){
   const dataRet=document.getElementById('rc-data').value;
   const custo=parseFloat(document.getElementById('rc-custo').value)||0;
   const obs=document.getElementById('rc-obs').value;
-  if(!qtd||!custo||!dataRet){toast('Preencha quantidade, data e custo','err');return;}
   const c=cortesData.find(x=>x.id===id);
+  const externo=c?.externo||false;
+  if(!qtd||!dataRet){toast('Preencha quantidade e data','err');return;}
+  if(externo&&!custo){toast('Corte externo requer custo','err');return;}
   try{
+    const novoStatus=externo?'Concluído / Ag. Pagamento':'Ag. Fechamento Mensal';
     await db('cortes?id=eq.'+id,'PATCH',{
       qtd_cortada:qtd,
-      custo_corte:custo,
+      custo_corte:custo||null,
       obs_corte:obs,
       data_retorno_corte:dataRet,
-      status:'Concluído / Ag. Pagamento',pgto_pendente:true
+      status:novoStatus,
+      pgto_pendente:externo
     });
-    // Cria lote na faccao automaticamente
     await db('lotes_faccao','POST',{
       corte_id:id,
       numero_corte:c.numero_corte,
@@ -726,7 +756,10 @@ async function finalizarCorte(){
       qtd_cortada:qtd,
       status:'Aguardando Facção'
     });
-    toast('Corte finalizado! Cortador em pagamentos, peças em Facções.');
+    const msg=externo
+      ?'Corte finalizado! Cortador em pagamentos, peças em Facções.'
+      :'Corte interno finalizado! Custo será fechado no fechamento mensal.';
+    toast(msg);
     fecharModal('mo-retcorte');loadCortes();
   }catch(e){toast('Erro: '+e.message,'err');}
 }
@@ -843,6 +876,7 @@ async function salvarEnvio(){
     qtd_enviada:parseInt(document.getElementById('ef-qtd').value)||0,
     valor_peca:parseFloat(document.getElementById('ef-vlr').value)||0,
     prazo_dias:parseInt(document.getElementById('ef-prazo').value)||7,
+    frete_ida:parseFloat(document.getElementById('ef-frete-ida').value)||0,
     status:'Em Produção'
   };
   if(!data.faccao||!data.qtd_enviada||!data.valor_peca||!data.data_envio){toast('Preencha todos os campos','err');return;}
@@ -916,6 +950,7 @@ async function abrirRetFac(loteId){
   document.getElementById('rf-qtd-cons').value='0';
   document.getElementById('rf-desc').value='0';
   document.getElementById('rf-acres').value='0';
+  document.getElementById('rf-frete-volta').value='0';
   document.getElementById('rf-obs').value='';
   document.getElementById('rf-obs').style.borderColor='';
   document.getElementById('rf-obs-label').textContent='Observação';
@@ -969,6 +1004,7 @@ async function salvarRetornoFac(){
   const dataRet=document.getElementById('rf-data').value;
   const desc=parseFloat(document.getElementById('rf-desc').value)||0;
   const acres=parseFloat(document.getElementById('rf-acres').value)||0;
+  const freteVolta=parseFloat(document.getElementById('rf-frete-volta').value)||0;
   const obs=document.getElementById('rf-obs').value;
   if(!ok||!dataRet){toast('Informe qtd OK e data de retorno','err');return;}
   if(ok>pendentes){toast('Qtd OK não pode ser maior que as peças pendentes ('+pendentes+')','err');return;}
@@ -989,6 +1025,8 @@ async function salvarRetornoFac(){
       aprovado:true,
       data_retorno:dataRet
     });
+    // Salva frete de volta no lote
+    if(freteVolta>0)await db('lotes_faccao?id=eq.'+loteId,'PATCH',{frete_volta:freteVolta});
     // Calcula novo status do lote independentemente do pagamento
     // Busca todos os grupos deste lote para saber se há algum já pago
     const todosGrupos=await db('grupos_peca?lote_id=eq.'+loteId+'&select=status,quantidade');
@@ -1375,6 +1413,60 @@ function showPayTab(tab){
 }
 
 // ===== RELATORIOS =====
+// ===== FECHAMENTO MENSAL =====
+async function executarFechamento(){
+  const mes=document.getElementById('fech-mes').value;
+  const salario=parseFloat(document.getElementById('fech-salario').value)||0;
+  if(!mes||!salario){toast('Informe mês e salário','err');return;}
+
+  try{
+    // Busca cortes internos do mês não fechados
+    const [anoMes]=[mes];
+    const cortes=await db('cortes?externo=eq.false&status=eq.Ag. Fechamento Mensal&data_corte=gte.'+mes+'-01&data_corte=lte.'+mes+'-31&select=*');
+    if(!cortes.length){toast('Nenhum corte interno encontrado para '+mes,'err');return;}
+    const totalPecas=cortes.reduce((s,c)=>s+(c.qtd_cortada||0),0);
+    if(!totalPecas){toast('Total de peças é zero','err');return;}
+    const custoPorPeca=salario/totalPecas;
+
+    // Atualiza cada corte com o custo distribuído
+    for(const c of cortes){
+      const custoCorte=(c.qtd_cortada||0)*custoPorPeca;
+      await db('cortes?id=eq.'+c.id,'PATCH',{
+        custo_corte:parseFloat(custoCorte.toFixed(2)),
+        salario_distribuido:parseFloat(custoCorte.toFixed(2)),
+        status:'Concluído / Ag. Pagamento',
+        pgto_pendente:false // interno não gera pagamento
+      });
+    }
+
+    // Registra fechamento
+    await db('fechamentos_mensais','POST',{
+      mes,
+      salario,
+      total_pecas:totalPecas,
+      custo_por_peca:parseFloat(custoPorPeca.toFixed(2))
+    });
+
+    toast('Fechamento de '+mes+' concluído! '+cortes.length+' cortes · '+totalPecas+' peças · '+fR(custoPorPeca)+'/pç');
+    document.getElementById('fech-mes').value='';
+    document.getElementById('fech-salario').value='';
+    loadRel();
+  }catch(e){toast('Erro: '+e.message,'err');}
+}
+
+async function loadFechamentos(){
+  try{
+    const fechs=await db('fechamentos_mensais?select=*&order=created_at.desc&limit=12');
+    const el=document.getElementById('fech-historico');
+    if(!el)return;
+    el.innerHTML=fechs.length?fechs.map(f=>`
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bd);font-size:12px">
+        <div><b>${f.mes}</b> · ${f.total_pecas} peças · ${fR(f.custo_por_peca)}/pç</div>
+        <div style="color:var(--gn);font-weight:600">${fR(f.salario)}</div>
+      </div>`).join(''):'<div class="nd" style="padding:12px">Nenhum fechamento</div>';
+  }catch(e){}
+}
+
 async function loadRel(){
   try{
     // Lead time usa lotes com status que contém "Concluído"
@@ -1445,7 +1537,7 @@ async function loadRel(){
     const vAtual=sel.value;
     sel.innerHTML='<option value="">Todas</option>'+colecoes.map(c=>`<option value="${c}">${c}</option>`).join('');
     sel.value=vAtual;
-
+    loadFechamentos();
   }catch(e){toast('Erro relatórios: '+e.message,'err');}
 }
 
@@ -1468,6 +1560,12 @@ async function gerarRelColecao(){
     const cortes=await db(query);
     if(!cortes.length){el.innerHTML='<div class="nd">Nenhum corte encontrado com os filtros selecionados</div>';return;}
 
+    // Aviso de mês não fechado
+    const temNaoFechado=cortes.some(c=>c.status==='Ag. Fechamento Mensal');
+    const avisoMes=temNaoFechado?`<div style="background:rgba(232,197,71,.1);border:1px solid var(--yw);border-radius:8px;padding:12px;margin-bottom:14px;font-size:12px;color:var(--yw)">
+      ⚠️ <b>Atenção:</b> Este período contém cortes internos com custo pendente de fechamento mensal. Os valores de custo podem variar até o fechamento do mês.
+    </div>`:'';
+
     // Busca lotes e grupos vinculados
     const ids=cortes.map(c=>c.id).join(',');
     const[lotes,itensPgto]=await Promise.all([
@@ -1487,8 +1585,9 @@ async function gerarRelColecao(){
       const lotesCorte=lotes.filter(l=>l.corte_id===c.id);
       const gruposCorte=grupos.filter(g=>lotesCorte.find(l=>l.id===g.lote_id));
       const custoFac=gruposCorte.reduce((s,g)=>s+g.valor_liquido,0);
+      const freteLote=lotesCorte.reduce((s,l)=>s+(l.frete_ida||0)+(l.frete_volta||0),0);
       const custoCorte=c.custo_corte||0;
-      const total=custoCorte+custoFac;
+      const total=custoCorte+custoFac+freteLote;
       const enviado=lotesCorte.reduce((s,l)=>s+(l.qtd_enviada||0),0);
       const retornado=gruposCorte.reduce((s,g)=>s+g.quantidade,0);
 
@@ -1497,7 +1596,7 @@ async function gerarRelColecao(){
       totEnviado+=enviado;
       totRetornado+=retornado;
       totCorte+=custoCorte;
-      totFac+=custoFac;
+      totFac+=custoFac+freteLote;
 
       return`<tr style="cursor:pointer" onclick="verDetalhe('${c.id}')">
         <td style="color:var(--yw);font-weight:600">${c.numero_corte}</td>
@@ -1516,6 +1615,7 @@ async function gerarRelColecao(){
     }).join('');
 
     el.innerHTML=`
+      ${avisoMes}
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:16px">
         <div class="stat"><div class="sl">Pretendido</div><div class="sv">${totPretendido}</div></div>
         <div class="stat"><div class="sl">Cortado</div><div class="sv" style="color:var(--yw)">${totCortado}</div></div>
