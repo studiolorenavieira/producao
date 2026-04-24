@@ -325,7 +325,7 @@ tr:hover td{background:rgba(255,255,255,.015);}
       <div class="fi"><label>Coleção *</label><input type="text" id="cc-col" placeholder="Verão 2026"></div>
       <div class="fi"><label>Modelo/Referência *</label><input type="text" id="cc-mod" placeholder="REF-001"></div>
       <div class="fi"><label>Tipo de Peça *</label>
-        <select id="cc-tipo"><option value="">Selecione...</option><option>Blusa</option><option>Camisa</option><option>Camiseta</option><option>Short</option><option>Bermuda</option><option>Vestido</option><option>Calça</option><option>Macacão</option><option>Colete</option><option>Body</option><option>Conjunto</option><option>Saia</option><option>Blazer</option><option>Jaqueta</option><option>Parka</option><option>Outro</option></select>
+        <select id="cc-tipo"><option value="">Selecione...</option><option>Blusa</option><option>Camisa</option><option>Camiseta</option><option>Short</option><option>Bermuda</option><option>Vestido</option><option>Calça</option><option>Macacão</option><option>Colete</option><option>Body</option><option>Conjunto</option><option>Saia</option><option>Blazer</option><option>Jaqueta</option><option>Parka</option><option>Capa</option><option>Outro</option></select>
       </div>
       <div class="fi"><label>Qtd Pretendida *</label><input type="number" id="cc-qtdp" min="1"></div>
       <div class="fi"><label>Cortador</label><input type="text" id="cc-cort" placeholder="Nome..."></div>
@@ -1236,6 +1236,7 @@ async function verDetalhe(corteId){
       <div style="font-weight:700;margin-bottom:10px;font-size:11px;text-transform:uppercase;letter-spacing:.5px">Resumo de Custos</div>
       <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:var(--t2)">Corte</span><span>${fR(c.custo_corte)}</span></div>
       <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:var(--t2)">Facções</span><span>${fR(totalFac)}</span></div>
+      ${totalFretes>0?`<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:var(--t2)">Fretes</span><span>${fR(totalFretes)}</span></div>`:''}
       <div class="divider"></div>
       <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:800"><span>Total</span><span style="color:var(--yw)">${fR(totalGeral)}</span></div>
     </div>`;
