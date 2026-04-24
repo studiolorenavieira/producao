@@ -193,7 +193,8 @@ tr:hover td{background:rgba(255,255,255,.015);}
   </div>
   <div class="flt">
     <select id="fc-mes" onchange="renderCortes()"><option value="">Todos os meses</option></select>
-    <input type="text" id="fc-col" placeholder="Coleção..." oninput="renderCortes()" style="width:130px">
+    <input type="text" id="fc-col" placeholder="Coleção..." oninput="renderCortes()" style="width:120px">
+    <input type="text" id="fc-mod" placeholder="🔍 Modelo..." oninput="renderCortes()" style="width:140px">
     <select id="fc-st" onchange="renderCortes()">
       <option value="">Todos os status</option>
       <option>Aguardando Retorno</option>
@@ -377,9 +378,34 @@ tr:hover td{background:rgba(255,255,255,.015);}
       <div class="fi" style="grid-column:1/-1"><label id="rf-obs-label">Observação</label><input type="text" id="rf-obs" placeholder="Ex: frete R$20, acréscimo por urgência..."></div>
     </div>
     <div id="rf-calc" style="background:var(--s2);border-radius:8px;padding:12px;font-size:12px;margin-bottom:4px"></div>
+    <div id="rf-redir-btn" style="display:none;margin-bottom:8px">
+      <button class="btn bor bsm" onclick="abrirRedirecionamento()" style="width:100%">↪ Redirecionar peças pendentes para outra Facção</button>
+    </div>
     <div class="md-f">
       <button class="btn bg" onclick="fecharModal('mo-retfac')">Cancelar</button>
       <button class="btn by" onclick="salvarRetornoFac()">Salvar Retorno</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL REDIRECIONAMENTO -->
+<div class="mo" id="mo-redir">
+  <div class="md">
+    <div class="md-t">↪ Redirecionar para Nova Facção</div>
+    <input type="hidden" id="rd-corte-id">
+    <input type="hidden" id="rd-qtd">
+    <input type="hidden" id="rd-lote-origem-id">
+    <div id="rd-info" style="background:var(--s2);border-radius:8px;padding:10px;font-size:12px;color:var(--t2);margin-bottom:16px"></div>
+    <div class="fg">
+      <div class="fi"><label>Data de Envio *</label><input type="date" id="rd-data"></div>
+      <div class="fi"><label>Nova Facção *</label><input type="text" id="rd-fac" placeholder="Nome da facção"></div>
+      <div class="fi"><label>Valor por Peça (R$) *</label><input type="number" id="rd-vlr" step="0.01" min="0"></div>
+      <div class="fi"><label>Prazo (dias) *</label><input type="number" id="rd-prazo" min="1" value="7"></div>
+      <div class="fi" style="grid-column:1/-1"><label>Observação</label><input type="text" id="rd-obs" placeholder="Ex: peças com problema de corte, redirecionadas após conserto..."></div>
+    </div>
+    <div class="md-f">
+      <button class="btn bg" onclick="fecharModal('mo-redir')">Cancelar</button>
+      <button class="btn by" onclick="salvarRedirecionamento()">Confirmar Envio</button>
     </div>
   </div>
 </div>
@@ -584,9 +610,11 @@ function renderCortes(){
   let d=[...cortesData];
   const mes=document.getElementById('fc-mes').value;
   const col=document.getElementById('fc-col').value.toLowerCase();
+  const mod=document.getElementById('fc-mod').value.toLowerCase();
   const st=document.getElementById('fc-st').value;
   if(mes)d=d.filter(c=>c.data_corte?.startsWith(mes));
   if(col)d=d.filter(c=>c.colecao?.toLowerCase().includes(col));
+  if(mod)d=d.filter(c=>c.modelo?.toLowerCase().includes(mod));
   if(st)d=d.filter(c=>c.status===st);
   document.getElementById('cortes-tot').textContent=d.length+' corte(s) · '+d.reduce((s,c)=>s+(c.qtd_cortada||c.qtd_pretendida||0),0)+' peças';
   if(!d.length){document.getElementById('tb-cortes').innerHTML='<tr><td colspan="11" class="nd">Nenhum corte</td></tr>';return;}
@@ -930,6 +958,7 @@ function calcRetorno(){
     ${desc>0?`<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:var(--rd)">Desconto</span><span>- ${fR(desc)}</span></div>`:''}
     ${acres>0?`<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:var(--gn)">Acréscimo</span><span>+ ${fR(acres)}</span></div>`:''}
     <div style="border-top:1px solid var(--bd);padding-top:8px;display:flex;justify-content:space-between;font-weight:700"><span>Valor Líquido</span><span style="color:var(--gn)">${fR(liquido)}</span></div>`;
+  document.getElementById('rf-redir-btn').style.display=cons>0?'block':'none';
 }
 
 async function salvarRetornoFac(){
@@ -976,6 +1005,63 @@ async function salvarRetornoFac(){
     // NÃO muda o status do corte — são independentes
     toast('Retorno registrado! '+ok+' peças aprovadas para pagamento.'+(cons>0?' '+cons+' peças ainda em conserto.':''));
     fecharModal('mo-retfac');loadFaccoes();
+  }catch(e){toast('Erro: '+e.message,'err');}
+}
+
+// ===== REDIRECIONAMENTO ENTRE FACÇÕES =====
+function abrirRedirecionamento(){
+  const loteId=document.getElementById('rf-lote-id').value;
+  const pendentes=parseInt(document.getElementById('rf-qtd-enviada').value)||0;
+  const ok=parseInt(document.getElementById('rf-qtd-ok').value)||0;
+  const cons=pendentes-ok;
+  const lote=facData.find(f=>f.id===loteId);
+  document.getElementById('rd-lote-origem-id').value=loteId;
+  document.getElementById('rd-corte-id').value=lote?.corte_id||'';
+  document.getElementById('rd-qtd').value=cons;
+  document.getElementById('rd-info').innerHTML=`<b>${cons} peças</b> serão redirecionadas de <b>${lote?.faccao||'—'}</b> para nova facção · Modelo: ${lote?.modelo||'—'}`;
+  document.getElementById('rd-data').value=hoje();
+  document.getElementById('rd-fac').value='';
+  document.getElementById('rd-vlr').value='';
+  document.getElementById('rd-prazo').value='7';
+  document.getElementById('rd-obs').value='';
+  fecharModal('mo-retfac');
+  abrirModal('mo-redir');
+}
+
+async function salvarRedirecionamento(){
+  const loteOrigemId=document.getElementById('rd-lote-origem-id').value;
+  const corteId=document.getElementById('rd-corte-id').value;
+  const qtd=parseInt(document.getElementById('rd-qtd').value)||0;
+  const fac=document.getElementById('rd-fac').value.trim();
+  const vlr=parseFloat(document.getElementById('rd-vlr').value)||0;
+  const prazo=parseInt(document.getElementById('rd-prazo').value)||7;
+  const dataEnv=document.getElementById('rd-data').value;
+  const obs=document.getElementById('rd-obs').value;
+  if(!fac||!vlr||!dataEnv){toast('Preencha facção, valor e data','err');return;}
+  try{
+    const loteOrig=facData.find(f=>f.id===loteOrigemId);
+    // Cria novo lote vinculado ao mesmo corte
+    await db('lotes_faccao','POST',{
+      corte_id:corteId,
+      numero_corte:loteOrig?.numero_corte,
+      colecao:loteOrig?.colecao,
+      modelo:loteOrig?.modelo,
+      tipo_peca:loteOrig?.tipo_peca,
+      qtd_cortada:qtd,
+      qtd_enviada:qtd,
+      faccao:fac,
+      valor_peca:vlr,
+      prazo_dias:prazo,
+      data_envio:dataEnv,
+      status:'Em Produção',
+      obs_redir:obs,
+      lote_origem_id:loteOrigemId
+    });
+    // Atualiza lote original para Concluído (as peças pendentes foram redirecionadas)
+    await db('lotes_faccao?id=eq.'+loteOrigemId,'PATCH',{status:'Concluído / Ag. Pagamento'});
+    toast(qtd+' peças redirecionadas para '+fac+'!');
+    fecharModal('mo-redir');
+    loadFaccoes();
   }catch(e){toast('Erro: '+e.message,'err');}
 }
 
