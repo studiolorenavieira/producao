@@ -217,9 +217,13 @@ td{padding:10px 12px;white-space:nowrap;font-size:13px;}
 <div class="modal-overlay" id="modal">
   <div class="modal">
     <div class="modal-title">Nova coleção</div>
-    <div class="field-group" style="width:100%">
+    <div class="field-group" style="width:100%;margin-bottom:12px">
       <span class="field-label">Nome da coleção</span>
-      <input type="text" class="input-text" id="novaColecaoInput" placeholder="Ex: Prumo Março/2026" style="width:100%" onkeydown="if(event.key==='Enter')criarColecao()">
+      <input type="text" class="input-text" id="novaColecaoInput" placeholder="Ex: Prumo" style="width:100%">
+    </div>
+    <div class="field-group" style="width:100%">
+      <span class="field-label">Mês / Ano de lançamento</span>
+      <input type="month" class="input-text" id="novaColecaoMes" style="width:100%" onkeydown="if(event.key==='Enter')criarColecao()">
     </div>
     <div id="modal-msg"></div>
     <div class="modal-footer">
@@ -284,14 +288,23 @@ function onColecaoChange(){
   document.getElementById('colecao-badge').textContent = val || 'Nenhuma coleção selecionada';
   if(val){ renderPeriodoBlocks(); syncStatus(); renderTable(); updateSummary(); renderAlertas(); }
 }
-function openModal(){ document.getElementById('modal').classList.add('open'); document.getElementById('novaColecaoInput').value=''; document.getElementById('modal-msg').innerHTML=''; setTimeout(()=>document.getElementById('novaColecaoInput').focus(),100); }
+function openModal(){ document.getElementById('modal').classList.add('open'); document.getElementById('novaColecaoInput').value=''; document.getElementById('novaColecaoMes').value=''; document.getElementById('modal-msg').innerHTML=''; setTimeout(()=>document.getElementById('novaColecaoInput').focus(),100); }
 function closeModal(){ document.getElementById('modal').classList.remove('open'); }
 function criarColecao(){
   const nome = document.getElementById('novaColecaoInput').value.trim();
+  const mes = document.getElementById('novaColecaoMes').value; // formato YYYY-MM
   if(!nome){ document.getElementById('modal-msg').innerHTML='<div class="msg msg-err">Informe o nome.</div>'; return; }
-  if(db[nome]){ document.getElementById('modal-msg').innerHTML='<div class="msg msg-err">Já existe.</div>'; return; }
-  db[nome] = emptyCol(); saveDb(); renderColecoes();
-  document.getElementById('colecaoSelect').value = nome; onColecaoChange(); closeModal();
+  if(!mes){ document.getElementById('modal-msg').innerHTML='<div class="msg msg-err">Informe o mês/ano.</div>'; return; }
+  // Formata label: "Prumo — Mar/2026"
+  const [ano, mm] = mes.split('-');
+  const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  const mesLabel = meses[parseInt(mm)-1]+'/'+ano;
+  const chave = nome + ' — ' + mesLabel;
+  if(db[chave]){ document.getElementById('modal-msg').innerHTML='<div class="msg msg-err">Já existe.</div>'; return; }
+  const col = emptyCol();
+  col.meta = { nome, mes, mesLabel, chave };
+  db[chave] = col; saveDb(); renderColecoes();
+  document.getElementById('colecaoSelect').value = chave; onColecaoChange(); closeModal();
 }
 function deletarColecao(){
   if(!currentColecao || !confirm(`Excluir "${currentColecao}"?`)) return;
