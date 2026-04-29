@@ -1515,6 +1515,9 @@ async function confirmarCancelamento(){
         await db('lotes_faccao?id=eq.'+grupo.lote_id,'PATCH',{status:'Concluído / Ag. Pagamento'});
       }
     }
+    if(item.acabamento_id){
+      await db('acabamentos?id=eq.'+item.acabamento_id,'PATCH',{status:'Concluído / Ag. Pagamento',aprovado_pagamento:true});
+    }
     toast('Pagamento cancelado!');
     fecharModal('mo-cancel');
     loadHistPgto();
