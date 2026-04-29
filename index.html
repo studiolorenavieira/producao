@@ -472,6 +472,19 @@ tr:hover td{background:rgba(255,255,255,.015);}
       <button class="btn bg bsm" onclick="addFreteRetorno()" style="margin-top:6px">+ Adicionar Frete</button>
     </div>
     <div id="rf-calc" style="background:var(--s2);border-radius:8px;padding:12px;font-size:12px;margin-bottom:4px"></div>
+    <div id="rf-motivo-wrap" style="display:none;margin-bottom:12px">
+      <div style="font-size:10px;color:var(--t2);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:8px">O que acontece com as peças restantes?</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px;background:var(--s2);border-radius:8px;border:1px solid var(--bd)">
+          <input type="radio" name="rf-motivo" id="rf-motivo-prod" value="producao" checked style="accent-color:var(--yw);width:16px;height:16px">
+          <div><div style="font-size:12px;font-weight:600">⚙️ Ainda em produção</div><div style="font-size:11px;color:var(--t2)">Continuando normalmente, vai mandar mais</div></div>
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px;background:var(--s2);border-radius:8px;border:1px solid var(--bd)">
+          <input type="radio" name="rf-motivo" id="rf-motivo-cons" value="conserto" style="accent-color:var(--rd);width:16px;height:16px">
+          <div><div style="font-size:12px;font-weight:600">🔧 Retorno para conserto</div><div style="font-size:11px;color:var(--t2)">Voltou com defeito, precisa de conserto</div></div>
+        </label>
+      </div>
+    </div>
     <div id="rf-redir-btn" style="display:none;margin-bottom:8px">
       <button class="btn bor bsm" onclick="abrirRedirecionamento()" style="width:100%">↪ Redirecionar peças pendentes para outra Facção</button>
     </div>
@@ -1074,6 +1087,8 @@ async function abrirRetFac(loteId){
   document.getElementById('rf-acres').value='0';
   document.getElementById('rf-fretes-lista').innerHTML='';
   rfFretes=[];
+  document.getElementById('rf-motivo-wrap').style.display='none';
+  document.getElementById('rf-motivo-prod').checked=true;
   document.getElementById('rf-obs').value='';
   document.getElementById('rf-obs').style.borderColor='';
   document.getElementById('rf-obs-label').textContent='Observação';
@@ -1112,12 +1127,14 @@ function calcRetorno(){
   const liquido=Math.max(0,bruto-desc+acres);
   document.getElementById('rf-calc').innerHTML=`
     <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:var(--t2)">Peças OK neste retorno</span><span style="color:var(--gn);font-weight:600">${ok}</span></div>
-    <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:var(--t2)">Ainda em conserto</span><span style="color:var(--rd);font-weight:600">${cons}</span></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:var(--t2)">Peças pendentes</span><span style="color:var(--or);font-weight:600">${cons}</span></div>
     <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:var(--t2)">Valor Bruto (${ok} × ${fR(vlr)})</span><span>${fR(bruto)}</span></div>
     ${desc>0?`<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:var(--rd)">Desconto</span><span>- ${fR(desc)}</span></div>`:''}
     ${acres>0?`<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:var(--gn)">Acréscimo</span><span>+ ${fR(acres)}</span></div>`:''}
     <div style="border-top:1px solid var(--bd);padding-top:8px;display:flex;justify-content:space-between;font-weight:700"><span>Valor Líquido</span><span style="color:var(--gn)">${fR(liquido)}</span></div>`;
   document.getElementById('rf-redir-btn').style.display=cons>0?'block':'none';
+  document.getElementById('rf-motivo-wrap').style.display=cons>0?'block':'none';
+  if(cons===0)document.getElementById('rf-motivo-prod').checked=true;
 }
 
 async function salvarRetornoFac(){
@@ -1157,15 +1174,21 @@ async function salvarRetornoFac(){
     const temPago=todosGrupos.some(g=>g.status==='Pago');
     let novoSt;
     if(cons>0){
-      // Ainda tem peças em conserto
-      novoSt=temPago?'Ret. Conserto / Pag. Parcial':'Ret. Conserto / Ag. Pagamento';
+      const motivo=document.querySelector('input[name="rf-motivo"]:checked')?.value||'producao';
+      if(motivo==='conserto'){
+        // Voltou com defeito
+        novoSt=temPago?'Ret. Conserto / Pag. Parcial':'Ret. Conserto / Ag. Pagamento';
+      } else {
+        // Ainda em produção — entrega parcial normal
+        novoSt='Em Produção';
+      }
     } else {
       // Todas as peças retornaram
       novoSt=temPago?'Concluído / Pag. Parcial':'Concluído / Ag. Pagamento';
     }
     await db('lotes_faccao?id=eq.'+loteId,'PATCH',{status:novoSt});
-    // NÃO muda o status do corte — são independentes
-    toast('Retorno registrado! '+ok+' peças aprovadas para pagamento.'+(cons>0?' '+cons+' peças ainda em conserto.':''));
+    const motivoMsg=cons>0?(document.querySelector('input[name="rf-motivo"]:checked')?.value==='conserto'?' '+cons+' peças em conserto.'	:' '+cons+' peças ainda em produção.'):'';
+    toast('Retorno registrado! '+ok+' peças aprovadas para pagamento.'+motivoMsg);
     fecharModal('mo-retfac');loadFaccoes();
   }catch(e){toast('Erro: '+e.message,'err');}
 }
