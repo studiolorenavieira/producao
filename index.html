@@ -132,6 +132,7 @@ tr:hover td{background:rgba(255,255,255,.015);}
     <button class="nb active" onclick="P('dash')">Dashboard</button>
     <button class="nb" onclick="P('cortes')">Cortes</button>
     <button class="nb" onclick="P('faccoes')">Facções</button>
+    <button class="nb" onclick="P('acabamentos')">Acabamento</button>
     <button class="nb" onclick="P('pagamentos')">Pagamentos</button>
     <button class="nb" onclick="P('relatorios')">Relatórios</button>
   </nav>
@@ -144,6 +145,7 @@ tr:hover td{background:rgba(255,255,255,.015);}
   <button class="nb active" onclick="P('dash')">Dashboard</button>
   <button class="nb" onclick="P('cortes')">Cortes</button>
   <button class="nb" onclick="P('faccoes')">Facções</button>
+  <button class="nb" onclick="P('acabamentos')">Acabamento</button>
   <button class="nb" onclick="P('pagamentos')">Pagamentos</button>
   <button class="nb" onclick="P('relatorios')">Relatórios</button>
 </div>
@@ -312,9 +314,69 @@ tr:hover td{background:rgba(255,255,255,.015);}
   </div>
 </div>
 
+<!-- ACABAMENTO -->
+<div id="pg-acabamentos" style="display:none">
+  <div class="sh">
+    <div><div class="st">Acabamento</div><div class="ss">Controle de acabamento de peças</div></div>
+    <button class="btn by" onclick="abrirNovoAcabamento()">+ Novo Acabamento</button>
+  </div>
+  <div class="flt">
+    <select id="fa-st" onchange="renderAcabamentos()">
+      <option value="">Todos</option>
+      <option>Em Acabamento</option>
+      <option>Concluído / Ag. Pagamento</option>
+      <option>Concluído / Pago</option>
+    </select>
+    <input type="text" id="fa-acab" placeholder="Acabador..." oninput="renderAcabamentos()" style="width:140px">
+  </div>
+  <div class="card0"><div class="tw"><table>
+    <thead><tr><th>Modelo</th><th>Coleção</th><th>Acabador</th><th>Qtd</th><th>Vlr/Pç</th><th>Total</th><th>Envio</th><th>Ret. Prev.</th><th>Prazo</th><th>Status</th><th></th></tr></thead>
+    <tbody id="tb-acabamentos"><tr><td colspan="11" class="nd"><span class="sp"></span></td></tr></tbody>
+  </table></div></div>
+</div>
+
 </div><!-- /ct -->
 
-<!-- MODAL CORTE (criar/editar) -->
+<!-- MODAL ACABAMENTO -->
+<div class="mo" id="mo-acabamento">
+  <div class="md">
+    <div class="md-t" id="mo-acab-titulo">Novo Acabamento</div>
+    <input type="hidden" id="acab-id">
+    <div class="fg">
+      <div class="fi" style="grid-column:1/-1"><label>Lote de Facção *</label>
+        <select id="acab-lote"><option value="">Selecione um lote...</option></select>
+      </div>
+      <div class="fi"><label>Acabador *</label><input type="text" id="acab-acabador" placeholder="Nome..."></div>
+      <div class="fi"><label>Qtd Peças *</label><input type="number" id="acab-qtd" min="1"></div>
+      <div class="fi"><label>Valor por Peça (R$) *</label><input type="number" id="acab-vlr" step="0.01" min="0" oninput="calcAcabamento()"></div>
+      <div class="fi"><label>Data de Envio *</label><input type="date" id="acab-data"></div>
+      <div class="fi"><label>Prazo (dias) *</label><input type="number" id="acab-prazo" min="1" value="3"></div>
+      <div class="fi" style="grid-column:1/-1"><label>Observação</label><input type="text" id="acab-obs" placeholder="Observações..."></div>
+    </div>
+    <div id="acab-calc" style="background:var(--s2);border-radius:8px;padding:12px;font-size:12px;margin-top:10px"></div>
+    <div class="md-f">
+      <button class="btn bg" onclick="fecharModal('mo-acabamento')">Cancelar</button>
+      <button class="btn by" onclick="salvarAcabamento()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL RETORNO ACABAMENTO -->
+<div class="mo" id="mo-ret-acab">
+  <div class="md">
+    <div class="md-t" id="mo-ret-acab-titulo">Retorno do Acabamento</div>
+    <input type="hidden" id="ra-id">
+    <div id="ra-info" style="background:var(--s2);border-radius:8px;padding:10px;font-size:12px;color:var(--t2);margin-bottom:14px"></div>
+    <div class="fg">
+      <div class="fi"><label>Data de Retorno *</label><input type="date" id="ra-data"></div>
+      <div class="fi"><label>Observação</label><input type="text" id="ra-obs" placeholder="Observações..."></div>
+    </div>
+    <div class="md-f">
+      <button class="btn bg" onclick="fecharModal('mo-ret-acab')">Cancelar</button>
+      <button class="btn by" onclick="salvarRetornoAcab()">Confirmar Retorno</button>
+    </div>
+  </div>
+</div>
 <div class="mo" id="mo-corte">
   <div class="md">
     <div class="md-t" id="mo-corte-titulo">Novo Corte</div>
@@ -516,7 +578,7 @@ function P(page){
   document.querySelectorAll('[id^="pg-"]').forEach(e=>e.style.display='none');
   document.getElementById('pg-'+page).style.display='block';
   document.querySelectorAll('.nb').forEach(b=>b.classList.toggle('active',b.getAttribute('onclick')?.includes("'"+page+"'")));
-  const map={dash:loadDash,cortes:loadCortes,faccoes:loadFaccoes,pagamentos:loadPagamentos,relatorios:loadRel};
+  const map={dash:loadDash,cortes:loadCortes,faccoes:loadFaccoes,acabamentos:loadAcabamentos,pagamentos:loadPagamentos,relatorios:loadRel};
   map[page]?.();
 }
 
@@ -1252,15 +1314,17 @@ let ultimoLote=null;
 
 async function loadPagamentos(){
   try{
-    const[cortes,grupos,lotes]=await Promise.all([
+    const[cortes,grupos,lotes,acabs]=await Promise.all([
       db('cortes?pgto_pendente=eq.true&select=*'),
       db('grupos_peca?aprovado=eq.true&status=eq.OK&select=*'),
-      db('lotes_faccao?select=id,faccao,modelo,numero_corte,tipo_peca,colecao')
+      db('lotes_faccao?select=id,faccao,modelo,numero_corte,tipo_peca,colecao'),
+      db('acabamentos?aprovado_pagamento=eq.true&status=eq.Concluído / Ag. Pagamento&select=*')
     ]);
     const loteMap=Object.fromEntries(lotes.map(l=>[l.id,l]));
     payItems=[
       ...cortes.map(c=>({key:'c-'+c.id,tipo:'Corte',ref:c.numero_corte,desc:c.modelo+' · Cortador: '+(c.cortador||'—'),valor:c.custo_corte||0,raw_id:c.id,raw_tipo:'corte'})),
-      ...grupos.map(g=>({key:'g-'+g.id,tipo:'Facção',ref:loteMap[g.lote_id]?.numero_corte||'—',desc:(loteMap[g.lote_id]?.modelo||'—')+' · '+(loteMap[g.lote_id]?.faccao||'—')+' · '+g.quantidade+'pç',valor:g.valor_liquido||0,raw_id:g.id,raw_tipo:'grupo',lote_id:g.lote_id}))
+      ...grupos.map(g=>({key:'g-'+g.id,tipo:'Facção',ref:loteMap[g.lote_id]?.numero_corte||'—',desc:(loteMap[g.lote_id]?.modelo||'—')+' · '+(loteMap[g.lote_id]?.faccao||'—')+' · '+g.quantidade+'pç',valor:g.valor_liquido||0,raw_id:g.id,raw_tipo:'grupo',lote_id:g.lote_id})),
+      ...acabs.map(a=>({key:'a-'+a.id,tipo:'Acabamento',ref:a.modelo||'—',desc:a.modelo+' · '+a.acabador+' · '+a.qtd_pecas+'pç',valor:a.valor_total||0,raw_id:a.id,raw_tipo:'acabamento'}))
     ];
     renderPayLista();
   }catch(e){toast('Erro pagamentos: '+e.message,'err');}
@@ -1268,8 +1332,8 @@ async function loadPagamentos(){
 
 function renderPayLista(){
   if(!payItems.length){document.getElementById('pay-lista').innerHTML='<div class="nd">Nenhum item aguardando pagamento</div>';return;}
-  const byTipo={'Corte':[],'Facção':[]};
-  payItems.forEach(p=>byTipo[p.tipo]?.push(p));
+  const byTipo={'Corte':[],'Facção':[],'Acabamento':[]};
+  payItems.forEach(p=>{if(byTipo[p.tipo])byTipo[p.tipo].push(p);});
   let html='';
   for(const[tipo,items] of Object.entries(byTipo)){
     if(!items.length)continue;
@@ -1322,25 +1386,23 @@ async function gerarLotePgto(){
         valor:it.valor,
         corte_id:it.raw_tipo==='corte'?it.raw_id:null,
         grupo_id:it.raw_tipo==='grupo'?it.raw_id:null,
+        acabamento_id:it.raw_tipo==='acabamento'?it.raw_id:null,
         cancelado:false
       });
       if(it.raw_tipo==='corte'){
         await db('cortes?id=eq.'+it.raw_id,'PATCH',{status:'Concluído / Pago',pgto_pendente:false});
+      } else if(it.raw_tipo==='acabamento'){
+        await db('acabamentos?id=eq.'+it.raw_id,'PATCH',{status:'Concluído / Pago',aprovado_pagamento:false});
       } else {
         await db('grupos_peca?id=eq.'+it.raw_id,'PATCH',{status:'Pago'});
-        // Recalcula status do lote de facção
         if(it.lote_id){
           const todosGrupos=await db('grupos_peca?lote_id=eq.'+it.lote_id+'&select=status,quantidade');
           const temOK=todosGrupos.some(g=>g.status==='OK');
-          const temPago=todosGrupos.some(g=>g.status==='Pago')||true; // acabamos de pagar
           const loteAtual=facData.find(f=>f.id===it.lote_id);
           const temConserto=loteAtual&&['Ret. Conserto / Ag. Pagamento','Ret. Conserto / Pag. Parcial'].includes(loteAtual.status);
           let novoStFac;
-          if(temConserto){
-            novoStFac=temOK?'Ret. Conserto / Pag. Parcial':'Ret. Conserto / Pag. Parcial';
-          } else {
-            novoStFac=temOK?'Concluído / Pag. Parcial':'Concluído / Pago';
-          }
+          if(temConserto){novoStFac='Ret. Conserto / Pag. Parcial';}
+          else{novoStFac=temOK?'Concluído / Pag. Parcial':'Concluído / Pago';}
           await db('lotes_faccao?id=eq.'+it.lote_id,'PATCH',{status:novoStFac});
         }
       }
@@ -1483,6 +1545,148 @@ function showPayTab(tab){
 }
 
 // ===== RELATORIOS =====
+// ===== ACABAMENTOS =====
+let acabamentosData=[];
+
+async function loadAcabamentos(){
+  try{
+    acabamentosData=await db('acabamentos?select=*&order=created_at.desc');
+    renderAcabamentos();
+  }catch(e){toast('Erro acabamentos: '+e.message,'err');}
+}
+
+function chipAcab(s){
+  const m={'Em Acabamento':'cb','Concluído / Ag. Pagamento':'co','Concluído / Pago':'cg'};
+  return`<span class="chip ${m[s]||'cgr'}">${s}</span>`;
+}
+
+function renderAcabamentos(){
+  let d=[...acabamentosData];
+  const st=document.getElementById('fa-st').value;
+  const acab=document.getElementById('fa-acab').value.toLowerCase();
+  if(st)d=d.filter(a=>a.status===st);
+  if(acab)d=d.filter(a=>a.acabador?.toLowerCase().includes(acab));
+  if(!d.length){document.getElementById('tb-acabamentos').innerHTML='<tr><td colspan="11" class="nd">Nenhum acabamento</td></tr>';return;}
+  const now=new Date();
+  document.getElementById('tb-acabamentos').innerHTML=d.map(a=>{
+    const p=new Date(a.data_envio);p.setDate(p.getDate()+(a.prazo_dias||0));
+    const diff=Math.ceil((p-now)/(864e5));
+    const cc=a.status.startsWith('Concluído')?'cg':diff<0?'cr':diff<=2?'cy':'cg';
+    const ct=a.status.startsWith('Concluído')?'OK':diff<0?Math.abs(diff)+'d atraso':diff===0?'hoje':diff+'d';
+    const btns=[];
+    if(a.status==='Em Acabamento')btns.push(`<button class="btn bgr bsm" onclick="abrirRetornoAcab('${a.id}')">↩ Retorno</button>`);
+    btns.push(`<button class="btn br bsm" onclick="delAcabamento('${a.id}')">✕</button>`);
+    return`<tr>
+      <td style="color:var(--yw);font-weight:600">${a.modelo||'—'}</td>
+      <td>${a.colecao||'—'}</td>
+      <td><b>${a.acabador}</b></td>
+      <td>${a.qtd_pecas}</td>
+      <td>${fR(a.valor_por_peca)}</td>
+      <td style="color:var(--gn);font-weight:600">${fR(a.valor_total)}</td>
+      <td>${fD(a.data_envio)}</td>
+      <td>${a.data_envio&&a.prazo_dias?new Date(new Date(a.data_envio).getTime()+a.prazo_dias*864e5).toLocaleDateString('pt-BR'):'—'}</td>
+      <td><span class="chip ${cc}">${ct}</span></td>
+      <td>${chipAcab(a.status)}</td>
+      <td style="white-space:nowrap;display:flex;gap:4px">${btns.join('')}</td>
+    </tr>`;
+  }).join('');
+}
+
+async function abrirNovoAcabamento(){
+  document.getElementById('acab-id').value='';
+  document.getElementById('acab-acabador').value='';
+  document.getElementById('acab-qtd').value='';
+  document.getElementById('acab-vlr').value='';
+  document.getElementById('acab-data').value=hoje();
+  document.getElementById('acab-prazo').value='3';
+  document.getElementById('acab-obs').value='';
+  document.getElementById('acab-calc').innerHTML='';
+  document.getElementById('mo-acab-titulo').textContent='Novo Acabamento';
+  // Carrega lotes concluídos ou em produção
+  try{
+    const lotes=await db('lotes_faccao?select=id,modelo,colecao,faccao,qtd_enviada&order=created_at.desc');
+    const sel=document.getElementById('acab-lote');
+    sel.innerHTML='<option value="">Selecione um lote...</option>'+lotes.map(l=>`<option value="${l.id}" data-modelo="${l.modelo||''}" data-colecao="${l.colecao||''}" data-qtd="${l.qtd_enviada||0}">${l.modelo||'—'} · ${l.colecao||'—'} · ${l.faccao||'—'} (${l.qtd_enviada||0} pçs)</option>`).join('');
+  }catch(e){}
+  abrirModal('mo-acabamento');
+}
+
+function calcAcabamento(){
+  const qtd=parseInt(document.getElementById('acab-qtd').value)||0;
+  const vlr=parseFloat(document.getElementById('acab-vlr').value)||0;
+  const total=qtd*vlr;
+  document.getElementById('acab-calc').innerHTML=total>0?
+    `<div style="display:flex;justify-content:space-between;font-weight:700"><span>Total</span><span style="color:var(--gn)">${fR(total)}</span></div>`:'';
+}
+
+async function salvarAcabamento(){
+  const loteId=document.getElementById('acab-lote').value;
+  const acabador=document.getElementById('acab-acabador').value.trim();
+  const qtd=parseInt(document.getElementById('acab-qtd').value)||0;
+  const vlr=parseFloat(document.getElementById('acab-vlr').value)||0;
+  const data=document.getElementById('acab-data').value;
+  const prazo=parseInt(document.getElementById('acab-prazo').value)||3;
+  const obs=document.getElementById('acab-obs').value;
+  if(!loteId||!acabador||!qtd||!vlr||!data){toast('Preencha todos os campos obrigatórios','err');return;}
+  const sel=document.getElementById('acab-lote');
+  const opt=sel.options[sel.selectedIndex];
+  try{
+    await db('acabamentos','POST',{
+      lote_id:loteId,
+      modelo:opt.dataset.modelo,
+      colecao:opt.dataset.colecao,
+      acabador,
+      qtd_pecas:qtd,
+      valor_por_peca:vlr,
+      valor_total:qtd*vlr,
+      prazo_dias:prazo,
+      data_envio:data,
+      obs,
+      status:'Em Acabamento',
+      aprovado_pagamento:false
+    });
+    toast('Acabamento registrado!');fecharModal('mo-acabamento');loadAcabamentos();
+  }catch(e){toast('Erro: '+e.message,'err');}
+}
+
+function abrirRetornoAcab(id){
+  const a=acabamentosData.find(x=>x.id===id);if(!a)return;
+  document.getElementById('ra-id').value=id;
+  document.getElementById('mo-ret-acab-titulo').textContent='Retorno — '+a.acabador+' · '+a.modelo;
+  document.getElementById('ra-info').textContent=a.qtd_pecas+' peças · '+fR(a.valor_por_peca)+'/pç · Total: '+fR(a.valor_total);
+  document.getElementById('ra-data').value=hoje();
+  document.getElementById('ra-obs').value='';
+  abrirModal('mo-ret-acab');
+}
+
+async function salvarRetornoAcab(){
+  const id=document.getElementById('ra-id').value;
+  const dataRet=document.getElementById('ra-data').value;
+  const obs=document.getElementById('ra-obs').value;
+  if(!dataRet){toast('Informe a data de retorno','err');return;}
+  try{
+    await db('acabamentos?id=eq.'+id,'PATCH',{
+      status:'Concluído / Ag. Pagamento',
+      data_retorno:dataRet,
+      aprovado_pagamento:true,
+      obs:obs||null
+    });
+    toast('Retorno registrado! Acabamento em pagamentos.');
+    fecharModal('mo-ret-acab');loadAcabamentos();loadPagamentos();
+  }catch(e){toast('Erro: '+e.message,'err');}
+}
+
+async function delAcabamento(id){
+  if(!confirm('Excluir este acabamento?'))return;
+  try{
+    // Verifica se tem pagamento ativo
+    const itens=await db('itens_pagamento?acabamento_id=eq.'+id+'&cancelado=eq.false&select=id');
+    if(itens.length>0){toast('Cancele o pagamento antes de excluir','err');return;}
+    await db('acabamentos?id=eq.'+id,'DELETE');
+    toast('Excluído');loadAcabamentos();
+  }catch(e){toast('Erro: '+e.message,'err');}
+}
+
 // ===== FECHAMENTO MENSAL =====
 async function executarFechamento(){
   const mes=document.getElementById('fech-mes').value;
