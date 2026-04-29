@@ -125,18 +125,22 @@ td{padding:10px 12px;white-space:nowrap;font-size:13px;}
     <div class="upload-base-grid" style="grid-template-columns:1fr">
       <div class="upload-base-card">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
-          <div class="upload-base-title">Ordens de Produção da Coleção</div>
+          <div class="upload-base-title">Produtos Produzidos</div>
           <a href="https://dapic.app/pivot/produtosproducaopivot" target="_blank" class="btn btn-outline btn-sm" style="font-size:10px;padding:4px 9px;text-decoration:none">↗ Abrir no DAPIC</a>
         </div>
-        <div class="upload-base-desc">Relatório de OPs finalizado por coleção. Define exatamente o que foi produzido para esta coleção — sem contaminar com lotes anteriores. Cada novo upload substitui o anterior.</div>
-        <div class="upload-zone">
-          <input type="file" accept=".xlsx,.xls" onchange="handleUpload('produzidos',this)">
-          <div class="upload-zone-text">↓ clique ou arraste .xlsx</div>
+        <div class="upload-base-desc">Base da coleção — define quais produtos pertencem a ela e o total produzido. Use o upload ou adicione manualmente.</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+          <div class="upload-zone">
+            <input type="file" accept=".xlsx,.xls" onchange="handleUpload('produzidos',this)">
+            <div class="upload-zone-text">↓ Upload Excel (OP)</div>
+          </div>
+          <button class="btn btn-outline" style="font-size:12px" onclick="abrirModalManual()">+ Adicionar manual</button>
         </div>
         <div class="upload-status">
           <div class="status-dot" id="dot-produzidos"></div>
           <span id="txt-produzidos" style="color:var(--muted)">Nenhum arquivo</span>
         </div>
+        <div id="lista-produzidos" style="margin-top:8px"></div>
       </div>
     </div>
 
@@ -209,6 +213,26 @@ td{padding:10px 12px;white-space:nowrap;font-size:13px;}
           </div>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ENTRADA MANUAL -->
+<div class="modal-overlay" id="modal-manual">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-title">Adicionar produto manualmente</div>
+    <div class="field-group" style="width:100%;margin-bottom:12px">
+      <span class="field-label">Nome do produto</span>
+      <input type="text" class="input-text" id="manual-nome" placeholder="Ex: Vestido Fran" style="width:100%">
+    </div>
+    <div class="field-group" style="width:100%;margin-bottom:4px">
+      <span class="field-label">Quantidade produzida</span>
+      <input type="number" class="input-text" id="manual-qtd" placeholder="Ex: 150" min="1" style="width:100%" onkeydown="if(event.key==='Enter')salvarManual()">
+    </div>
+    <div id="modal-manual-msg"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline btn-sm" onclick="fecharModalManual()">Cancelar</button>
+      <button class="btn btn-gold btn-sm" onclick="salvarManual()">Adicionar</button>
     </div>
   </div>
 </div>
@@ -366,7 +390,7 @@ function renderPeriodoBlocks(){
 
 function syncStatus(){
   const d = getCol();
-  if(d.produzidos&&d.produzidos.length) setStatus('produzidos','ok',`${d.produzidos.length} produtos`);
+  if(d.produzidos&&d.produzidos.length){ setStatus('produzidos','ok',`${d.produzidos.length} produtos`); renderListaProduzidos(); }
   PERIODOS.forEach(p => {
     const h = d['historico'+p];
     if(h) setStatus('historico'+p,'ok',`${h.total} produtos · ${h.label}`);
@@ -389,7 +413,7 @@ function handleUpload(tipo, input, periodo){
       if(tipo==='produzidos') parseProduzidos(rows);
       else if(tipo.startsWith('bazar')) parseBazar(rows, periodo);
       else parseHistorico(rows, tipo, periodo);
-      saveDb(); renderPeriodoBlocks(); syncStatus(); renderTable(); updateSummary(); renderAlertas();
+      saveDb(); renderPeriodoBlocks(); syncStatus(); renderListaProduzidos(); renderTable(); updateSummary(); renderAlertas();
     } catch(err){ setStatus(tipo,'err','Erro: '+err.message); console.error(err); }
     input.value='';
   };
@@ -767,9 +791,86 @@ function renderTable(){
   document.getElementById('table-container').innerHTML = html;
 }
 
+// ── ENTRADA MANUAL ────────────────────────────────────────────────────────────
+function abrirModalManual(){
+  if(!currentColecao){ alert('Selecione uma coleção primeiro.'); return; }
+  document.getElementById('manual-nome').value = '';
+  document.getElementById('manual-qtd').value = '';
+  document.getElementById('modal-manual-msg').innerHTML = '';
+  document.getElementById('modal-manual').classList.add('open');
+  setTimeout(()=>document.getElementById('manual-nome').focus(), 100);
+}
+
+function fecharModalManual(){
+  document.getElementById('modal-manual').classList.remove('open');
+}
+
+function salvarManual(){
+  const nome = document.getElementById('manual-nome').value.trim();
+  const qtd = parseInt(document.getElementById('manual-qtd').value)||0;
+  if(!nome){ document.getElementById('modal-manual-msg').innerHTML='<div class="msg msg-err">Informe o nome do produto.</div>'; return; }
+  if(!qtd||qtd<=0){ document.getElementById('modal-manual-msg').innerHTML='<div class="msg msg-err">Informe uma quantidade válida.</div>'; return; }
+
+  const d = getCol();
+  const produzidos = d.produzidos || [];
+  // Verifica se já existe
+  const existente = produzidos.find(p => p.nome.toLowerCase() === nome.toLowerCase());
+  if(existente){
+    existente.total = qtd; // atualiza quantidade
+  } else {
+    produzidos.push({ nome, total: qtd });
+  }
+  db[currentColecao].produzidos = produzidos;
+  saveDb();
+  renderListaProduzidos();
+  setStatus('produzidos','ok',`${produzidos.length} produtos · manual`);
+  renderTable(); updateSummary(); renderAlertas();
+  fecharModalManual();
+}
+
+function removerProduzido(nome){
+  if(!confirm(`Remover "${nome}"?`)) return;
+  const d = getCol();
+  db[currentColecao].produzidos = d.produzidos.filter(p => p.nome !== nome);
+  saveDb();
+  renderListaProduzidos();
+  setStatus('produzidos','ok',`${db[currentColecao].produzidos.length} produtos`);
+  if(!db[currentColecao].produzidos.length) setStatus('produzidos','','Nenhum produto');
+  renderTable(); updateSummary(); renderAlertas();
+}
+
+function renderListaProduzidos(){
+  const el = document.getElementById('lista-produzidos');
+  if(!el) return;
+  const d = getCol();
+  const prod = d.produzidos || [];
+  if(!prod.length){ el.innerHTML=''; return; }
+  el.innerHTML = `
+    <div style="margin-top:6px;max-height:160px;overflow-y:auto">
+      ${prod.map(p=>`
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px">
+          <span style="color:var(--text)">${p.nome}</span>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="color:var(--gold);font-weight:600">${p.total} pçs</span>
+            <button onclick="abrirEditarProduzido('${p.nome.replace(/'/g,"\'")}',${p.total})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:11px">✎</button>
+            <button onclick="removerProduzido('${p.nome.replace(/'/g,"\'")}');" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:11px">✕</button>
+          </div>
+        </div>`).join('')}
+    </div>`;
+}
+
+function abrirEditarProduzido(nome, qtd){
+  document.getElementById('manual-nome').value = nome;
+  document.getElementById('manual-qtd').value = qtd;
+  document.getElementById('modal-manual-msg').innerHTML = '';
+  document.getElementById('modal-manual').classList.add('open');
+  setTimeout(()=>document.getElementById('manual-qtd').focus(), 100);
+}
+
 // ── INIT ──────────────────────────────────────────────────────────────────────
 renderColecoes();
 document.getElementById('modal').addEventListener('click', e => { if(e.target===e.currentTarget) closeModal(); });
+document.getElementById('modal-manual').addEventListener('click', e => { if(e.target===e.currentTarget) fecharModalManual(); });
 </script>
 </body>
 </html>
