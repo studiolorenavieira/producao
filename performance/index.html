@@ -792,6 +792,23 @@ function renderTable(){
   document.getElementById('table-container').innerHTML = html;
 }
 
+// ── LIMPAR UPLOAD ─────────────────────────────────────────────────────────────
+function limparUpload(tipo){
+  if(!confirm('Limpar este arquivo?')) return;
+  if(tipo.startsWith('historico')){
+    const p = tipo.replace('historico','');
+    db[currentColecao]['historico'+p] = null;
+  } else if(tipo.startsWith('bazar')){
+    const p = tipo.replace('bazar','');
+    db[currentColecao]['bazar'+p] = [];
+  }
+  saveDb();
+  renderPeriodoBlocks();
+  renderTable();
+  updateSummary();
+  renderAlertas();
+}
+
 // ── ENTRADA MANUAL ────────────────────────────────────────────────────────────
 function abrirModalManual(){
   if(!currentColecao){ alert('Selecione uma coleção primeiro.'); return; }
