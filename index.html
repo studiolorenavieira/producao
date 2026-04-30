@@ -914,7 +914,9 @@ function renderFaccoes(){
     btns.push(`<button class="btn br bsm" onclick="delLote('${f.id}')">✕</button>`);
     const g=facGrupos[f.id]||{retorno:0};
     const retorno=g.retorno;
-    const conserto=Math.max(0,(f.qtd_enviada||0)-retorno);
+    const pendentes=Math.max(0,(f.qtd_enviada||0)-retorno);
+    const emConserto=f.status?.includes('Ret. Conserto')?pendentes:0;
+    const emProducao=f.status==='Em Produção'&&pendentes>0?pendentes:0;
     return`<tr>
       <td style="color:var(--yw);font-weight:600">${f.modelo||'—'}</td>
       <td>${f.colecao||'—'}</td>
@@ -922,7 +924,7 @@ function renderFaccoes(){
       <td>${f.qtd_cortada||'—'}</td>
       <td>${f.qtd_enviada||'—'}</td>
       <td>${retorno>0?`<span style="color:var(--gn);font-weight:600">${retorno}</span>`:'—'}</td>
-      <td>${conserto>0?`<span style="color:var(--rd);font-weight:600">${conserto}</span>`:'—'}</td>
+      <td>${emConserto>0?`<span style="color:var(--rd);font-weight:600">${emConserto}</span>`:emProducao>0?`<span style="color:var(--or);font-weight:600">${emProducao}⚙️</span>`:'—'}</td>
       <td><b>${f.faccao||'—'}</b></td>
       <td>${f.valor_peca?fR(f.valor_peca):'—'}</td>
       <td>${fD(f.data_envio)}</td>
