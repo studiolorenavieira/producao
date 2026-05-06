@@ -221,6 +221,7 @@ tr:hover td{background:rgba(255,255,255,.015);}
   </div>
   <div class="flt">
     <select id="ff-st" onchange="renderFaccoes()">
+      <option value="ativos">Ativos</option>
       <option value="">Todos</option>
       <option>Aguardando Facção</option>
       <option>Em Produção</option>
@@ -902,8 +903,9 @@ function renderFaccoes(){
   let d=[...facData];
   const st=document.getElementById('ff-st').value;
   const fac=document.getElementById('ff-fac').value.toLowerCase();
-  if(st)d=d.filter(f=>f.status===st);
-  // sem filtro = mostra TODOS
+  const statusConcluidos=['Concluído / Pago'];
+  if(st==='ativos')d=d.filter(f=>!statusConcluidos.includes(f.status));
+  else if(st)d=d.filter(f=>f.status===st);
   if(fac)d=d.filter(f=>f.faccao?.toLowerCase().includes(fac));
   if(!d.length){document.getElementById('tb-faccoes').innerHTML='<tr><td colspan="14" class="nd">Nenhum lote</td></tr>';return;}
   document.getElementById('tb-faccoes').innerHTML=d.map(f=>{
