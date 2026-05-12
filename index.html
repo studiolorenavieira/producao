@@ -60,7 +60,8 @@ tr:hover td{background:rgba(255,255,255,.015);}
 .fg{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px;}
 .fi{display:flex;flex-direction:column;gap:4px;}
 .fi label{font-size:10px;color:var(--t2);text-transform:uppercase;letter-spacing:.5px;font-weight:600;}
-.fi input,.fi select,.fi textarea{background:var(--s2);border:1px solid var(--bd);border-radius:6px;color:var(--tx);font-family:'Inter',sans-serif;font-size:12px;padding:8px 10px;outline:none;transition:border-color .15s;width:100%;}
+.fi input[type="text"],.fi input[type="number"],.flt input[type="text"]{text-transform:uppercase;}
+.fi input[type="text"]::placeholder,.flt input[type="text"]::placeholder{text-transform:uppercase;}
 .fi input:focus,.fi select:focus{border-color:var(--yw);}
 .fi select option{background:var(--s2);}
 .flt{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
@@ -195,8 +196,8 @@ tr:hover td{background:rgba(255,255,255,.015);}
   </div>
   <div class="flt">
     <select id="fc-mes" onchange="renderCortes()"><option value="">Todos os meses</option></select>
-    <input type="text" id="fc-col" placeholder="Coleção..." oninput="renderCortes()" style="width:120px">
-    <input type="text" id="fc-mod" placeholder="🔍 Modelo..." oninput="renderCortes()" style="width:140px">
+    <input type="text" id="fc-col" placeholder="COLEÇÃO..." oninput="this.value=this.value.toUpperCase();renderCortes()" style="width:120px;text-transform:uppercase">
+    <input type="text" id="fc-mod" placeholder="🔍 MODELO..." oninput="this.value=this.value.toUpperCase();renderCortes()" style="width:140px;text-transform:uppercase">
     <select id="fc-st" onchange="renderCortes()">
       <option value="">Todos os status</option>
       <option>Aguardando Retorno</option>
@@ -231,7 +232,8 @@ tr:hover td{background:rgba(255,255,255,.015);}
       <option>Concluído / Pag. Parcial</option>
       <option>Concluído / Pago</option>
     </select>
-    <input type="text" id="ff-fac" placeholder="Facção..." oninput="renderFaccoes()" style="width:130px">
+    <input type="text" id="ff-fac" placeholder="FACÇÃO..." oninput="this.value=this.value.toUpperCase();renderFaccoes()" style="width:130px;text-transform:uppercase">
+    <input type="text" id="ff-mod" placeholder="🔍 MODELO..." oninput="this.value=this.value.toUpperCase();renderFaccoes()" style="width:140px;text-transform:uppercase">
   </div>
   <div class="card0"><div class="tw"><table>
     <thead><tr><th>Modelo</th><th>Coleção</th><th>Tipo</th><th>Cortado</th><th>Enviado</th><th>Retorno</th><th>Conserto</th><th>Facção</th><th>Vlr/Pç</th><th>Envio</th><th>Ret. Prev.</th><th>Prazo</th><th>Status</th><th class="sticky-col"></th></tr></thead>
@@ -328,7 +330,8 @@ tr:hover td{background:rgba(255,255,255,.015);}
       <option>Concluído / Ag. Pagamento</option>
       <option>Concluído / Pago</option>
     </select>
-    <input type="text" id="fa-acab" placeholder="Acabador..." oninput="renderAcabamentos()" style="width:140px">
+    <input type="text" id="fa-acab" placeholder="ACABADOR..." oninput="this.value=this.value.toUpperCase();renderAcabamentos()" style="width:140px;text-transform:uppercase">
+    <input type="text" id="fa-mod" placeholder="🔍 MODELO..." oninput="this.value=this.value.toUpperCase();renderAcabamentos()" style="width:140px;text-transform:uppercase">
   </div>
   <div class="card0"><div class="tw"><table>
     <thead><tr><th>Modelo</th><th>Coleção</th><th>Acabador</th><th>Qtd</th><th>Vlr/Pç</th><th>Total</th><th>Envio</th><th>Ret. Prev.</th><th>Prazo</th><th>Status</th><th></th></tr></thead>
@@ -783,11 +786,11 @@ async function salvarCorte(){
   const data={
     data_corte:document.getElementById('cc-data').value,
     numero_corte:document.getElementById('cc-num').value,
-    colecao:document.getElementById('cc-col').value,
-    modelo:document.getElementById('cc-mod').value,
+    colecao:document.getElementById('cc-col').value.toUpperCase(),
+    modelo:document.getElementById('cc-mod').value.toUpperCase(),
     tipo_peca:document.getElementById('cc-tipo').value,
     qtd_pretendida:parseInt(document.getElementById('cc-qtdp').value)||0,
-    cortador:document.getElementById('cc-cort').value||null,
+    cortador:document.getElementById('cc-cort').value.toUpperCase()||null,
     externo:externo
   };
   if(!data.data_corte||!data.numero_corte||!data.colecao||!data.modelo||!data.tipo_peca||!data.qtd_pretendida){toast('Preencha os campos obrigatórios','err');return;}
@@ -903,10 +906,12 @@ function renderFaccoes(){
   let d=[...facData];
   const st=document.getElementById('ff-st').value;
   const fac=document.getElementById('ff-fac').value.toLowerCase();
+  const modFac=document.getElementById('ff-mod').value.toLowerCase();
   const statusConcluidos=['Concluído / Pago'];
   if(st==='ativos')d=d.filter(f=>!statusConcluidos.includes(f.status));
   else if(st)d=d.filter(f=>f.status===st);
   if(fac)d=d.filter(f=>f.faccao?.toLowerCase().includes(fac));
+  if(modFac)d=d.filter(f=>f.modelo?.toLowerCase().includes(modFac));
   if(!d.length){document.getElementById('tb-faccoes').innerHTML='<tr><td colspan="14" class="nd">Nenhum lote</td></tr>';return;}
   document.getElementById('tb-faccoes').innerHTML=d.map(f=>{
     const btns=[];
@@ -1009,7 +1014,7 @@ async function salvarEnvio(){
   const id=document.getElementById('ef-id').value;
   const data={
     data_envio:document.getElementById('ef-data').value,
-    faccao:document.getElementById('ef-fac').value,
+    faccao:document.getElementById('ef-fac').value.toUpperCase(),
     qtd_enviada:parseInt(document.getElementById('ef-qtd').value)||0,
     valor_peca:parseFloat(document.getElementById('ef-vlr').value)||0,
     prazo_dias:parseInt(document.getElementById('ef-prazo').value)||7,
@@ -1594,8 +1599,10 @@ function renderAcabamentos(){
   let d=[...acabamentosData];
   const st=document.getElementById('fa-st').value;
   const acab=document.getElementById('fa-acab').value.toLowerCase();
+  const modAcab=document.getElementById('fa-mod').value.toLowerCase();
   if(st)d=d.filter(a=>a.status===st);
   if(acab)d=d.filter(a=>a.acabador?.toLowerCase().includes(acab));
+  if(modAcab)d=d.filter(a=>a.modelo?.toLowerCase().includes(modAcab));
   if(!d.length){document.getElementById('tb-acabamentos').innerHTML='<tr><td colspan="11" class="nd">Nenhum acabamento</td></tr>';return;}
   const now=new Date();
   document.getElementById('tb-acabamentos').innerHTML=d.map(a=>{
@@ -1651,7 +1658,7 @@ function calcAcabamento(){
 
 async function salvarAcabamento(){
   const loteId=document.getElementById('acab-lote').value;
-  const acabador=document.getElementById('acab-acabador').value.trim();
+  const acabador=document.getElementById('acab-acabador').value.trim().toUpperCase();
   const qtd=parseInt(document.getElementById('acab-qtd').value)||0;
   const vlr=parseFloat(document.getElementById('acab-vlr').value)||0;
   const data=document.getElementById('acab-data').value;
