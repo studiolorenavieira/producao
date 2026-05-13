@@ -1155,25 +1155,29 @@ async function salvarRetornoFac(){
   const desc=parseFloat(document.getElementById('rf-desc').value)||0;
   const acres=parseFloat(document.getElementById('rf-acres').value)||0;
   const obs=document.getElementById('rf-obs').value;
-  if(!ok||!dataRet){toast('Informe qtd OK e data de retorno','err');return;}
+  const motivo=document.querySelector('input[name="rf-motivo"]:checked')?.value||'producao';
+  if(ok===0&&motivo!=='conserto'){toast('Informe a quantidade OK','err');return;}
+  if(!dataRet){toast('Informe a data de retorno','err');return;}
   if(ok>pendentes){toast('Qtd OK não pode ser maior que as peças pendentes ('+pendentes+')','err');return;}
   if((desc>0||acres>0)&&!obs.trim()){toast('Observação obrigatória quando há desconto ou acréscimo','err');return;}
   const cons=pendentes-ok;
   const bruto=ok*vlrPeca;
   const liquido=Math.max(0,bruto-desc+acres);
   try{
-    await db('grupos_peca','POST',{
-      lote_id:loteId,
-      quantidade:ok,
-      status:'OK',
-      desconto:desc,
-      acrescimo:acres,
-      obs:obs,
-      valor_bruto:bruto,
-      valor_liquido:liquido,
-      aprovado:true,
-      data_retorno:dataRet
-    });
+    if(ok>0){
+      await db('grupos_peca','POST',{
+        lote_id:loteId,
+        quantidade:ok,
+        status:'OK',
+        desconto:desc,
+        acrescimo:acres,
+        obs:obs,
+        valor_bruto:bruto,
+        valor_liquido:liquido,
+        aprovado:true,
+        data_retorno:dataRet
+      });
+    }
     // Salva fretes de retorno
     const fretesRet=coletarFretes('rf-fretes-lista');
     for(const f of fretesRet) await db('fretes_lote','POST',{lote_id:loteId,...f});
@@ -1183,21 +1187,17 @@ async function salvarRetornoFac(){
     const temPago=todosGrupos.some(g=>g.status==='Pago');
     let novoSt;
     if(cons>0){
-      const motivo=document.querySelector('input[name="rf-motivo"]:checked')?.value||'producao';
       if(motivo==='conserto'){
-        // Voltou com defeito
         novoSt=temPago?'Ret. Conserto / Pag. Parcial':'Ret. Conserto / Ag. Pagamento';
       } else {
-        // Ainda em produção — entrega parcial normal
         novoSt='Em Produção';
       }
     } else {
-      // Todas as peças retornaram
       novoSt=temPago?'Concluído / Pag. Parcial':'Concluído / Ag. Pagamento';
     }
     await db('lotes_faccao?id=eq.'+loteId,'PATCH',{status:novoSt});
-    const motivoMsg=cons>0?(document.querySelector('input[name="rf-motivo"]:checked')?.value==='conserto'?' '+cons+' peças em conserto.'	:' '+cons+' peças ainda em produção.'):'';
-    toast('Retorno registrado! '+ok+' peças aprovadas para pagamento.'+motivoMsg);
+    const motivoMsg=cons>0?(motivo==='conserto'?' '+cons+' peças em conserto.':' '+cons+' peças ainda em produção.'):'';
+    toast('Retorno registrado!'+(ok>0?' '+ok+' peças aprovadas para pagamento.':'')+motivoMsg);
     fecharModal('mo-retfac');loadFaccoes();
   }catch(e){toast('Erro: '+e.message,'err');}
 }
