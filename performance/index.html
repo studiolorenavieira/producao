@@ -511,9 +511,11 @@ function showToast(msg, type='ok'){
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
-renderColecoes();
-document.getElementById('modal').addEventListener('click', e => { if(e.target===e.currentTarget) closeModal(); });
-document.getElementById('modal-manual').addEventListener('click', e => { if(e.target===e.currentTarget) fecharModalManual(); });
+(async () => {
+  await renderColecoes();
+  document.getElementById('modal').addEventListener('click', e => { if(e.target===e.currentTarget) closeModal(); });
+  document.getElementById('modal-manual').addEventListener('click', e => { if(e.target===e.currentTarget) fecharModalManual(); });
+})();
 
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
