@@ -620,7 +620,7 @@ function handleUpload(tipo, input, periodo){
 // Col3: Cor (mesclada)
 // Col6: Tamanho
 // Col7: Quantidade (string)
-function parseProduzidos(rows){
+async function parseProduzidos(rows){
   const res = {};
   let currentNome = '';
   for(let i=0;i<rows.length;i++){
@@ -644,7 +644,6 @@ function parseProduzidos(rows){
     }
   }
   const arr = Object.entries(res).map(([nome,total])=>({nome,total}));
-  console.log('PRODUZIDOS PARSED:', JSON.stringify(arr));
   await salvarProduzidos(arr);
   setStatus('produzidos','ok',`${arr.length} produtos · ${nowLabel()}`);
 }
@@ -654,7 +653,7 @@ function parseProduzidos(rows){
 // Cada produto aparece na col0 com código numérico
 // Col5: Quantidade total do produto nessa transferência
 // Linhas seguintes sem col0 são tamanhos da mesma transferência (ignoramos, já temos o total em col5)
-function parseBazar(rows, periodo){
+async function parseBazar(rows, periodo){
   const res = {};
   for(let i=0;i<rows.length;i++){
     const r = rows[i];
@@ -698,7 +697,7 @@ function parseBazar(rows, periodo){
 // Col18: Venda Normal
 // Col19: Venda Brinde
 // Col20: Resultado
-function parseHistorico(rows, tipo, periodo){
+async function parseHistorico(rows, tipo, periodo){
   const produtos = [];
 
   for(let i=0;i<rows.length;i++){
