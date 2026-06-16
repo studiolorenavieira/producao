@@ -1296,8 +1296,7 @@ async function salvarRetornoFac(){
     // Salva fretes de retorno
     const fretesRet=coletarFretes('rf-fretes-lista');
     for(const f of fretesRet) await db('fretes_lote','POST',{lote_id:loteId,...f});
-    // Calcula novo status do lote independentemente do pagamento
-    // Busca todos os grupos deste lote para saber se há algum já pago
+    // Calcula novo status do lote
     const todosGrupos=await db('grupos_peca?lote_id=eq.'+loteId+'&select=status,quantidade');
     const temPago=todosGrupos.some(g=>g.status==='Pago');
     let novoSt;
@@ -1308,11 +1307,20 @@ async function salvarRetornoFac(){
         novoSt='Em Produção';
       }
     } else {
-      novoSt=temPago?'Concluído / Pag. Parcial':'Concluído / Ag. Pagamento';
+      // cons=0: todas as peças foram aprovadas ou perdidas
+      if(ok>0){
+        novoSt=temPago?'Concluído / Pag. Parcial':'Concluído / Ag. Pagamento';
+      } else {
+        // ok=0 e cons=0: tudo foi perdido ou já pago
+        novoSt=temPago?'Concluído / Pago':'Concluído / Ag. Pagamento';
+      }
     }
     await db('lotes_faccao?id=eq.'+loteId,'PATCH',{status:novoSt});
-    const motivoMsg=cons>0?(motivo==='conserto'?' '+cons+' peças em conserto.':' '+cons+' peças ainda em produção.'):'';
-    toast('Retorno registrado!'+(ok>0?' '+ok+' peças aprovadas para pagamento.':'')+motivoMsg);
+    let msg='Retorno registrado!';
+    if(ok>0)msg+=` ${ok} peças aprovadas.`;
+    if(qtdPerdida>0)msg+=` ${qtdPerdida} peça(s) registrada(s) como perda.`;
+    if(cons>0)msg+=motivo==='conserto'?` ${cons} em conserto.`:` ${cons} ainda em produção.`;
+    toast(msg);
     fecharModal('mo-retfac');loadFaccoes();
   }catch(e){toast('Erro: '+e.message,'err');}
 }
@@ -1426,7 +1434,11 @@ async function verDetalhe(corteId){
         html+=`<div class="tli"><div class="tld">${fD(f.data_frete)}</div><div class="tlt">🚛 Frete ${f.tipo}</div><div class="tlb">${fR(f.valor)}${f.obs?' · '+f.obs:''}</div></div>`;
       });
       grupos.filter(g=>g.lote_id===l.id).forEach(g=>{
-        html+=`<div class="tli"><div class="tld">${fD(g.data_retorno)}</div><div class="tlt">📦 Retorno: ${g.quantidade} pçs OK</div><div class="tlb">Bruto: ${fR(g.valor_bruto)}${g.desconto>0?' · Desc: -'+fR(g.desconto):''}${g.acrescimo>0?' · Acrés: +'+fR(g.acrescimo):''}${g.obs?' · '+g.obs:''} · <b>Líquido: ${fR(g.valor_liquido)}</b></div></div>`;
+        if(g.status==='Perda'){
+          html+=`<div class="tli"><div class="tld">${fD(g.data_retorno)}</div><div class="tlt" style="color:var(--rd)">⚠️ Perda: ${g.qtd_perdida||0} pç(s)</div><div class="tlb" style="color:var(--rd)">Motivo: ${g.obs_perda||'—'}</div></div>`;
+        } else {
+          html+=`<div class="tli"><div class="tld">${fD(g.data_retorno)}</div><div class="tlt">📦 Retorno: ${g.quantidade} pçs OK</div><div class="tlb">Bruto: ${fR(g.valor_bruto)}${g.desconto>0?' · Desc: -'+fR(g.desconto):''}${g.acrescimo>0?' · Acrés: +'+fR(g.acrescimo):''}${g.obs?' · '+g.obs:''} · <b>Líquido: ${fR(g.valor_liquido)}</b></div></div>`;
+        }
         // Eventos de pagamento deste grupo
         itensPgto.filter(it=>it.grupo_id===g.id).forEach(it=>{
           if(it.cancelado){
