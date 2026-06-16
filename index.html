@@ -396,7 +396,8 @@ tr:hover td{background:rgba(255,255,255,.015);}
         <input type="text" id="cc-col" placeholder="DIGITE O NOME DA COLEÇÃO..." style="display:none" oninput="this.value=this.value.toUpperCase();verificarColecaoSimilar(this.value)">
         <div id="cc-col-aviso" style="font-size:11px;color:var(--or);margin-top:4px;display:none"></div>
       </div>
-      <div class="fi"><label>Modelo/Referência *</label><input type="text" id="cc-mod" placeholder="REF-001"></div>
+      <div class="fi"><label>Referência (número) *</label><input type="number" id="cc-refnum" placeholder="3582" min="1"></div>
+      <div class="fi"><label>Nome do Modelo *</label><input type="text" id="cc-mod" placeholder="BLUSA RENATA"></div>
       <div class="fi"><label>Tipo de Peça *</label>
         <select id="cc-tipo"><option value="">Selecione...</option><option>Blusa</option><option>Camisa</option><option>Camiseta</option><option>Short</option><option>Bermuda</option><option>Vestido</option><option>Calça</option><option>Macacão</option><option>Colete</option><option>Body</option><option>Conjunto</option><option>Saia</option><option>Blazer</option><option>Jaqueta</option><option>Parka</option><option>Capa</option><option>Outro</option></select>
       </div>
@@ -732,7 +733,7 @@ function renderCortes(){
   const st=document.getElementById('fc-st').value;
   if(mes)d=d.filter(c=>c.data_corte?.startsWith(mes));
   if(col)d=d.filter(c=>c.colecao?.toLowerCase().includes(col));
-  if(mod)d=d.filter(c=>c.modelo?.toLowerCase().includes(mod));
+  if(mod)d=d.filter(c=>c.modelo?.toLowerCase().includes(mod)||c.referencia_num?.includes(mod)||c.nome_modelo?.toLowerCase().includes(mod));
   if(st)d=d.filter(c=>c.status===st);
   document.getElementById('cortes-tot').textContent=d.length+' corte(s) · '+d.reduce((s,c)=>s+(c.qtd_cortada||c.qtd_pretendida||0),0)+' peças';
   if(!d.length){document.getElementById('tb-cortes').innerHTML='<tr><td colspan="11" class="nd">Nenhum corte</td></tr>';return;}
@@ -813,7 +814,7 @@ function getColecaoValue(){
 
 async function abrirCorte(){
   document.getElementById('cc-id').value='';
-  ['cc-num','cc-col','cc-mod','cc-qtdp','cc-cort'].forEach(id=>document.getElementById(id).value='');
+  ['cc-num','cc-refnum','cc-col','cc-mod','cc-qtdp','cc-cort'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('cc-tipo').value='';
   document.getElementById('cc-data').value=hoje();
   document.getElementById('cc-externo').checked=false;
@@ -837,7 +838,8 @@ function abrirCorteEdit(id){
   document.getElementById('cc-data').value=c.data_corte||'';
   document.getElementById('cc-num').value=c.numero_corte||'';
   document.getElementById('cc-col').value=c.colecao||'';
-  document.getElementById('cc-mod').value=c.modelo||'';
+  document.getElementById('cc-refnum').value=c.referencia_num||'';
+  document.getElementById('cc-mod').value=c.nome_modelo||c.modelo||'';
   document.getElementById('cc-tipo').value=c.tipo_peca||'';
   document.getElementById('cc-qtdp').value=c.qtd_pretendida||'';
   document.getElementById('cc-cort').value=c.cortador||'';
@@ -865,13 +867,15 @@ async function salvarCorte(){
     data_corte:document.getElementById('cc-data').value,
     numero_corte:document.getElementById('cc-num').value,
     colecao:getColecaoValue(),
-    modelo:document.getElementById('cc-mod').value.toUpperCase(),
+    modelo:document.getElementById('cc-refnum').value+' - '+document.getElementById('cc-mod').value.toUpperCase(),
+    referencia_num:document.getElementById('cc-refnum').value,
+    nome_modelo:document.getElementById('cc-mod').value.toUpperCase(),
     tipo_peca:document.getElementById('cc-tipo').value,
     qtd_pretendida:parseInt(document.getElementById('cc-qtdp').value)||0,
     cortador:document.getElementById('cc-cort').value.toUpperCase()||null,
     externo:externo
   };
-  if(!data.data_corte||!data.numero_corte||!data.colecao||!data.modelo||!data.tipo_peca||!data.qtd_pretendida){toast('Preencha os campos obrigatórios','err');return;}
+  if(!data.data_corte||!data.numero_corte||!data.colecao||!data.referencia_num||!data.nome_modelo||!data.tipo_peca||!data.qtd_pretendida){toast('Preencha os campos obrigatórios','err');return;}
   if(!id)data.status='Aguardando Retorno';
   try{
     if(id)await db('cortes?id=eq.'+id,'PATCH',data);
