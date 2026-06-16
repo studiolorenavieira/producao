@@ -472,10 +472,12 @@ tr:hover td{background:rgba(255,255,255,.015);}
     <div id="rf-info" style="font-size:12px;color:var(--t2);margin-bottom:14px;background:var(--s2);padding:10px;border-radius:6px"></div>
     <div class="fg" style="margin-bottom:14px">
       <div class="fi"><label>Qtd OK (aprovadas) *</label><input type="number" id="rf-qtd-ok" min="0" value="0" oninput="calcRetorno()"></div>
+      <div class="fi"><label>Qtd Perdida</label><input type="number" id="rf-qtd-perd" min="0" value="0" oninput="calcRetorno()" placeholder="0"></div>
       <div class="fi"><label>Qtd Ret. Conserto</label><input type="number" id="rf-qtd-cons" min="0" value="0" oninput="calcRetorno()" readonly style="opacity:.6"></div>
       <div class="fi"><label>Data de Retorno *</label><input type="date" id="rf-data"></div>
       <div class="fi"><label>Desconto Total (R$)</label><input type="number" id="rf-desc" step="0.01" min="0" value="0" oninput="calcRetorno();toggleObsRetorno()"></div>
       <div class="fi"><label>Acréscimo (R$)</label><input type="number" id="rf-acres" step="0.01" min="0" value="0" oninput="calcRetorno();toggleObsRetorno()"></div>
+      <div class="fi" style="grid-column:1/-1" id="rf-obs-perda-wrap" style="display:none"><label>Motivo da Perda</label><input type="text" id="rf-obs-perda" placeholder="EX: TECIDO INSUFICIENTE, PEÇA DANIFICADA..."></div>
       <div class="fi" style="grid-column:1/-1"><label id="rf-obs-label">Observação</label><input type="text" id="rf-obs" placeholder="Ex: acréscimo por urgência..."></div>
     </div>
     <div style="margin-bottom:12px">
@@ -1173,6 +1175,7 @@ async function abrirRetFac(loteId){
   document.getElementById('rf-data').value=hoje();
   document.getElementById('rf-qtd-ok').value='';
   document.getElementById('rf-qtd-ok').max=pendentes;
+  document.getElementById('rf-qtd-perd').value='0';
   document.getElementById('rf-qtd-cons').value='0';
   document.getElementById('rf-desc').value='0';
   document.getElementById('rf-acres').value='0';
@@ -1180,6 +1183,8 @@ async function abrirRetFac(loteId){
   rfFretes=[];
   document.getElementById('rf-motivo-wrap').style.display='none';
   document.getElementById('rf-motivo-prod').checked=true;
+  const perdWrap=document.getElementById('rf-obs-perda-wrap');
+  if(perdWrap)perdWrap.style.display='none';
   document.getElementById('rf-obs').value='';
   document.getElementById('rf-obs').style.borderColor='';
   document.getElementById('rf-obs-label').textContent='Observação';
@@ -1207,17 +1212,24 @@ function toggleObsRetorno(){
 function calcRetorno(){
   const pendentes=parseInt(document.getElementById('rf-qtd-enviada').value)||0;
   const okInput=document.getElementById('rf-qtd-ok');
+  const perdInput=document.getElementById('rf-qtd-perd');
   let ok=parseInt(okInput.value)||0;
+  let perd=parseInt(perdInput.value)||0;
   if(ok>pendentes){ok=pendentes;okInput.value=pendentes;}
+  if(ok+perd>pendentes){perd=pendentes-ok;perdInput.value=perd;}
   const vlr=parseFloat(document.getElementById('rf-vlr-peca').value)||0;
   const desc=parseFloat(document.getElementById('rf-desc').value)||0;
   const acres=parseFloat(document.getElementById('rf-acres').value)||0;
-  const cons=Math.max(0,pendentes-ok);
+  const cons=Math.max(0,pendentes-ok-perd);
   document.getElementById('rf-qtd-cons').value=cons;
   const bruto=ok*vlr;
   const liquido=Math.max(0,bruto-desc+acres);
+  // Mostra/esconde campo de motivo da perda
+  const perdWrap=document.getElementById('rf-obs-perda-wrap');
+  if(perdWrap)perdWrap.style.display=perd>0?'':'none';
   document.getElementById('rf-calc').innerHTML=`
     <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:var(--t2)">Peças OK neste retorno</span><span style="color:var(--gn);font-weight:600">${ok}</span></div>
+    ${perd>0?`<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:var(--rd)">Peças perdidas</span><span style="color:var(--rd);font-weight:600">${perd}</span></div>`:''}
     <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:var(--t2)">Peças pendentes</span><span style="color:var(--or);font-weight:600">${cons}</span></div>
     <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:var(--t2)">Valor Bruto (${ok} × ${fR(vlr)})</span><span>${fR(bruto)}</span></div>
     ${desc>0?`<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:var(--rd)">Desconto</span><span>- ${fR(desc)}</span></div>`:''}
@@ -1233,16 +1245,19 @@ async function salvarRetornoFac(){
   const vlrPeca=parseFloat(document.getElementById('rf-vlr-peca').value)||0;
   const pendentes=parseInt(document.getElementById('rf-qtd-enviada').value)||0;
   const ok=parseInt(document.getElementById('rf-qtd-ok').value)||0;
+  const qtdPerdida=parseInt(document.getElementById('rf-qtd-perd').value)||0;
+  const obsPerdida=document.getElementById('rf-obs-perda')?.value||'';
   const dataRet=document.getElementById('rf-data').value;
   const desc=parseFloat(document.getElementById('rf-desc').value)||0;
   const acres=parseFloat(document.getElementById('rf-acres').value)||0;
   const obs=document.getElementById('rf-obs').value;
   const motivo=document.querySelector('input[name="rf-motivo"]:checked')?.value||'producao';
-  if(ok===0&&motivo!=='conserto'){toast('Informe a quantidade OK','err');return;}
+  if(ok===0&&qtdPerdida===0&&motivo!=='conserto'){toast('Informe a quantidade OK','err');return;}
   if(!dataRet){toast('Informe a data de retorno','err');return;}
-  if(ok>pendentes){toast('Qtd OK não pode ser maior que as peças pendentes ('+pendentes+')','err');return;}
+  if(ok+qtdPerdida>pendentes){toast('Qtd OK + Perdidas não pode ser maior que as peças pendentes ('+pendentes+')','err');return;}
+  if(qtdPerdida>0&&!obsPerdida.trim()){toast('Informe o motivo da perda','err');return;}
   if((desc>0||acres>0)&&!obs.trim()){toast('Observação obrigatória quando há desconto ou acréscimo','err');return;}
-  const cons=pendentes-ok;
+  const cons=pendentes-ok-qtdPerdida;
   const bruto=ok*vlrPeca;
   const liquido=Math.max(0,bruto-desc+acres);
   try{
@@ -1257,6 +1272,24 @@ async function salvarRetornoFac(){
         valor_bruto:bruto,
         valor_liquido:liquido,
         aprovado:true,
+        data_retorno:dataRet,
+        qtd_perdida:0,
+        obs_perda:null
+      });
+    }
+    // Registra peças perdidas como grupo separado se houver
+    if(qtdPerdida>0){
+      await db('grupos_peca','POST',{
+        lote_id:loteId,
+        quantidade:0,
+        qtd_perdida:qtdPerdida,
+        status:'Perda',
+        desconto:0,
+        acrescimo:0,
+        obs_perda:obsPerdida.toUpperCase(),
+        valor_bruto:0,
+        valor_liquido:0,
+        aprovado:false,
         data_retorno:dataRet
       });
     }
