@@ -388,7 +388,14 @@ tr:hover td{background:rgba(255,255,255,.015);}
     <div class="fg">
       <div class="fi"><label>Data *</label><input type="date" id="cc-data"></div>
       <div class="fi"><label>Número do Corte *</label><input type="text" id="cc-num" placeholder="001"></div>
-      <div class="fi"><label>Coleção *</label><input type="text" id="cc-col" placeholder="Verão 2026"></div>
+      <div class="fi" style="grid-column:1/-1">
+        <label>Coleção *</label>
+        <select id="cc-col-sel" onchange="handleColecaoSelect()" style="margin-bottom:6px">
+          <option value="">Selecione ou crie nova...</option>
+        </select>
+        <input type="text" id="cc-col" placeholder="DIGITE O NOME DA COLEÇÃO..." style="display:none" oninput="this.value=this.value.toUpperCase();verificarColecaoSimilar(this.value)">
+        <div id="cc-col-aviso" style="font-size:11px;color:var(--or);margin-top:4px;display:none"></div>
+      </div>
       <div class="fi"><label>Modelo/Referência *</label><input type="text" id="cc-mod" placeholder="REF-001"></div>
       <div class="fi"><label>Tipo de Peça *</label>
         <select id="cc-tipo"><option value="">Selecione...</option><option>Blusa</option><option>Camisa</option><option>Camiseta</option><option>Short</option><option>Bermuda</option><option>Vestido</option><option>Calça</option><option>Macacão</option><option>Colete</option><option>Body</option><option>Conjunto</option><option>Saia</option><option>Blazer</option><option>Jaqueta</option><option>Parka</option><option>Capa</option><option>Outro</option></select>
@@ -749,13 +756,72 @@ function renderCortes(){
   </tr>`).join('');
 }
 
+// ===== COLEÇÃO SMART DROPDOWN =====
+let colecoesExistentes=[];
+
+async function carregarColecoes(){
+  try{
+    const data=await db('cortes?select=colecao&order=colecao.asc');
+    colecoesExistentes=[...new Set(data.map(c=>c.colecao).filter(Boolean))].sort();
+    const sel=document.getElementById('cc-col-sel');
+    if(!sel)return;
+    const val=sel.value;
+    sel.innerHTML='<option value="">Selecione ou crie nova...</option>'+
+      colecoesExistentes.map(c=>`<option value="${c}">${c}</option>`).join('')+
+      '<option value="__nova__">+ Nova coleção...</option>';
+    if(val)sel.value=val;
+  }catch(e){}
+}
+
+function handleColecaoSelect(){
+  const sel=document.getElementById('cc-col-sel');
+  const inp=document.getElementById('cc-col');
+  const aviso=document.getElementById('cc-col-aviso');
+  if(sel.value==='__nova__'){
+    inp.style.display='block';
+    inp.value='';
+    inp.focus();
+    aviso.style.display='none';
+  } else {
+    inp.style.display='none';
+    inp.value=sel.value;
+    aviso.style.display='none';
+  }
+}
+
+function verificarColecaoSimilar(val){
+  const aviso=document.getElementById('cc-col-aviso');
+  if(!val||val.length<3){aviso.style.display='none';return;}
+  // Normaliza para comparação: remove espaços extras, substitui 2 dígitos de ano por 4
+  const normalizar=s=>s.trim().toUpperCase().replace(/\b(\d{2})\b/g,(m,p)=>p.length===2?'20'+p:p);
+  const valNorm=normalizar(val);
+  const similar=colecoesExistentes.find(c=>normalizar(c)===valNorm&&c.toUpperCase()!==val.toUpperCase());
+  if(similar){
+    aviso.style.display='block';
+    aviso.innerHTML=`⚠️ Já existe a coleção <b>"${similar}"</b>. É a mesma? Selecione no dropdown acima para evitar duplicatas.`;
+  } else {
+    aviso.style.display='none';
+  }
+}
+
+function getColecaoValue(){
+  const sel=document.getElementById('cc-col-sel');
+  const inp=document.getElementById('cc-col');
+  if(sel.value==='__nova__'||sel.value==='')return inp.value.toUpperCase();
+  return sel.value;
+}
+
 async function abrirCorte(){
   document.getElementById('cc-id').value='';
   ['cc-num','cc-col','cc-mod','cc-qtdp','cc-cort'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('cc-tipo').value='';
   document.getElementById('cc-data').value=hoje();
   document.getElementById('cc-externo').checked=false;
+  document.getElementById('cc-col').style.display='none';
+  document.getElementById('cc-col-aviso').style.display='none';
   document.getElementById('mo-corte-titulo').textContent='Novo Corte';
+  await carregarColecoes();
+  document.getElementById('cc-col-sel').value='';
   try{
     const todos=await db('cortes?select=numero_corte&order=numero_corte.desc&limit=1');
     const ultimo=todos[0]?.numero_corte;
@@ -777,6 +843,18 @@ function abrirCorteEdit(id){
   document.getElementById('cc-cort').value=c.cortador||'';
   document.getElementById('cc-externo').checked=c.externo||false;
   document.getElementById('mo-corte-titulo').textContent='Editar Corte';
+  // No edit, mostra campo texto com valor atual
+  carregarColecoes().then(()=>{
+    const sel=document.getElementById('cc-col-sel');
+    if(colecoesExistentes.includes(c.colecao)){
+      sel.value=c.colecao;
+      document.getElementById('cc-col').style.display='none';
+    } else {
+      sel.value='__nova__';
+      document.getElementById('cc-col').value=c.colecao||'';
+      document.getElementById('cc-col').style.display='block';
+    }
+  });
   abrirModal('mo-corte');
 }
 
@@ -786,7 +864,7 @@ async function salvarCorte(){
   const data={
     data_corte:document.getElementById('cc-data').value,
     numero_corte:document.getElementById('cc-num').value,
-    colecao:document.getElementById('cc-col').value.toUpperCase(),
+    colecao:getColecaoValue(),
     modelo:document.getElementById('cc-mod').value.toUpperCase(),
     tipo_peca:document.getElementById('cc-tipo').value,
     qtd_pretendida:parseInt(document.getElementById('cc-qtdp').value)||0,
