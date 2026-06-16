@@ -675,19 +675,26 @@ async function loadDash(){
     const statusConcluidos=['Concluído','Aguardando Facção','Concluído / Pago','Concluído / Ag. Pagamento','Concluído / Pag. Parcial'];
 
     // Cortes no cortador
-    const cortesNoCortador=cortes.filter(c=>c.status==='Aguardando Retorno');
+    const now=new Date();
+    const cortesNoCortador=cortes.filter(c=>c.status==='Aguardando Retorno')
+      .sort((a,b)=>new Date(a.data_corte)-new Date(b.data_corte));
     document.getElementById('d-no-corte').innerHTML=cortesNoCortador.length?cortesNoCortador.map(c=>`
       <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bd);font-size:12px">
         <div><span style="color:var(--yw)">#${c.numero_corte}</span> · ${c.modelo||'—'}</div>
         <span style="color:var(--t2)">${c.cortador||'—'} · ${c.qtd_pretendida} pçs</span>
       </div>`).join(''):'<div class="nd">Nenhum</div>';
 
-    // Cortes na facção (fisicamente lá)
+    // Cortes na facção — maior atraso primeiro
     const statusNaFac=['Em Produção','Ret. Conserto / Ag. Pagamento','Ret. Conserto / Pag. Parcial'];
-    const lotesNaFac=lotes.filter(l=>statusNaFac.includes(l.status));
+    const lotesNaFac=lotes.filter(l=>statusNaFac.includes(l.status))
+      .sort((a,b)=>{
+        const da=new Date(a.data_envio);da.setDate(da.getDate()+(a.prazo_dias||0));
+        const db2=new Date(b.data_envio);db2.setDate(db2.getDate()+(b.prazo_dias||0));
+        return da-db2;
+      });
     document.getElementById('d-na-fac').innerHTML=lotesNaFac.length?lotesNaFac.map(l=>{
-      const p=new Date(l.data_envio);p.setDate(p.getDate()+l.prazo_dias);
-      const diff=Math.ceil((p-new Date())/(864e5));
+      const p=new Date(l.data_envio);p.setDate(p.getDate()+(l.prazo_dias||0));
+      const diff=Math.ceil((p-now)/(864e5));
       const cc=diff<0?'cr':diff<=2?'cy':'cg';
       const ct=diff<0?Math.abs(diff)+'d atraso':diff===0?'hoje':diff+'d';
       return`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bd);font-size:12px;align-items:center">
@@ -695,17 +702,21 @@ async function loadDash(){
         <span class="chip ${cc}">${ct}</span>
       </div>`;
     }).join(''):'<div class="nd">Nenhum</div>';
-    // Lotes em atraso (fisicamente na facção e passaram do prazo)
+    // Lotes em atraso — maior atraso primeiro
     const statusNaFacAtraso=['Em Produção','Ret. Conserto / Ag. Pagamento','Ret. Conserto / Pag. Parcial'];
     const lotesAtrasados=lotes.filter(l=>{
       if(!statusNaFacAtraso.includes(l.status))return false;
       if(!l.data_envio||!l.prazo_dias)return false;
       const p=new Date(l.data_envio);p.setDate(p.getDate()+l.prazo_dias);
-      return p<new Date();
+      return p<now;
+    }).sort((a,b)=>{
+      const da=new Date(a.data_envio);da.setDate(da.getDate()+a.prazo_dias);
+      const db2=new Date(b.data_envio);db2.setDate(db2.getDate()+b.prazo_dias);
+      return da-db2;
     });
     document.getElementById('d-pend').innerHTML=lotesAtrasados.length?lotesAtrasados.map(l=>{
       const p=new Date(l.data_envio);p.setDate(p.getDate()+l.prazo_dias);
-      const diff=Math.ceil((p-new Date())/(864e5));
+      const diff=Math.ceil((p-now)/(864e5));
       return`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bd);font-size:12px;align-items:center">
         <span><b>${l.faccao||'—'}</b> · ${l.modelo||'—'}</span>
         <span class="chip cr">${Math.abs(diff)}d atraso</span>
@@ -1928,7 +1939,7 @@ async function loadRel(){
       byTipo[l.tipo_peca].push(l.prazo_dias);
     });
     document.getElementById('rel-tipo').innerHTML=Object.keys(byTipo).length?
-      `<table><thead><tr><th>Tipo</th><th>Lead Time Médio</th><th>Lotes</th></tr></thead><tbody>${Object.entries(byTipo).map(([t,d])=>`<tr><td>${t}</td><td>${(d.reduce((a,b)=>a+b,0)/d.length).toFixed(1)} dias</td><td>${d.length}</td></tr>`).join('')}</tbody></table>`
+      `<table><thead><tr><th>Tipo</th><th>Lead Time Médio</th><th>Lotes</th></tr></thead><tbody>${Object.entries(byTipo).map(([t,d])=>({t,avg:d.reduce((a,b)=>a+b,0)/d.length,n:d.length})).sort((a,b)=>b.avg-a.avg).map(({t,avg,n})=>`<tr><td>${t}</td><td>${avg.toFixed(1)} dias</td><td>${n}</td></tr>`).join('')}</tbody></table>`
       :'<div class="nd">Dados insuficientes — conclua lotes para ver</div>';
 
     // Lead time por facção
@@ -1939,7 +1950,7 @@ async function loadRel(){
       byFac[l.faccao].push(l.prazo_dias);
     });
     document.getElementById('rel-fac').innerHTML=Object.keys(byFac).length?
-      `<table><thead><tr><th>Facção</th><th>Lead Time Médio</th><th>Lotes</th></tr></thead><tbody>${Object.entries(byFac).map(([f,d])=>`<tr><td>${f}</td><td>${(d.reduce((a,b)=>a+b,0)/d.length).toFixed(1)} dias</td><td>${d.length}</td></tr>`).join('')}</tbody></table>`
+      `<table><thead><tr><th>Facção</th><th>Lead Time Médio</th><th>Lotes</th></tr></thead><tbody>${Object.entries(byFac).map(([f,d])=>({f,avg:d.reduce((a,b)=>a+b,0)/d.length,n:d.length})).sort((a,b)=>b.avg-a.avg).map(({f,avg,n})=>`<tr><td>${f}</td><td>${avg.toFixed(1)} dias</td><td>${n}</td></tr>`).join('')}</tbody></table>`
       :'<div class="nd">Dados insuficientes</div>';
 
     // Preço médio por tipo
@@ -1950,7 +1961,7 @@ async function loadRel(){
       precoTipo[l.tipo_peca].push(l.valor_peca);
     });
     document.getElementById('rel-preco').innerHTML=Object.keys(precoTipo).length?
-      `<table><thead><tr><th>Tipo</th><th>Preço Médio/Pç</th><th>Lotes</th></tr></thead><tbody>${Object.entries(precoTipo).map(([t,v])=>`<tr><td>${t}</td><td>${fR(v.reduce((a,b)=>a+b,0)/v.length)}</td><td>${v.length}</td></tr>`).join('')}</tbody></table>`
+      `<table><thead><tr><th>Tipo</th><th>Preço Médio/Pç</th><th>Lotes</th></tr></thead><tbody>${Object.entries(precoTipo).map(([t,v])=>({t,avg:v.reduce((a,b)=>a+b,0)/v.length,n:v.length})).sort((a,b)=>b.avg-a.avg).map(({t,avg,n})=>`<tr><td>${t}</td><td>${fR(avg)}</td><td>${n}</td></tr>`).join('')}</tbody></table>`
       :'<div class="nd">Dados insuficientes</div>';
 
     // Histórico de pagamentos com valores reais (descontando cancelados)
