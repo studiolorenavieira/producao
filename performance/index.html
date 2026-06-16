@@ -4,12 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Lorena Vieira — Performance</title>
-<link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAGrklEQVR4nO2aW4hVVRjHf5o5M+aYjo6TaaYlhZqWiKhZmqn5oGlqPhiGQZGgqQ8qBEEPEj1UL0EQBD1E9BIEQdBDRC9BERQVFUVRFEVRRFEURX+o/dv1sdc+Z8+cOXNmjufMOfAHmzWz91prr+//fd+67HOMiIiIiIiIiIiIiIiIiIiIiIiIiHgTcC3wJfAP8D3wCnBqmUlFREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREREQ+eB24CxgHCjgBHA0cBOwFngFOBM4HfgMuBQ4HNgL2BXYH9gEOAQ4FDgMOBk4AjgKOBo4BjgWOA4YB9gX2B/YADgQOAg4GDgEOBQ4DDgcOB44AjgSOBI4CjgaOBo4BjgWOA44DjgeOAE4ETgROBk4BTgVOA04HTgDOBM4CzgbOBs4BzgXOA84HLgAuBC4GLgEuBS4DLgcuAK4ErgKuBq4BrgWuA64HrgBuBG4CbgZuAW4FbgNuB24A7gTuAu4G7gHuBe4D7gfuAB4EHgIeBh4BHgUeBR4DHgceBJ4AngSeBp4BngWeBe4BngXuBe4H7gAeAB4GHgEeBx4AngceBJ4AngSeBp4BngXuBe4H7gAeAB4GHgEeBx4AngceBJ4AngSeBp4BngXuBe4H7gAeAB4GHgEeBx4AngceBJ4AngSeBp4BngXuBe4H7gAeAB4GHgEeBx4AngceBJ4AngSeBp4BngXuBe4H7gAeAB4GHgEeBx4AngceBJ4AngSeBp4Bng">
+<link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABhUlEQVR4nO2aMU7DQBBFZ2FFioSOA3AEOEUKBTUHSMENkku4K0hBp6RJxyUoKJConNApJQ1/BTuONzsbr5P3pFGcJPN3ZtY7HgshAAAAAAAAAAAAAAAAAAAAAAAAwH9gMLN9ZjYxsxczOy5JMzvMbGpm45KZmQ1mdlrmQJIkSZIkSZKkv5ot5u9b5u9BO7O9pIWkhaRFZluSJEmSJEnSx5IeSHoGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8Ie8AgAA//8DAFBLAwQUAAYACAAAACEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#0f0e0d;--bg2:#181614;--bg3:#221f1c;--bg4:#2d2926;
-  --gold:#c9a96e;--gold2:#e8c98a;--cream:#f5ede0;--muted:#7a6e63;
+  --gold:#c9a96e;--gold2:#e8c98a;--muted:#7a6e63;
   --text:#f0e8dc;--red:#c0614a;--green:#6a9e6f;--blue:#5b8fa8;--orange:#c98a4a;
   --border:rgba(201,169,110,0.15);--radius:8px;
 }
@@ -29,33 +29,30 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 .btn-gold{background:var(--gold);color:#1a1410;}.btn-gold:hover{background:var(--gold2);}
 .btn-outline{background:transparent;border:1px solid var(--border);color:var(--muted);}.btn-outline:hover{border-color:var(--gold);color:var(--gold);}
 .btn-sm{padding:5px 11px;font-size:12px;}
-.btn-danger{background:transparent;border:1px solid rgba(192,97,74,0.3);color:var(--red);font-size:12px;padding:7px 12px;}.btn-danger:hover{background:rgba(192,97,74,0.1);}
+.btn-danger{background:transparent;border:1px solid rgba(192,97,74,0.3);color:var(--red);font-size:12px;padding:7px 12px;}
+.btn-danger:hover{background:rgba(192,97,74,0.1);}
 
-/* UPLOADS */
-.uploads-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;}
-@media(max-width:1000px){.uploads-grid{grid-template-columns:1fr 1fr;}}
-.upload-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;}
-.upload-card-title{font-size:12px;font-weight:600;color:var(--gold);margin-bottom:3px;display:flex;align-items:center;justify-content:space-between;}
-.upload-card-desc{font-size:10px;color:var(--muted);margin-bottom:10px;line-height:1.5;}
-.upload-zone{border:1px dashed rgba(201,169,110,0.2);border-radius:5px;padding:8px;text-align:center;cursor:pointer;transition:all 0.15s;position:relative;}
+/* PRODUTOS BASE */
+.prod-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:20px;}
+.prod-list{max-height:160px;overflow-y:auto;margin-top:10px;}
+.prod-item{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;}
+.prod-item:last-child{border-bottom:none;}
+
+/* PERÍODO BLOCKS */
+.periodo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px;}
+@media(max-width:1100px){.periodo-grid{grid-template-columns:1fr;}}
+.periodo-block{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;}
+.periodo-badge{display:inline-block;padding:3px 10px;border-radius:4px;font-size:10px;font-weight:600;letter-spacing:.5px;background:rgba(201,169,110,0.12);color:var(--gold);margin-bottom:12px;}
+.upload-row{display:flex;flex-direction:column;gap:10px;}
+.upload-item{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:10px;}
+.upload-item-title{font-size:11px;font-weight:600;color:var(--gold);margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;}
+.upload-zone{border:1px dashed rgba(201,169,110,0.2);border-radius:5px;padding:7px;text-align:center;cursor:pointer;transition:all 0.15s;position:relative;}
 .upload-zone:hover{border-color:var(--gold);background:rgba(201,169,110,0.04);}
 .upload-zone input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;}
 .upload-zone-text{font-size:10px;color:var(--muted);}
-.upload-status{margin-top:6px;font-size:10px;display:flex;align-items:center;justify-content:space-between;gap:5px;}
-.status-dot{width:5px;height:5px;border-radius:50%;background:var(--muted);flex-shrink:0;}
+.upload-status{margin-top:5px;font-size:10px;display:flex;align-items:center;justify-content:space-between;}
+.status-dot{width:5px;height:5px;border-radius:50%;background:var(--muted);flex-shrink:0;margin-right:4px;}
 .status-dot.ok{background:var(--green);}.status-dot.err{background:var(--red);}
-
-/* PERÍODO BLOCKS */
-.periodo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;}
-@media(max-width:1000px){.periodo-grid{grid-template-columns:1fr;}}
-.periodo-block{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;}
-.periodo-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;letter-spacing:.5px;background:rgba(201,169,110,0.12);color:var(--gold);margin-bottom:8px;}
-
-/* PRODUZIDOS */
-.prod-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:20px;}
-.prod-list{max-height:150px;overflow-y:auto;margin-top:8px;}
-.prod-item{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px;}
-.prod-item:last-child{border-bottom:none;}
 
 /* SUMMARY */
 .summary-row{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:16px;}
@@ -88,14 +85,13 @@ thead th:hover{color:var(--gold);}thead th.sorted{color:var(--gold);}
 tbody tr{border-bottom:1px solid rgba(201,169,110,0.06);transition:background 0.1s;}
 tbody tr:hover{background:rgba(201,169,110,0.04);}
 td{padding:9px 10px;white-space:nowrap;font-size:13px;}
-.td-num{color:var(--cream);font-variant-numeric:tabular-nums;}
+.td-num{color:#f5ede0;font-variant-numeric:tabular-nums;}
 .td-muted{color:var(--muted);}
 .td-red{color:var(--red);}
 .td-green{color:var(--green);}
 .td-blue{color:var(--blue);}
 .td-orange{color:var(--orange);}
 .chip{display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600;}
-.chip-red{background:rgba(192,97,74,0.15);color:var(--red);}
 .chip-orange{background:rgba(201,138,74,0.15);color:var(--orange);}
 .perf-bar-wrap{display:flex;align-items:center;gap:6px;min-width:100px;}
 .perf-bar{height:3px;border-radius:2px;background:var(--bg4);flex:1;overflow:hidden;}
@@ -117,8 +113,6 @@ td{padding:9px 10px;white-space:nowrap;font-size:13px;}
 .modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;}
 .msg{font-size:11px;padding:7px 11px;border-radius:6px;margin-top:8px;}
 .msg-err{background:rgba(192,97,74,0.15);color:var(--red);border:1px solid rgba(192,97,74,0.3);}
-.spinner{display:inline-block;width:12px;height:12px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .6s linear infinite;}
-@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
@@ -144,144 +138,33 @@ td{padding:9px 10px;white-space:nowrap;font-size:13px;}
 
   <div id="main" style="display:none">
 
-    <!-- PRODUTOS PRODUZIDOS -->
+    <!-- PRODUTOS DA COLEÇÃO -->
     <div class="section-label">Produtos da coleção</div>
     <div class="prod-card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
         <div>
-          <div style="font-size:12px;font-weight:600;color:var(--gold)">Ordens de Produção</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:2px">Define quais produtos pertencem a esta coleção e o total produzido.</div>
+          <div style="font-size:12px;font-weight:600;color:var(--gold)">Lista de produtos</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">Define quais produtos pertencem a esta coleção. O Histórico filtrará apenas estes produtos.</div>
         </div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <a href="https://dapic.app/pivot/produtosproducaopivot" target="_blank" class="btn btn-outline btn-sm" style="text-decoration:none;font-size:11px">↗ DAPIC</a>
-          <button class="btn btn-outline btn-sm" onclick="abrirModalManual()">+ Manual</button>
-        </div>
+        <button class="btn btn-outline btn-sm" onclick="abrirModalManual()">+ Adicionar produto</button>
       </div>
-      <div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center">
-        <div class="upload-zone">
-          <input type="file" accept=".xlsx,.xls,.csv" onchange="handleUpload('produzidos',this)">
-          <div class="upload-zone-text">↓ clique ou arraste .xlsx / .csv</div>
-        </div>
-      </div>
-      <div class="upload-status" style="margin-top:6px">
-        <div style="display:flex;align-items:center;gap:5px">
-          <div class="status-dot" id="dot-produzidos"></div>
-          <span id="txt-produzidos" style="color:var(--muted);font-size:11px">Nenhum arquivo</span>
-        </div>
-      </div>
-      <div class="prod-list" id="lista-produzidos"></div>
-    </div>
-
-    <!-- UPLOADS BASE -->
-    <div class="section-label">Dados de apoio</div>
-    <div class="uploads-grid">
-      <!-- BAZAR -->
-      <div class="upload-card">
-        <div class="upload-card-title">
-          Transferência para Bazar
-          <a href="https://dapic.app/relatorio/transferenciaestoquereport" target="_blank" class="btn btn-outline btn-sm" style="text-decoration:none;font-size:10px">↗ DAPIC</a>
-        </div>
-        <div class="upload-card-desc">Saídas com destino Bazar. Valida Mov. Estoque Saída.</div>
-        <div class="upload-zone">
-          <input type="file" accept=".xlsx,.xls" onchange="handleUpload('bazar',this)">
-          <div class="upload-zone-text">↓ clique ou arraste .xlsx</div>
-        </div>
-        <div class="upload-status">
-          <div style="display:flex;align-items:center;gap:5px">
-            <div class="status-dot" id="dot-bazar"></div>
-            <span id="txt-bazar" style="color:var(--muted)">Nenhum arquivo</span>
-          </div>
-          <button id="btn-limpar-bazar" onclick="limparUpload('bazar')" style="display:none;background:none;border:none;color:var(--red);cursor:pointer;font-size:10px">✕ limpar</button>
-        </div>
-      </div>
-      <!-- COMPROMETIDO -->
-      <div class="upload-card">
-        <div class="upload-card-title">
-          Gestão de Estoque (Comprometido)
-          <a href="https://dapic.app/pivot/gestaoestoquepivot" target="_blank" class="btn btn-outline btn-sm" style="text-decoration:none;font-size:10px">↗ DAPIC</a>
-        </div>
-        <div class="upload-card-desc">⚠ Selecionar modelo: <strong style="color:var(--gold)">RELATÓRIO - PERFORMANCE</strong><br>Peças separadas mas ainda não vendidas.</div>
-        <div class="upload-zone">
-          <input type="file" accept=".xlsx,.xls,.csv" onchange="handleUpload('comprometido',this)">
-          <div class="upload-zone-text">↓ clique ou arraste .xlsx / .csv</div>
-        </div>
-        <div class="upload-status">
-          <div style="display:flex;align-items:center;gap:5px">
-            <div class="status-dot" id="dot-comprometido"></div>
-            <span id="txt-comprometido" style="color:var(--muted)">Nenhum arquivo</span>
-          </div>
-          <button id="btn-limpar-comprometido" onclick="limparUpload('comprometido')" style="display:none;background:none;border:none;color:var(--red);cursor:pointer;font-size:10px">✕ limpar</button>
-        </div>
+      <div class="prod-list" id="lista-produzidos">
+        <div style="padding:12px;font-size:12px;color:var(--muted);text-align:center">Nenhum produto cadastrado.</div>
       </div>
     </div>
 
-    <!-- HISTÓRICO POR PERÍODO -->
-    <div class="section-label">Histórico de produto acabado — por período</div>
-    <div style="font-size:11px;color:var(--muted);margin-bottom:12px">Cada período é independente — upload substitui o anterior do mesmo período.</div>
-    <div class="periodo-grid">
-      <div class="periodo-block">
-        <div class="periodo-badge">7 dias</div>
-        <div style="font-size:11px;font-weight:600;color:var(--text);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
-          Histórico
-          <a href="https://dapic.app/relatorio/historicoprodutoacabadoreport" target="_blank" class="btn btn-outline btn-sm" style="text-decoration:none;font-size:10px">↗ DAPIC</a>
-        </div>
-        <div class="upload-zone">
-          <input type="file" accept=".xlsx,.xls" onchange="handleUpload('historico7',this,'7')">
-          <div class="upload-zone-text">↓ .xlsx de 7 dias</div>
-        </div>
-        <div class="upload-status">
-          <div style="display:flex;align-items:center;gap:5px">
-            <div class="status-dot" id="dot-historico7"></div>
-            <span id="txt-historico7" style="color:var(--muted)">Nenhum arquivo</span>
-          </div>
-          <button id="btn-limpar-historico7" onclick="limparUpload('historico7')" style="display:none;background:none;border:none;color:var(--red);cursor:pointer;font-size:10px">✕</button>
-        </div>
-      </div>
-      <div class="periodo-block">
-        <div class="periodo-badge">30 dias</div>
-        <div style="font-size:11px;font-weight:600;color:var(--text);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
-          Histórico
-          <a href="https://dapic.app/relatorio/historicoprodutoacabadoreport" target="_blank" class="btn btn-outline btn-sm" style="text-decoration:none;font-size:10px">↗ DAPIC</a>
-        </div>
-        <div class="upload-zone">
-          <input type="file" accept=".xlsx,.xls" onchange="handleUpload('historico30',this,'30')">
-          <div class="upload-zone-text">↓ .xlsx de 30 dias</div>
-        </div>
-        <div class="upload-status">
-          <div style="display:flex;align-items:center;gap:5px">
-            <div class="status-dot" id="dot-historico30"></div>
-            <span id="txt-historico30" style="color:var(--muted)">Nenhum arquivo</span>
-          </div>
-          <button id="btn-limpar-historico30" onclick="limparUpload('historico30')" style="display:none;background:none;border:none;color:var(--red);cursor:pointer;font-size:10px">✕</button>
-        </div>
-      </div>
-      <div class="periodo-block">
-        <div class="periodo-badge">60 dias</div>
-        <div style="font-size:11px;font-weight:600;color:var(--text);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
-          Histórico
-          <a href="https://dapic.app/relatorio/historicoprodutoacabadoreport" target="_blank" class="btn btn-outline btn-sm" style="text-decoration:none;font-size:10px">↗ DAPIC</a>
-        </div>
-        <div class="upload-zone">
-          <input type="file" accept=".xlsx,.xls" onchange="handleUpload('historico60',this,'60')">
-          <div class="upload-zone-text">↓ .xlsx de 60 dias</div>
-        </div>
-        <div class="upload-status">
-          <div style="display:flex;align-items:center;gap:5px">
-            <div class="status-dot" id="dot-historico60"></div>
-            <span id="txt-historico60" style="color:var(--muted)">Nenhum arquivo</span>
-          </div>
-          <button id="btn-limpar-historico60" onclick="limparUpload('historico60')" style="display:none;background:none;border:none;color:var(--red);cursor:pointer;font-size:10px">✕</button>
-        </div>
-      </div>
-    </div>
+    <!-- PERÍODOS -->
+    <div class="section-label">Dados por período</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:14px">Cada período é independente — upload substitui o anterior do mesmo período.</div>
+    <div class="periodo-grid" id="periodo-blocks"></div>
 
     <div class="divider"></div>
 
     <!-- PAINEL -->
     <div class="section-label">Painel de performance</div>
     <div class="summary-row">
-      <div class="summary-card"><div class="summary-card-label">Total produzido</div><div class="summary-card-val" id="sum-produzido">—</div><div class="summary-card-sub">OP entrada</div></div>
-      <div class="summary-card"><div class="summary-card-label">Total vendido</div><div class="summary-card-val" id="sum-vendas">—</div><div class="summary-card-sub">normal + brinde</div></div>
+      <div class="summary-card"><div class="summary-card-label">Total produzido</div><div class="summary-card-val" id="sum-produzido">—</div><div class="summary-card-sub">cadastrado na coleção</div></div>
+      <div class="summary-card"><div class="summary-card-label">Venda normal</div><div class="summary-card-val" id="sum-vendas">—</div><div class="summary-card-sub">vendas efetivadas</div></div>
       <div class="summary-card"><div class="summary-card-label">Consig. pendente</div><div class="summary-card-val" id="sum-consig">—</div><div class="summary-card-sub">remessa − retorno</div></div>
       <div class="summary-card"><div class="summary-card-label">Resultado</div><div class="summary-card-val" id="sum-resultado">—</div><div class="summary-card-sub">estoque físico</div></div>
       <div class="summary-card"><div class="summary-card-label">Comprometido</div><div class="summary-card-val" id="sum-comprometido">—</div><div class="summary-card-sub">separado, não vendido</div></div>
@@ -341,7 +224,7 @@ td{padding:9px 10px;white-space:nowrap;font-size:13px;}
   </div>
 </div>
 
-<!-- MODAL MANUAL -->
+<!-- MODAL PRODUTO MANUAL -->
 <div class="modal-overlay" id="modal-manual">
   <div class="modal">
     <div class="modal-title">Adicionar produto</div>
@@ -381,16 +264,11 @@ async function sbFetch(path,method='GET',body=null){
 let currentColecao=null,currentColecaoId=null,currentPeriod='total';
 let sortCol='produzido',sortDir=-1;
 const PERIODOS=['7','30','60'];
+// Cache: produzidos=[], uploads={ historico7, bazar7, comp7, historico30, ... }
 let _cache={produzidos:[],uploads:{}};
 
-function getCol(){
-  const c={produzidos:_cache.produzidos||[]};
-  PERIODOS.forEach(p=>{
-    c['historico'+p]=_cache.uploads['historico'+p]||null;
-  });
-  c.bazar=_cache.uploads.bazar||[];
-  c.comprometido=_cache.uploads.comprometido||[];
-  return c;
+function getUpload(tipo,periodo){
+  return _cache.uploads[tipo+periodo]||null;
 }
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
@@ -403,17 +281,89 @@ function nowLabel(){
   const n=new Date();
   return`${String(n.getDate()).padStart(2,'0')}/${String(n.getMonth()+1).padStart(2,'0')}/${n.getFullYear()}`;
 }
-function setStatus(tipo,state,msg){
-  const dot=document.getElementById('dot-'+tipo);
-  const txt=document.getElementById('txt-'+tipo);
-  const btn=document.getElementById('btn-limpar-'+tipo);
+function pc(p){return p>=80?'var(--green)':p>=50?'var(--gold)':'var(--red)';}
+
+function setStatusEl(dotId,txtId,btnId,state,msg){
+  const dot=document.getElementById(dotId);
+  const txt=document.getElementById(txtId);
+  const btn=document.getElementById(btnId);
   if(!dot||!txt)return;
   dot.className='status-dot'+(state==='ok'?' ok':state==='err'?' err':'');
   txt.textContent=msg;
   txt.style.color=state==='ok'?'var(--green)':state==='err'?'var(--red)':'var(--muted)';
   if(btn)btn.style.display=state==='ok'?'inline':'none';
 }
-function pc(p){return p>=80?'var(--green)':p>=50?'var(--gold)':'var(--red)';}
+
+// ── PERÍODO BLOCKS ────────────────────────────────────────────────────────────
+function renderPeriodoBlocks(){
+  const el=document.getElementById('periodo-blocks');
+  el.innerHTML=PERIODOS.map(p=>{
+    const hist=getUpload('historico',p);
+    const baz=getUpload('bazar',p);
+    const comp=getUpload('comp',p);
+    return`<div class="periodo-block">
+      <div class="periodo-badge">${p} dias</div>
+      <div class="upload-row">
+
+        <div class="upload-item">
+          <div class="upload-item-title">
+            Histórico produto acabado
+            <a href="https://dapic.app/relatorio/historicoprodutoacabadoreport" target="_blank" class="btn btn-outline btn-sm" style="text-decoration:none;font-size:10px">↗ DAPIC</a>
+          </div>
+          <div class="upload-zone">
+            <input type="file" accept=".xlsx,.xls" onchange="handleUpload('historico','${p}',this)">
+            <div class="upload-zone-text">↓ clique ou arraste .xlsx</div>
+          </div>
+          <div class="upload-status">
+            <div style="display:flex;align-items:center;gap:4px">
+              <div class="status-dot${hist?' ok':''}" id="dot-historico${p}"></div>
+              <span id="txt-historico${p}" style="color:${hist?'var(--green)':'var(--muted)'}">${hist?`✓ ${hist.total} produtos · ${hist.label}`:'Nenhum arquivo'}</span>
+            </div>
+            <button id="btn-limpar-historico${p}" onclick="limparUpload('historico','${p}')" style="display:${hist?'inline':'none'};background:none;border:none;color:var(--red);cursor:pointer;font-size:10px">✕ limpar</button>
+          </div>
+        </div>
+
+        <div class="upload-item">
+          <div class="upload-item-title">
+            Transferência para Bazar
+            <a href="https://dapic.app/relatorio/transferenciaestoquereport" target="_blank" class="btn btn-outline btn-sm" style="text-decoration:none;font-size:10px">↗ DAPIC</a>
+          </div>
+          <div class="upload-zone">
+            <input type="file" accept=".xlsx,.xls" onchange="handleUpload('bazar','${p}',this)">
+            <div class="upload-zone-text">↓ clique ou arraste .xlsx</div>
+          </div>
+          <div class="upload-status">
+            <div style="display:flex;align-items:center;gap:4px">
+              <div class="status-dot${baz?' ok':''}" id="dot-bazar${p}"></div>
+              <span id="txt-bazar${p}" style="color:${baz?'var(--green)':'var(--muted)'}">${baz?`✓ ${baz.length} itens · ${baz.label}`:'Nenhum arquivo'}</span>
+            </div>
+            <button id="btn-limpar-bazar${p}" onclick="limparUpload('bazar','${p}')" style="display:${baz?'inline':'none'};background:none;border:none;color:var(--red);cursor:pointer;font-size:10px">✕ limpar</button>
+          </div>
+        </div>
+
+        <div class="upload-item">
+          <div class="upload-item-title">
+            Estoque Comprometido
+            <a href="https://dapic.app/pivot/gestaoestoquepivot" target="_blank" class="btn btn-outline btn-sm" style="text-decoration:none;font-size:10px">↗ DAPIC</a>
+          </div>
+          <div style="font-size:10px;color:var(--orange);margin-bottom:5px">⚠ Selecionar modelo: <strong>RELATÓRIO - PERFORMANCE</strong></div>
+          <div class="upload-zone">
+            <input type="file" accept=".xlsx,.xls,.csv" onchange="handleUpload('comp','${p}',this)">
+            <div class="upload-zone-text">↓ clique ou arraste .xlsx / .csv</div>
+          </div>
+          <div class="upload-status">
+            <div style="display:flex;align-items:center;gap:4px">
+              <div class="status-dot${comp?' ok':''}" id="dot-comp${p}"></div>
+              <span id="txt-comp${p}" style="color:${comp?'var(--green)':'var(--muted)'}">${comp?`✓ ${comp.length} itens · ${comp.label}`:'Nenhum arquivo'}</span>
+            </div>
+            <button id="btn-limpar-comp${p}" onclick="limparUpload('comp','${p}')" style="display:${comp?'inline':'none'};background:none;border:none;color:var(--red);cursor:pointer;font-size:10px">✕ limpar</button>
+          </div>
+        </div>
+
+      </div>
+    </div>`;
+  }).join('');
+}
 
 // ── COLEÇÕES ──────────────────────────────────────────────────────────────────
 async function renderColecoes(){
@@ -441,7 +391,7 @@ async function onColecaoChange(){
   document.getElementById('colecao-badge').textContent=val||'Nenhuma coleção selecionada';
   if(val){
     await carregarDadosColecao();
-    syncStatus();
+    renderPeriodoBlocks();
     renderListaProduzidos();
     renderTable();
     updateSummary();
@@ -462,7 +412,7 @@ async function carregarDadosColecao(){
       if(u.tipo.startsWith('historico')){
         _cache.uploads[u.tipo]={produtos:u.dados,total:u.total,label:u.label};
       }else{
-        _cache.uploads[u.tipo]=u.dados||[];
+        _cache.uploads[u.tipo]={dados:u.dados||[],length:(u.dados||[]).length,label:u.label};
       }
     });
   }catch(e){console.error('Erro carregar:',e);}
@@ -511,119 +461,74 @@ async function deletarColecao(){
   }catch(e){alert('Erro: '+e.message);}
 }
 
-// ── SALVAR SUPABASE ───────────────────────────────────────────────────────────
+// ── SUPABASE SAVE ─────────────────────────────────────────────────────────────
 async function salvarProduzidos(arr){
   if(!currentColecaoId)return;
   await sbFetch('perf_produzidos?colecao_id=eq.'+currentColecaoId,'DELETE');
-  if(arr.length){
-    await sbFetch('perf_produzidos','POST',arr.map(p=>({colecao_id:currentColecaoId,nome:p.nome,total:p.total})));
-  }
+  if(arr.length)await sbFetch('perf_produzidos','POST',arr.map(p=>({colecao_id:currentColecaoId,nome:p.nome,total:p.total})));
   _cache.produzidos=arr;
 }
 
-async function salvarUpload(tipo,dados,label='',total=0){
+async function salvarUploadSB(tipo,periodo,dados,label,total){
   if(!currentColecaoId)return;
-  const exists=await sbFetch('perf_uploads?colecao_id=eq.'+currentColecaoId+'&tipo=eq.'+encodeURIComponent(tipo)+'&select=id');
+  const chave=tipo+periodo;
+  const exists=await sbFetch('perf_uploads?colecao_id=eq.'+currentColecaoId+'&tipo=eq.'+encodeURIComponent(chave)+'&select=id');
   if(exists.length){
-    await sbFetch('perf_uploads?colecao_id=eq.'+currentColecaoId+'&tipo=eq.'+encodeURIComponent(tipo),'PATCH',{dados,label,total,updated_at:new Date().toISOString()});
+    await sbFetch('perf_uploads?colecao_id=eq.'+currentColecaoId+'&tipo=eq.'+encodeURIComponent(chave),'PATCH',{dados,label,total,updated_at:new Date().toISOString()});
   }else{
-    await sbFetch('perf_uploads','POST',{colecao_id:currentColecaoId,tipo,dados,label,total});
+    await sbFetch('perf_uploads','POST',{colecao_id:currentColecaoId,tipo:chave,dados,label,total});
   }
 }
 
-async function limparUpload(tipo){
+async function limparUpload(tipo,periodo){
   if(!confirm('Limpar este arquivo?'))return;
+  const chave=tipo+periodo;
   try{
-    await sbFetch('perf_uploads?colecao_id=eq.'+currentColecaoId+'&tipo=eq.'+encodeURIComponent(tipo),'DELETE');
-    if(tipo.startsWith('historico'))_cache.uploads[tipo]=null;
-    else _cache.uploads[tipo]=[];
-    syncStatus();renderTable();updateSummary();renderAlertas();
+    await sbFetch('perf_uploads?colecao_id=eq.'+currentColecaoId+'&tipo=eq.'+encodeURIComponent(chave),'DELETE');
+    delete _cache.uploads[chave];
+    renderPeriodoBlocks();
+    renderTable();updateSummary();renderAlertas();
   }catch(e){alert('Erro: '+e.message);}
 }
 
-function syncStatus(){
-  const d=getCol();
-  if(d.produzidos&&d.produzidos.length)setStatus('produzidos','ok',`${d.produzidos.length} produtos`);
-  else setStatus('produzidos','','Nenhum arquivo');
-  PERIODOS.forEach(p=>{
-    const h=d['historico'+p];
-    if(h)setStatus('historico'+p,'ok',`${h.total} produtos · ${h.label}`);
-    else setStatus('historico'+p,'','Nenhum arquivo');
-  });
-  if(d.bazar&&d.bazar.length)setStatus('bazar','ok',`${d.bazar.length} itens`);
-  else setStatus('bazar','','Nenhum arquivo');
-  if(d.comprometido&&d.comprometido.length)setStatus('comprometido','ok',`${d.comprometido.length} itens`);
-  else setStatus('comprometido','','Nenhum arquivo');
-}
-
-// ── UPLOAD ────────────────────────────────────────────────────────────────────
-function handleUpload(tipo,input,periodo){
+// ── UPLOAD & PARSE ────────────────────────────────────────────────────────────
+function handleUpload(tipo,periodo,input){
   if(!currentColecao){alert('Selecione uma coleção primeiro.');return;}
   const file=input.files[0];if(!file)return;
-  setStatus(tipo,'','Processando...');
   const reader=new FileReader();
   reader.onload=async e=>{
     try{
       const wb=XLSX.read(e.target.result,{type:'array'});
       const ws=wb.Sheets[wb.SheetNames[0]];
       const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
-      if(tipo==='produzidos')await parseProduzidos(rows);
-      else if(tipo==='bazar')await parseBazar(rows);
-      else if(tipo==='comprometido')await parseComprometido(rows);
-      else if(tipo.startsWith('historico'))await parseHistorico(rows,tipo,periodo);
-      syncStatus();renderListaProduzidos();renderTable();updateSummary();renderAlertas();
-    }catch(err){setStatus(tipo,'err','Erro: '+err.message);console.error(err);}
+      if(tipo==='historico')await parseHistorico(rows,periodo);
+      else if(tipo==='bazar')await parseBazar(rows,periodo);
+      else if(tipo==='comp')await parseComp(rows,periodo);
+      renderPeriodoBlocks();
+      renderTable();updateSummary();renderAlertas();
+    }catch(err){alert('Erro ao processar: '+err.message);console.error(err);}
     input.value='';
   };
   reader.readAsArrayBuffer(file);
 }
 
-// ── PARSERS ───────────────────────────────────────────────────────────────────
-
-// Ordens de Produção (pivot CSV ou Excel)
-// Col3=Produto, Col9=QtdFinalizada
-async function parseProduzidos(rows){
-  const res={};
+// Histórico produto acabado
+// Row estrutura: Col0=Produto, Col6=OP, Col7=Devol, Col10=BalEnt, Col11=BalSai
+// Col12=MovEnt, Col13=MovSai, Col14=TransfEnt, Col15=TransfSai
+// Col16=ConsRem, Col17=ConsRet, Col19=VendNorm, Col20=VendBrind, Col21=Resultado
+async function parseHistorico(rows,periodo){
+  const nomesFiltro=new Set((_cache.produzidos||[]).map(p=>p.nome.toLowerCase()));
+  const produtos=[];
   for(let i=0;i<rows.length;i++){
     const r=rows[i];
     const col0=String(r[0]||'').trim();
-    if(col0.toLowerCase().includes('ordem')||col0.toLowerCase().includes('armazenador'))continue;
-    // CSV: col1=Nome, col4=Qtd | Excel pivot: col3=Nome, col9=Qtd
-    let nome='',qtd=0;
-    // Detecta se é CSV (col1 tem nome de produto)
-    const col1=String(r[1]||'').trim();
-    const col3=String(r[3]||'').trim();
-    if(col1&&!/^\d/.test(col1)&&col1.length>3){
-      nome=col1;qtd=parseFloat(String(r[4]||'0').replace(',','.'))||0;
-    } else if(col3){
-      nome=col3;qtd=parseInt(r[9])||0;
-    }
-    if(nome&&qtd>0)res[nome]=(res[nome]||0)+qtd;
-  }
-  const arr=Object.entries(res).map(([nome,total])=>({nome,total}));
-  await salvarProduzidos(arr);
-  setStatus('produzidos','ok',`${arr.length} produtos · ${nowLabel()}`);
-}
-
-// Histórico de produto acabado
-// Col6=OP, Col7=Devol, Col10=BalEnt, Col11=BalSai
-// Col12=MovEnt, Col13=MovSai, Col14=TransfEnt, Col15=TransfSai
-// Col16=ConsRem, Col17=ConsRet, Col19=VendNorm, Col20=VendBrind, Col21=Resultado
-async function parseHistorico(rows,tipo,periodo){
-  const produtos=[];
-  const nomesFiltro=new Set((_cache.produzidos||[]).map(p=>p.nome.toLowerCase()));
-  for(let i=0;i<rows.length;i++){
-    const r=rows[i];
-    const firstCell=String(r[0]||'').trim();
-    if(!/^\d{4}[.\-]/.test(firstCell))continue;
-    if(firstCell.toLowerCase().includes('totais'))continue;
-    const nome=normName(firstCell);
-    // Só inclui se estiver nos produzidos (filtro de coleção)
+    if(!/^\d{4}[.\-]/.test(col0))continue;
+    if(col0.toLowerCase().includes('totais'))continue;
+    const nome=normName(col0);
     if(nomesFiltro.size>0&&!nomesFiltro.has(nome.toLowerCase()))continue;
     const gi=idx=>parseInt(r[idx])||0;
     produtos.push({
-      nome,produto:firstCell,
-      op:gi(6),devol:gi(7),
+      nome,op:gi(6),devol:gi(7),
       balEnt:gi(10),balSai:gi(11),
       movEnt:gi(12),movSai:gi(13),
       transfEnt:gi(14),transfSai:gi(15),
@@ -632,13 +537,13 @@ async function parseHistorico(rows,tipo,periodo){
       res:gi(21)
     });
   }
-  _cache.uploads[tipo]={produtos,total:produtos.length,label:nowLabel()};
-  await salvarUpload(tipo,produtos,nowLabel(),produtos.length);
-  setStatus(tipo,'ok',`${produtos.length} produtos · ${nowLabel()}`);
+  const chave='historico'+periodo;
+  _cache.uploads[chave]={produtos,total:produtos.length,label:nowLabel()};
+  await salvarUploadSB('historico',periodo,produtos,nowLabel(),produtos.length);
 }
 
-// Bazar — col0=produto, col5=qtd total da transferência
-async function parseBazar(rows){
+// Bazar — col0=produto (código), col5=qtd transferida
+async function parseBazar(rows,periodo){
   const res={};
   for(let i=0;i<rows.length;i++){
     const r=rows[i];
@@ -650,26 +555,25 @@ async function parseBazar(rows){
     if(nome&&qtd>0)res[nome]=(res[nome]||0)+qtd;
   }
   const arr=Object.entries(res).map(([nome,qtd])=>({nome,qtd}));
-  _cache.uploads.bazar=arr;
-  await salvarUpload('bazar',arr,nowLabel(),arr.length);
-  setStatus('bazar','ok',`${arr.length} itens · ${nowLabel()}`);
+  const chave='bazar'+periodo;
+  _cache.uploads[chave]={dados:arr,length:arr.length,label:nowLabel()};
+  await salvarUploadSB('bazar',periodo,arr,nowLabel(),arr.length);
 }
 
-// Comprometido — CSV: col1=Nome, col4=QtdComprometida
-async function parseComprometido(rows){
+// Comprometido — CSV col1=Nome, col4=Qtd comprometida
+async function parseComp(rows,periodo){
   const res={};
   for(let i=0;i<rows.length;i++){
     const r=rows[i];
     const col1=String(r[1]||'').trim();
     if(!col1||col1.toLowerCase().includes('nome')||col1.toLowerCase().includes('produto'))continue;
-    const qtdStr=String(r[4]||'0').replace(',','.');
-    const qtd=parseFloat(qtdStr)||0;
+    const qtd=parseFloat(String(r[4]||'0').replace(',','.'))||0;
     if(col1&&qtd>0)res[col1]=(res[col1]||0)+qtd;
   }
   const arr=Object.entries(res).map(([nome,qtd])=>({nome,qtd}));
-  _cache.uploads.comprometido=arr;
-  await salvarUpload('comprometido',arr,nowLabel(),arr.length);
-  setStatus('comprometido','ok',`${arr.length} itens · ${nowLabel()}`);
+  const chave='comp'+periodo;
+  _cache.uploads[chave]={dados:arr,length:arr.length,label:nowLabel()};
+  await salvarUploadSB('comp',periodo,arr,nowLabel(),arr.length);
 }
 
 // ── ENTRADA MANUAL ────────────────────────────────────────────────────────────
@@ -694,7 +598,6 @@ async function salvarManual(){
     if(ex)ex.total=qtd;else prods.push({nome,total:qtd});
     await salvarProduzidos(prods);
     renderListaProduzidos();
-    setStatus('produzidos','ok',`${prods.length} produtos`);
     renderTable();updateSummary();renderAlertas();
     fecharModalManual();
   }catch(e){document.getElementById('modal-manual-msg').innerHTML=`<div class="msg msg-err">${e.message}</div>`;}
@@ -705,7 +608,6 @@ async function removerProduzido(nome){
   const prods=(_cache.produzidos||[]).filter(p=>p.nome!==nome);
   await salvarProduzidos(prods);
   renderListaProduzidos();
-  setStatus('produzidos',prods.length?'ok':'',prods.length?`${prods.length} produtos`:'Nenhum produto');
   renderTable();updateSummary();renderAlertas();
 }
 
@@ -713,10 +615,13 @@ function renderListaProduzidos(){
   const el=document.getElementById('lista-produzidos');
   if(!el)return;
   const prod=_cache.produzidos||[];
-  if(!prod.length){el.innerHTML='';return;}
+  if(!prod.length){
+    el.innerHTML='<div style="padding:12px;font-size:12px;color:var(--muted);text-align:center">Nenhum produto cadastrado.</div>';
+    return;
+  }
   el.innerHTML=`<div class="prod-list">${prod.map(p=>`
     <div class="prod-item">
-      <span>${p.nome}</span>
+      <span style="color:var(--text)">${p.nome}</span>
       <div style="display:flex;align-items:center;gap:8px">
         <span style="color:var(--gold);font-weight:600">${p.total} pçs</span>
         <button onclick="abrirEditarProduzido('${p.nome.replace(/'/g,"\\'")}',${p.total})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:11px">✎</button>
@@ -734,33 +639,31 @@ function abrirEditarProduzido(nome,qtd){
 }
 
 // ── AGGREGATION ───────────────────────────────────────────────────────────────
-function getHistorico(){
-  const d=getCol();
+function getHistoricoProdutos(){
   if(currentPeriod==='total'){
     for(const p of['60','30','7']){
-      const h=d['historico'+p];
-      if(h&&h.produtos&&h.produtos.length)return h.produtos;
+      const h=_cache.uploads['historico'+p];
+      if(h&&h.produtos&&h.produtos.length)return{produtos:h.produtos,periodo:p};
     }
-    return[];
+    return{produtos:[],periodo:null};
   }
-  const h=d['historico'+currentPeriod];
-  return h&&h.produtos?h.produtos:[];
+  const h=_cache.uploads['historico'+currentPeriod];
+  return{produtos:h&&h.produtos?h.produtos:[],periodo:currentPeriod};
 }
 
 function aggregate(){
-  const d=getCol();
-  const historico=getHistorico();
-  const produzidos=d.produzidos||[];
-  const bazar=d.bazar||[];
-  const comprometido=d.comprometido||[];
+  const{produtos:historico,periodo}=getHistoricoProdutos();
+  const p=periodo||(currentPeriod==='total'?'60':currentPeriod);
+  const produzidos=_cache.produzidos||[];
+  const bazarDados=((_cache.uploads['bazar'+p]||{}).dados)||[];
+  const compDados=((_cache.uploads['comp'+p]||{}).dados)||[];
 
-  const prodMap={};produzidos.forEach(p=>prodMap[p.nome]=p.total);
-  const bazarMap={};bazar.forEach(b=>bazarMap[b.nome]=(bazarMap[b.nome]||0)+b.qtd);
-  const compMap={};comprometido.forEach(c=>compMap[c.nome]=(compMap[c.nome]||0)+c.qtd);
+  const prodMap={};produzidos.forEach(x=>prodMap[x.nome]=x.total);
+  const bazarMap={};bazarDados.forEach(b=>bazarMap[b.nome]=(bazarMap[b.nome]||0)+b.qtd);
+  const compMap={};compDados.forEach(c=>compMap[c.nome]=(compMap[c.nome]||0)+c.qtd);
 
-  // Usa produzidos como filtro mestre
   const nomes=produzidos.length>0
-    ?new Set(produzidos.map(p=>p.nome))
+    ?new Set(produzidos.map(x=>x.nome))
     :new Set(historico.map(h=>h.nome));
 
   const rows=[];
@@ -772,8 +675,6 @@ function aggregate(){
 
     const op=h.op||0;
     const devol=h.devol||0;
-    const balEnt=h.balEnt||0;
-    const balSai=h.balSai||0;
     const movEnt=h.movEnt||0;
     const movSai=h.movSai||0;
     const transfEnt=h.transfEnt||0;
@@ -783,28 +684,18 @@ function aggregate(){
     const vendNorm=h.vendNorm||0;
     const vendBrind=h.vendBrind||0;
     const resultado=h.res||0;
-
-    const vendido=vendNorm+vendBrind;
     const consigPend=consRem-consRet;
     const disponivel=resultado-compQtd;
 
-    // Mov. Estoque suspeita: entrada ou saída que não bate com o Bazar
-    const movAlert=(movEnt>0)||(movSai!==bazarQtd&&(movSai>0||bazarQtd>0));
+    // Mov. suspeita: entrada > 0 OU saída ≠ bazar
+    const movAlert=movEnt>0||(movSai>0&&movSai!==bazarQtd)||(bazarQtd>0&&movSai!==bazarQtd);
     const transfAlert=transfEnt>0||transfSai>0;
 
-    // Performance: (vendido + consigPend) / (produzido - bazar - brinde)
+    // Performance: (vendNorm + consigPend) / (produzido - bazar - brinde)
     const basePerf=Math.max(0,(produzido>0?produzido:op)-bazarQtd-vendBrind);
     const perf=basePerf>0?((vendNorm+consigPend)/basePerf)*100:0;
 
-    rows.push({
-      nome,produzido,op,devol,
-      balEnt,balSai,movEnt,movSai,movAlert,
-      transfEnt,transfSai,transfAlert,
-      consRem,consRet,consigPend,
-      vendNorm,vendBrind,vendido,
-      resultado,compQtd,disponivel,
-      bazarQtd,perf
-    });
+    rows.push({nome,produzido,op,devol,movEnt,movSai,movAlert,transfEnt,transfSai,transfAlert,consRem,consRet,consigPend,vendNorm,vendBrind,resultado,compQtd,disponivel,bazarQtd,perf});
   });
 
   rows.sort((a,b)=>{
@@ -822,18 +713,16 @@ function renderAlertas(){
   const alertas=[];
   rows.forEach(r=>{
     if(r.movAlert&&r.op>0){
-      const desc=r.movEnt>0&&r.movSai!==r.bazarQtd
-        ?`Mov. Entrada: ${r.movEnt} · Mov. Saída: ${r.movSai} · Bazar: ${r.bazarQtd} — divergência!`
-        :r.movEnt>0
-        ?`Mov. Estoque Entrada: ${r.movEnt} — sem justificativa`
-        :`Mov. Saída (${r.movSai}) ≠ Bazar (${r.bazarQtd}) — ${Math.abs(r.movSai-r.bazarQtd)} peça(s) sem justificativa`;
-      alertas.push({icon:'↔',nome:r.nome,desc});
+      let desc='';
+      if(r.movEnt>0)desc+=`Mov. Entrada: ${r.movEnt} — sem justificativa. `;
+      if(r.movSai!==r.bazarQtd&&(r.movSai>0||r.bazarQtd>0))desc+=`Mov. Saída (${r.movSai}) ≠ Bazar (${r.bazarQtd}) — ${Math.abs(r.movSai-r.bazarQtd)} peça(s) sem justificativa.`;
+      if(desc)alertas.push({icon:'↔',nome:r.nome,desc:desc.trim()});
     }
     if(r.transfAlert&&r.op>0){
       alertas.push({icon:'🏢',nome:r.nome,desc:`Transf. Empresas: Entrada ${r.transfEnt} · Saída ${r.transfSai}`});
     }
     if(r.disponivel<0){
-      alertas.push({icon:'⚠',nome:r.nome,desc:`Disponível negativo: ${r.disponivel} (comprometido maior que resultado)`});
+      alertas.push({icon:'⚠',nome:r.nome,desc:`Disponível negativo (${r.disponivel}) — comprometido maior que resultado`});
     }
   });
   const el=document.getElementById('alertas-container');
@@ -850,16 +739,16 @@ function renderAlertas(){
 // ── SUMMARY ───────────────────────────────────────────────────────────────────
 function updateSummary(){
   const rows=aggregate();
-  const tProd=rows.reduce((s,r)=>s+(r.produzido||r.op||0),0);
-  const tVend=rows.reduce((s,r)=>s+r.vendido,0);
-  const tCons=rows.reduce((s,r)=>s+r.consigPend,0);
-  const tRes=rows.reduce((s,r)=>s+r.resultado,0);
+  const tP=rows.reduce((s,r)=>s+(r.produzido||r.op||0),0);
+  const tV=rows.reduce((s,r)=>s+r.vendNorm,0);
+  const tC=rows.reduce((s,r)=>s+r.consigPend,0);
+  const tR=rows.reduce((s,r)=>s+r.resultado,0);
   const tComp=rows.reduce((s,r)=>s+r.compQtd,0);
   const tDisp=rows.reduce((s,r)=>s+r.disponivel,0);
-  document.getElementById('sum-produzido').textContent=tProd||'—';
-  document.getElementById('sum-vendas').textContent=tVend||'—';
-  document.getElementById('sum-consig').textContent=tCons||'—';
-  document.getElementById('sum-resultado').textContent=tRes||'—';
+  document.getElementById('sum-produzido').textContent=tP||'—';
+  document.getElementById('sum-vendas').textContent=tV||'—';
+  document.getElementById('sum-consig').textContent=tC||'—';
+  document.getElementById('sum-resultado').textContent=tR||'—';
   document.getElementById('sum-comprometido').textContent=tComp||'—';
   document.getElementById('sum-disponivel').textContent=tDisp||'—';
 }
@@ -884,7 +773,7 @@ function renderTable(){
   document.getElementById('table-info').textContent=`${rows.length} peça${rows.length!==1?'s':''}`;
 
   if(!rows.length){
-    document.getElementById('table-container').innerHTML='<div class="empty-state"><div style="font-size:28px;opacity:.3;margin-bottom:10px">✦</div><div>Nenhum dado. Carregue os relatórios acima.</div></div>';
+    document.getElementById('table-container').innerHTML='<div class="empty-state"><div style="font-size:28px;opacity:.3;margin-bottom:10px">✦</div><div>Adicione produtos à coleção e carregue o Histórico.</div></div>';
     return;
   }
 
@@ -896,17 +785,17 @@ function renderTable(){
 
   let html=`<table><thead><tr>
     ${th('nome','Produto')}
-    ${th('produzido','Produzido','Total cortado (OP da coleção)')}
+    ${th('produzido','Produzido','Total cadastrado na coleção')}
     ${th('op','OP Entrada','Entradas via OP no DAPIC')}
     ${th('devol','Devolução','Devoluções de clientes')}
     ${th('vendNorm','Venda Normal','')}
     ${th('vendBrind','Brinde','')}
     ${th('consigPend','Consig. Pend.','Remessa − Retorno')}
     ${th('bazarQtd','Bazar','Transferências para Bazar')}
-    ${th('resultado','Resultado','Estoque físico atual')}
+    ${th('resultado','Resultado','Estoque físico atual (do DAPIC)')}
     ${th('compQtd','Comprometido','Separado, ainda não vendido')}
     ${th('disponivel','Disponível','Resultado − Comprometido')}
-    ${th('perf','Performance','(Vendas + Consig.Pend.) / (Produzido − Bazar − Brinde)')}
+    ${th('perf','Performance','(Vendas + Consig.) / (Produzido − Bazar − Brinde)')}
   </tr></thead><tbody>`;
 
   let tP=0,tOP=0,tD=0,tVN=0,tVB=0,tC=0,tB=0,tR=0,tComp=0,tDisp=0;
@@ -914,15 +803,13 @@ function renderTable(){
   rows.forEach(r=>{
     const color=pc(r.perf);
     const pw=Math.min(r.perf,100);
-    const movCls=r.movAlert?'td-orange':'td-muted';
     const dispCls=r.disponivel<0?'td-red':r.disponivel===0?'td-muted':'td-num';
+    const movBadge=r.movAlert?'<span class="chip chip-orange" style="margin-left:4px;font-size:9px">⚠ Mov</span>':'';
+    const transfBadge=r.transfAlert?'<span class="chip chip-orange" style="margin-left:4px;font-size:9px">🏢</span>':'';
 
     tP+=r.produzido;tOP+=r.op;tD+=r.devol;tVN+=r.vendNorm;
     tVB+=r.vendBrind;tC+=r.consigPend;tB+=r.bazarQtd;
     tR+=r.resultado;tComp+=r.compQtd;tDisp+=r.disponivel;
-
-    const movBadge=r.movAlert?`<span class="chip chip-orange" style="margin-left:4px">⚠</span>`:'';
-    const transfBadge=r.transfAlert?`<span class="chip chip-red" style="margin-left:4px">🏢</span>`:'';
 
     html+=`<tr>
       <td style="color:var(--text);font-weight:500">${r.nome}${movBadge}${transfBadge}</td>
@@ -943,7 +830,8 @@ function renderTable(){
     </tr>`;
   });
 
-  const tPerf=tP>0?((tVN+tC)/(Math.max(0,tP-tB-tVB))*100).toFixed(0)+'%':'—';
+  const baseTotal=Math.max(0,tP-tB-tVB);
+  const tPerf=baseTotal>0?((tVN+tC)/baseTotal*100).toFixed(0)+'%':'—';
   html+=`</tbody><tr class="totals-row">
     <td>TOTAL</td>
     <td>${tP||'—'}</td><td>${tOP||'—'}</td><td>${tD||'—'}</td>
