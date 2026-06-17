@@ -39,10 +39,15 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 .prod-item:last-child{border-bottom:none;}
 
 /* PERÍODO BLOCKS */
-.periodo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px;}
-@media(max-width:1100px){.periodo-grid{grid-template-columns:1fr;}}
-.periodo-block{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;}
-.periodo-badge{display:inline-block;padding:3px 10px;border-radius:4px;font-size:10px;font-weight:600;letter-spacing:.5px;background:rgba(201,169,110,0.12);color:var(--gold);margin-bottom:12px;}
+.upload-tab-bar{display:flex;gap:2px;background:var(--bg2);padding:3px;width:fit-content;border:1px solid var(--border);border-bottom:none;border-radius:var(--radius) var(--radius) 0 0;}
+.upload-tab{padding:5px 18px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;color:var(--muted);border:none;background:transparent;font-family:'DM Sans',sans-serif;transition:all 0.15s;display:flex;align-items:center;gap:6px;}
+.upload-tab:hover{color:var(--text);}
+.upload-tab.active{background:var(--gold);color:#1a1410;}
+.upload-tab.active .utab-badge{background:rgba(0,0,0,0.2);color:#1a1410;}
+.utab-badge{font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;background:rgba(201,169,110,0.15);color:var(--muted);transition:all 0.15s;}
+.utab-badge.full{background:rgba(106,158,111,0.25);color:var(--green);}
+.utab-badge.partial{background:rgba(201,138,74,0.25);color:var(--orange);}
+#periodo-blocks{background:var(--bg2);border:1px solid var(--border);border-radius:0 var(--radius) var(--radius) var(--radius);padding:16px;margin-bottom:20px;}
 .upload-row{display:flex;flex-direction:column;gap:10px;}
 .upload-item{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:10px;}
 .upload-item-title{font-size:11px;font-weight:600;color:var(--gold);margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;}
@@ -190,8 +195,19 @@ td{padding:9px 10px;white-space:nowrap;font-size:13px;}
 
     <!-- PERÍODOS -->
     <div class="section-label">Dados por período</div>
-    <div style="font-size:11px;color:var(--muted);margin-bottom:14px">Cada período é independente — upload substitui o anterior do mesmo período.</div>
-    <div class="periodo-grid" id="periodo-blocks"></div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:12px">Cada período é independente — upload substitui o anterior do mesmo período.</div>
+    <div class="upload-tab-bar">
+      <button class="upload-tab active" data-tab="7" onclick="setUploadTab('7',this)">
+        7 dias<span class="utab-badge" id="utab-badge-7"></span>
+      </button>
+      <button class="upload-tab" data-tab="30" onclick="setUploadTab('30',this)">
+        30 dias<span class="utab-badge" id="utab-badge-30"></span>
+      </button>
+      <button class="upload-tab" data-tab="60" onclick="setUploadTab('60',this)">
+        60 dias<span class="utab-badge" id="utab-badge-60"></span>
+      </button>
+    </div>
+    <div id="periodo-blocks"></div>
 
     <div class="divider"></div>
 
@@ -351,75 +367,97 @@ function setStatusEl(dotId,txtId,btnId,state,msg){
   if(btn)btn.style.display=state==='ok'?'inline':'none';
 }
 
-// ── PERÍODO BLOCKS ────────────────────────────────────────────────────────────
-function renderPeriodoBlocks(){
-  const el=document.getElementById('periodo-blocks');
-  el.innerHTML=PERIODOS.map(p=>{
+// ── PERÍODO BLOCKS (tabs) ─────────────────────────────────────────────────────
+let currentUploadTab='7';
+
+function setUploadTab(p,btn){
+  currentUploadTab=p;
+  document.querySelectorAll('.upload-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  renderPeriodoBlocks();
+}
+
+function updateUploadTabBadges(){
+  ['7','30','60'].forEach(p=>{
     const hist=getUpload('historico',p);
     const baz=getUpload('bazar',p);
     const comp=getUpload('comp',p);
-    return`<div class="periodo-block">
-      <div class="periodo-badge">${p} dias</div>
-      <div class="upload-row">
+    const count=[hist,baz,comp].filter(Boolean).length;
+    const badge=document.getElementById('utab-badge-'+p);
+    if(!badge)return;
+    if(count===0){badge.textContent='';badge.className='utab-badge';return;}
+    badge.textContent=count+'/3';
+    badge.className='utab-badge'+(count===3?' full':' partial');
+  });
+}
 
-        <div class="upload-item">
-          <div class="upload-item-title">
-            Histórico produto acabado
-            <a href="https://dapic.app/relatorio/historicoprodutoacabadoreport" target="_blank" class="btn btn-outline btn-sm" style="text-decoration:none;font-size:10px">↗ DAPIC</a>
-          </div>
-          <div class="upload-zone">
-            <input type="file" accept=".xlsx,.xls" onchange="handleUpload('historico','${p}',this)">
-            <div class="upload-zone-text">↓ clique ou arraste .xlsx</div>
-          </div>
-          <div class="upload-status">
-            <div style="display:flex;align-items:center;gap:4px">
-              <div class="status-dot${hist?' ok':''}" id="dot-historico${p}"></div>
-              <span id="txt-historico${p}" style="color:${hist?'var(--green)':'var(--muted)'}">${hist?`✓ ${hist.total} produtos · ${hist.label}`:'Nenhum arquivo'}</span>
-            </div>
-            <button id="btn-limpar-historico${p}" onclick="limparUpload('historico','${p}')" style="display:${hist?'inline':'none'};background:none;border:none;color:var(--red);cursor:pointer;font-size:10px">✕ limpar</button>
-          </div>
-        </div>
+function renderPeriodoBlocks(){
+  const p=currentUploadTab;
+  const hist=getUpload('historico',p);
+  const baz=getUpload('bazar',p);
+  const comp=getUpload('comp',p);
+  const el=document.getElementById('periodo-blocks');
 
-        <div class="upload-item">
-          <div class="upload-item-title">
-            Transferência para Bazar
-            <a href="https://dapic.app/relatorio/transferenciaestoquereport" target="_blank" class="btn btn-outline btn-sm" style="text-decoration:none;font-size:10px">↗ DAPIC</a>
-          </div>
-          <div class="upload-zone">
-            <input type="file" accept=".xlsx,.xls" onchange="handleUpload('bazar','${p}',this)">
-            <div class="upload-zone-text">↓ clique ou arraste .xlsx</div>
-          </div>
-          <div class="upload-status">
-            <div style="display:flex;align-items:center;gap:4px">
-              <div class="status-dot${baz?' ok':''}" id="dot-bazar${p}"></div>
-              <span id="txt-bazar${p}" style="color:${baz?'var(--green)':'var(--muted)'}">${baz?`✓ ${baz.length} itens · ${baz.label}`:'Nenhum arquivo'}</span>
-            </div>
-            <button id="btn-limpar-bazar${p}" onclick="limparUpload('bazar','${p}')" style="display:${baz?'inline':'none'};background:none;border:none;color:var(--red);cursor:pointer;font-size:10px">✕ limpar</button>
-          </div>
-        </div>
+  el.innerHTML=`<div class="upload-row">
 
-        <div class="upload-item">
-          <div class="upload-item-title">
-            Estoque Comprometido
-            <a href="https://dapic.app/pivot/gestaoestoquepivot" target="_blank" class="btn btn-outline btn-sm" style="text-decoration:none;font-size:10px">↗ DAPIC</a>
-          </div>
-          <div style="font-size:10px;color:var(--orange);margin-bottom:5px">⚠ Selecionar modelo: <strong>RELATÓRIO - PERFORMANCE</strong></div>
-          <div class="upload-zone">
-            <input type="file" accept=".xlsx,.xls,.csv" onchange="handleUpload('comp','${p}',this)">
-            <div class="upload-zone-text">↓ clique ou arraste .xlsx / .csv</div>
-          </div>
-          <div class="upload-status">
-            <div style="display:flex;align-items:center;gap:4px">
-              <div class="status-dot${comp?' ok':''}" id="dot-comp${p}"></div>
-              <span id="txt-comp${p}" style="color:${comp?'var(--green)':'var(--muted)'}">${comp?`✓ ${comp.length} itens · ${comp.label}`:'Nenhum arquivo'}</span>
-            </div>
-            <button id="btn-limpar-comp${p}" onclick="limparUpload('comp','${p}')" style="display:${comp?'inline':'none'};background:none;border:none;color:var(--red);cursor:pointer;font-size:10px">✕ limpar</button>
-          </div>
-        </div>
-
+    <div class="upload-item">
+      <div class="upload-item-title">
+        Histórico produto acabado
+        <a href="https://dapic.app/relatorio/historicoprodutoacabadoreport" target="_blank" class="btn btn-outline btn-sm" style="text-decoration:none;font-size:10px">↗ DAPIC</a>
       </div>
-    </div>`;
-  }).join('');
+      <div class="upload-zone">
+        <input type="file" accept=".xlsx,.xls" onchange="handleUpload('historico','${p}',this)">
+        <div class="upload-zone-text">↓ clique ou arraste .xlsx</div>
+      </div>
+      <div class="upload-status">
+        <div style="display:flex;align-items:center;gap:4px">
+          <div class="status-dot${hist?' ok':''}" id="dot-historico${p}"></div>
+          <span id="txt-historico${p}" style="color:${hist?'var(--green)':'var(--muted)'}">${hist?`✓ ${hist.total} produtos · ${hist.label}`:'Nenhum arquivo'}</span>
+        </div>
+        <button id="btn-limpar-historico${p}" onclick="limparUpload('historico','${p}')" style="display:${hist?'inline':'none'};background:none;border:none;color:var(--red);cursor:pointer;font-size:10px">✕ limpar</button>
+      </div>
+    </div>
+
+    <div class="upload-item">
+      <div class="upload-item-title">
+        Transferência para Bazar
+        <a href="https://dapic.app/relatorio/transferenciaestoquereport" target="_blank" class="btn btn-outline btn-sm" style="text-decoration:none;font-size:10px">↗ DAPIC</a>
+      </div>
+      <div class="upload-zone">
+        <input type="file" accept=".xlsx,.xls" onchange="handleUpload('bazar','${p}',this)">
+        <div class="upload-zone-text">↓ clique ou arraste .xlsx</div>
+      </div>
+      <div class="upload-status">
+        <div style="display:flex;align-items:center;gap:4px">
+          <div class="status-dot${baz?' ok':''}" id="dot-bazar${p}"></div>
+          <span id="txt-bazar${p}" style="color:${baz?'var(--green)':'var(--muted)'}">${baz?`✓ ${baz.length} itens · ${baz.label}`:'Nenhum arquivo'}</span>
+        </div>
+        <button id="btn-limpar-bazar${p}" onclick="limparUpload('bazar','${p}')" style="display:${baz?'inline':'none'};background:none;border:none;color:var(--red);cursor:pointer;font-size:10px">✕ limpar</button>
+      </div>
+    </div>
+
+    <div class="upload-item">
+      <div class="upload-item-title">
+        Estoque Comprometido
+        <a href="https://dapic.app/pivot/gestaoestoquepivot" target="_blank" class="btn btn-outline btn-sm" style="text-decoration:none;font-size:10px">↗ DAPIC</a>
+      </div>
+      <div style="font-size:10px;color:var(--orange);margin-bottom:5px">⚠ Selecionar modelo: <strong>RELATÓRIO - PERFORMANCE</strong></div>
+      <div class="upload-zone">
+        <input type="file" accept=".xlsx,.xls,.csv" onchange="handleUpload('comp','${p}',this)">
+        <div class="upload-zone-text">↓ clique ou arraste .xlsx / .csv</div>
+      </div>
+      <div class="upload-status">
+        <div style="display:flex;align-items:center;gap:4px">
+          <div class="status-dot${comp?' ok':''}" id="dot-comp${p}"></div>
+          <span id="txt-comp${p}" style="color:${comp?'var(--green)':'var(--muted)'}">${comp?`✓ ${comp.length} itens · ${comp.label}`:'Nenhum arquivo'}</span>
+        </div>
+        <button id="btn-limpar-comp${p}" onclick="limparUpload('comp','${p}')" style="display:${comp?'inline':'none'};background:none;border:none;color:var(--red);cursor:pointer;font-size:10px">✕ limpar</button>
+      </div>
+    </div>
+
+  </div>`;
+
+  updateUploadTabBadges();
 }
 
 // ── COLEÇÕES ──────────────────────────────────────────────────────────────────
@@ -449,6 +487,7 @@ async function onColecaoChange(){
   if(val){
     await carregarDadosColecao();
     renderPeriodoBlocks();
+    updateUploadTabBadges();
     renderListaProduzidos();
     renderTable();
     updateSummary();
@@ -550,6 +589,7 @@ async function limparUpload(tipo,periodo){
     await sbFetch('perf_uploads?colecao_id=eq.'+currentColecaoId+'&tipo=eq.'+encodeURIComponent(chave),'DELETE');
     delete _cache.uploads[chave];
     renderPeriodoBlocks();
+    updateUploadTabBadges();
     renderTable();updateSummary();renderAlertas();
   }catch(e){alert('Erro: '+e.message);}
 }
@@ -568,6 +608,7 @@ function handleUpload(tipo,periodo,input){
       else if(tipo==='bazar')await parseBazar(rows,periodo);
       else if(tipo==='comp')await parseComp(rows,periodo);
       renderPeriodoBlocks();
+      updateUploadTabBadges();
       renderTable();updateSummary();renderAlertas();
     }catch(err){alert('Erro ao processar: '+err.message);console.error(err);}
     input.value='';
