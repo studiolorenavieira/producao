@@ -616,10 +616,11 @@ function handleUpload(tipo,periodo,input){
   reader.readAsArrayBuffer(file);
 }
 
-// Histórico produto acabado
-// Row estrutura: Col0=Produto, Col6=OP, Col7=Devol, Col10=BalEnt, Col11=BalSai
-// Col12=MovEnt, Col13=MovSai, Col14=TransfEnt, Col15=TransfSai
-// Col16=ConsRem, Col17=ConsRet, Col19=VendNorm, Col20=VendBrind, Col21=Resultado
+// Histórico produto acabado — mapeamento REAL verificado via openpyxl:
+// Col0=Produto | Col3=NF Compra Ent | Col5=OP Ent | Col6=Devol Ent
+// Col9=Balanço Ent | Col10=Balanço Saí | Col11=MovEst Ent | Col12=MovEst Saí
+// Col13=Transf Ent | Col14=Transf Saí | Col15=Consig Remessa | Col16=Consig Retorno
+// Col18=Venda Normal | Col19=Venda Brinde | Col20=Resultado
 async function parseHistorico(rows,periodo){
   const nomesFiltro=new Set((_cache.produzidos||[]).map(p=>p.nome.toLowerCase()));
   const produtos=[];
@@ -632,13 +633,13 @@ async function parseHistorico(rows,periodo){
     if(nomesFiltro.size>0&&!nomesFiltro.has(nome.toLowerCase()))continue;
     const gi=idx=>parseInt(r[idx])||0;
     produtos.push({
-      nome,op:gi(6),devol:gi(7),
-      balEnt:gi(10),balSai:gi(11),
-      movEnt:gi(12),movSai:gi(13),
-      transfEnt:gi(14),transfSai:gi(15),
-      consRem:gi(16),consRet:gi(17),
-      vendNorm:gi(19),vendBrind:gi(20),
-      res:gi(21)
+      nome,op:gi(5),devol:gi(6),
+      balEnt:gi(9),balSai:gi(10),
+      movEnt:gi(11),movSai:gi(12),
+      transfEnt:gi(13),transfSai:gi(14),
+      consRem:gi(15),consRet:gi(16),
+      vendNorm:gi(18),vendBrind:gi(19),
+      res:gi(20)
     });
   }
   const chave='historico'+periodo;
@@ -646,17 +647,25 @@ async function parseHistorico(rows,periodo){
   await salvarUploadSB('historico',periodo,produtos,nowLabel(),produtos.length);
 }
 
-// Bazar — col0=produto (código), col5=qtd transferida
+// Bazar — Transferência Analítico
+// Estrutura hierárquica: col0=Produto (repete por cor), col5=total produto,
+// col7=Cor, col10=qtd cor, col13=Tamanho, col15=qtd tamanho (mais granular)
+// CORRETO: somar col15 por tamanho rastreando o produto atual (evita dupla contagem)
 async function parseBazar(rows,periodo){
   const res={};
+  let currentNome=null;
   for(let i=0;i<rows.length;i++){
     const r=rows[i];
     const col0=String(r[0]||'').trim();
-    if(!/^\d{4}[.\-]/.test(col0))continue;
-    if(col0.toLowerCase().includes('totais')||col0.toLowerCase().includes('produto'))continue;
-    const nome=normName(col0);
-    const qtd=parseInt(r[5])||0;
-    if(nome&&qtd>0)res[nome]=(res[nome]||0)+qtd;
+    // Pular linhas de cabeçalho/metadados
+    if(col0&&!/^\d{4}[.\-]/.test(col0))continue;
+    // Novo produto
+    if(col0&&/^\d{4}[.\-]/.test(col0)&&!col0.toLowerCase().includes('totais')){
+      currentNome=normName(col0);
+    }
+    // Quantidade por tamanho (col15) — nível mais granular, sem dupla contagem
+    const qtd=parseInt(r[15])||0;
+    if(currentNome&&qtd>0)res[currentNome]=(res[currentNome]||0)+qtd;
   }
   const arr=Object.entries(res).map(([nome,qtd])=>({nome,qtd}));
   const chave='bazar'+periodo;
@@ -664,14 +673,23 @@ async function parseBazar(rows,periodo){
   await salvarUploadSB('bazar',periodo,arr,nowLabel(),arr.length);
 }
 
-// Comprometido — CSV col1=Nome, col4=Qtd comprometida
+// Comprometido — CSV pivot col1=Nome, col4=Qtd comprometida (formato "14,00")
+// BUG: xlsx.js lê "14,00" como 1400 (trata vírgula como separador de milhar)
+// FIX: se o valor vier como número, dividir por 100; se string, substituir vírgula
 async function parseComp(rows,periodo){
   const res={};
   for(let i=0;i<rows.length;i++){
     const r=rows[i];
     const col1=String(r[1]||'').trim();
     if(!col1||col1.toLowerCase().includes('nome')||col1.toLowerCase().includes('produto'))continue;
-    const qtd=parseFloat(String(r[4]||'0').replace(',','.'))||0;
+    const rawVal=r[4];
+    let qtd;
+    if(typeof rawVal==='number'){
+      // xlsx.js parseou "14,00" como 1400 — dividir por 100
+      qtd=Math.round(rawVal/100);
+    }else{
+      qtd=Math.round(parseFloat(String(rawVal||'0').replace(',','.'))||0);
+    }
     if(col1&&qtd>0)res[col1]=(res[col1]||0)+qtd;
   }
   const arr=Object.entries(res).map(([nome,qtd])=>({nome,qtd}));
