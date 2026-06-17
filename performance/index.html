@@ -39,15 +39,10 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 .prod-item:last-child{border-bottom:none;}
 
 /* PERÍODO BLOCKS */
-.upload-tab-bar{display:flex;gap:2px;background:var(--bg2);padding:3px;width:fit-content;border:1px solid var(--border);border-bottom:none;border-radius:var(--radius) var(--radius) 0 0;}
-.upload-tab{padding:5px 18px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;color:var(--muted);border:none;background:transparent;font-family:'DM Sans',sans-serif;transition:all 0.15s;display:flex;align-items:center;gap:6px;}
-.upload-tab:hover{color:var(--text);}
-.upload-tab.active{background:var(--gold);color:#1a1410;}
-.upload-tab.active .utab-badge{background:rgba(0,0,0,0.2);color:#1a1410;}
-.utab-badge{font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;background:rgba(201,169,110,0.15);color:var(--muted);transition:all 0.15s;}
-.utab-badge.full{background:rgba(106,158,111,0.25);color:var(--green);}
-.utab-badge.partial{background:rgba(201,138,74,0.25);color:var(--orange);}
-#periodo-blocks{background:var(--bg2);border:1px solid var(--border);border-radius:0 var(--radius) var(--radius) var(--radius);padding:16px;margin-bottom:20px;}
+.periodo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px;}
+@media(max-width:1100px){.periodo-grid{grid-template-columns:1fr;}}
+.periodo-block{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;}
+.periodo-badge{display:inline-block;padding:3px 10px;border-radius:4px;font-size:10px;font-weight:600;letter-spacing:.5px;background:rgba(201,169,110,0.12);color:var(--gold);margin-bottom:12px;}
 .upload-row{display:flex;flex-direction:column;gap:10px;}
 .upload-item{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:10px;}
 .upload-item-title{font-size:11px;font-weight:600;color:var(--gold);margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;}
@@ -118,7 +113,17 @@ td{padding:9px 10px;white-space:nowrap;font-size:13px;}
 .modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;}
 .msg{font-size:11px;padding:7px 11px;border-radius:6px;margin-top:8px;}
 .msg-err{background:rgba(192,97,74,0.15);color:var(--red);border:1px solid rgba(192,97,74,0.3);}
-
+/* UPLOAD TABS */
+.upload-tab-bar{display:flex;gap:2px;background:var(--bg2);padding:3px;width:fit-content;border:1px solid var(--border);border-bottom:none;border-radius:var(--radius) var(--radius) 0 0;}
+.upload-tab{padding:5px 18px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;color:var(--muted);border:none;background:transparent;font-family:'DM Sans',sans-serif;transition:all 0.15s;display:flex;align-items:center;gap:6px;}
+.upload-tab:hover{color:var(--text);}
+.upload-tab.active{background:var(--gold);color:#1a1410;}
+.upload-tab.active .utab-badge{background:rgba(0,0,0,0.2);color:#1a1410;}
+.utab-badge{font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;background:rgba(201,169,110,0.15);color:var(--muted);transition:all 0.15s;}
+.utab-badge.full{background:rgba(106,158,111,0.25);color:var(--green);}
+.utab-badge.partial{background:rgba(201,138,74,0.25);color:var(--orange);}
+#periodo-blocks{background:var(--bg2);border:1px solid var(--border);border-radius:0 var(--radius) var(--radius) var(--radius);padding:16px;margin-bottom:20px;}
+.upload-row{display:flex;flex-direction:column;gap:10px;}
 /* MODAL IMPORTAÇÃO */
 .modal-lg{width:640px;max-height:82vh;display:flex;flex-direction:column;padding:24px 0 0;}
 .modal-lg .modal-header{padding:0 24px 16px;border-bottom:1px solid var(--border);}
@@ -137,15 +142,13 @@ td{padding:9px 10px;white-space:nowrap;font-size:13px;}
 .import-prod-total{color:var(--gold);font-weight:600;font-size:12px;min-width:60px;text-align:right;}
 .import-cores-wrap{display:none;background:var(--bg3);border-radius:6px;padding:8px 12px;margin:0 0 8px 44px;}
 .import-cores-wrap.open{display:block;}
-.import-cor-row{display:flex;justify-content:space-between;padding:3px 0;font-size:11px;color:var(--muted);border-bottom:1px solid rgba(201,169,110,0.04);}
+.import-cor-row{display:flex;justify-content:space-between;padding:3px 0;font-size:11px;color:var(--muted);}
 .import-cor-row:last-child{border-bottom:none;}
-.import-cor-row span:last-child{color:var(--text);font-variant-numeric:tabular-nums;}
-/* Lista produzidos expandível */
+.import-cor-row span:last-child{color:var(--text);}
 .prod-item-cores{display:none;background:var(--bg3);border-radius:6px;padding:7px 10px;margin:0 0 6px 28px;}
 .prod-item-cores.open{display:block;}
 .prod-cor-row{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);padding:2px 0;}
 .prod-cor-row span:last-child{color:var(--text);}
-/* Botão import DAPIC */
 .btn-import{background:rgba(201,169,110,0.1);border:1px solid rgba(201,169,110,0.3);color:var(--gold);font-size:12px;padding:6px 12px;}
 .btn-import:hover{background:rgba(201,169,110,0.18);border-color:var(--gold);}
 </style>
@@ -337,8 +340,8 @@ async function sbFetch(path,method='GET',body=null){
 // ── STATE ─────────────────────────────────────────────────────────────────────
 let currentColecao=null,currentColecaoId=null,currentPeriod='total';
 let sortCol='tLoja',sortDir=-1;
+let currentUploadTab='7';
 const PERIODOS=['7','30','60'];
-// Cache: produzidos=[], uploads={ historico7, bazar7, comp7, historico30, ... }
 let _cache={produzidos:[],uploads:{}};
 
 function getUpload(tipo,periodo){
@@ -357,20 +360,7 @@ function nowLabel(){
 }
 function pc(p){return p>=80?'var(--green)':p>=50?'var(--gold)':'var(--red)';}
 
-function setStatusEl(dotId,txtId,btnId,state,msg){
-  const dot=document.getElementById(dotId);
-  const txt=document.getElementById(txtId);
-  const btn=document.getElementById(btnId);
-  if(!dot||!txt)return;
-  dot.className='status-dot'+(state==='ok'?' ok':state==='err'?' err':'');
-  txt.textContent=msg;
-  txt.style.color=state==='ok'?'var(--green)':state==='err'?'var(--red)':'var(--muted)';
-  if(btn)btn.style.display=state==='ok'?'inline':'none';
-}
-
-// ── PERÍODO BLOCKS (tabs) ─────────────────────────────────────────────────────
-let currentUploadTab='7';
-
+// ── UPLOAD TABS ───────────────────────────────────────────────────────────────
 function setUploadTab(p,btn){
   currentUploadTab=p;
   document.querySelectorAll('.upload-tab').forEach(t=>t.classList.remove('active'));
@@ -380,11 +370,7 @@ function setUploadTab(p,btn){
 
 function updateUploadTabBadges(){
   ['7','30','60'].forEach(p=>{
-    const hist=getUpload('historico',p);
-    const loja=getUpload('loja',p);
-    const baz=getUpload('bazar',p);
-    const comp=getUpload('comp',p);
-    const count=[hist,loja,baz,comp].filter(Boolean).length;
+    const count=[getUpload('historico',p),getUpload('loja',p),getUpload('bazar',p),getUpload('comp',p)].filter(Boolean).length;
     const badge=document.getElementById('utab-badge-'+p);
     if(!badge)return;
     if(count===0){badge.textContent='';badge.className='utab-badge';return;}
@@ -400,147 +386,42 @@ function renderPeriodoBlocks(){
   const baz=getUpload('bazar',p);
   const comp=getUpload('comp',p);
   const el=document.getElementById('periodo-blocks');
-
-  el.innerHTML=`<div class="upload-row">
-
+  const mkSlot=(tipo,title,link,hint,data,dataLabel)=>`
     <div class="upload-item">
       <div class="upload-item-title">
-        Histórico produto acabado
-        <a href="https://dapic.app/relatorio/historicoprodutoacabadoreport" target="_blank" class="btn btn-outline btn-sm" style="text-decoration:none;font-size:10px">↗ DAPIC</a>
+        ${title}
+        <a href="${link}" target="_blank" class="btn btn-outline btn-sm" style="text-decoration:none;font-size:10px">&#8599; DAPIC</a>
       </div>
+      ${hint?`<div style="font-size:10px;color:var(--muted);margin-bottom:5px">${hint}</div>`:''}
       <div class="upload-zone">
-        <input type="file" accept=".xlsx,.xls" onchange="handleUpload('historico','${p}',this)">
-        <div class="upload-zone-text">↓ clique ou arraste .xlsx</div>
+        <input type="file" accept=".xlsx,.xls${tipo==='comp'?',.csv':''}" onchange="handleUpload('${tipo}','${p}',this)">
+        <div class="upload-zone-text">&#8595; clique ou arraste .xlsx</div>
       </div>
       <div class="upload-status">
         <div style="display:flex;align-items:center;gap:4px">
-          <div class="status-dot${hist?' ok':''}" id="dot-historico${p}"></div>
-          <span id="txt-historico${p}" style="color:${hist?'var(--green)':'var(--muted)'}">${hist?`✓ ${hist.total} produtos · ${hist.label}`:'Nenhum arquivo'}</span>
+          <div class="status-dot${data?' ok':''}" id="dot-${tipo}${p}"></div>
+          <span id="txt-${tipo}${p}" style="color:${data?'var(--green)':'var(--muted)'}">
+            ${data?(dataLabel||'Carregado'):'Nenhum arquivo'}
+          </span>
         </div>
-        <button id="btn-limpar-historico${p}" onclick="limparUpload('historico','${p}')" style="display:${hist?'inline':'none'};background:none;border:none;color:var(--red);cursor:pointer;font-size:10px">✕ limpar</button>
+        <button id="btn-limpar-${tipo}${p}" onclick="limparUpload('${tipo}','${p}')"
+          style="display:${data?'inline':'none'};background:none;border:none;color:var(--red);cursor:pointer;font-size:10px">&#10005; limpar</button>
       </div>
-    </div>
+    </div>`;
 
-    <div class="upload-item">
-      <div class="upload-item-title">
-        Transferência para Loja
-        <a href="https://dapic.app/relatorio/transferenciaestoquereport" target="_blank" class="btn btn-outline btn-sm" style="text-decoration:none;font-size:10px">↗ DAPIC</a>
-      </div>
-      <div style="font-size:10px;color:var(--muted);margin-bottom:5px">Origem: Estoque Produção → Destino: Estoque Loja</div>
-      <div class="upload-zone">
-        <input type="file" accept=".xlsx,.xls" onchange="handleUpload('loja','${p}',this)">
-        <div class="upload-zone-text">↓ clique ou arraste .xlsx</div>
-      </div>
-      <div class="upload-status">
-        <div style="display:flex;align-items:center;gap:4px">
-          <div class="status-dot${loja?' ok':''}" id="dot-loja${p}"></div>
-          <span id="txt-loja${p}" style="color:${loja?'var(--green)':'var(--muted)'}">${loja?`✓ ${loja.length} itens · ${loja.label}`:'Nenhum arquivo'}</span>
-        </div>
-        <button id="btn-limpar-loja${p}" onclick="limparUpload('loja','${p}')" style="display:${loja?'inline':'none'};background:none;border:none;color:var(--red);cursor:pointer;font-size:10px">✕ limpar</button>
-      </div>
-    </div>
-
-    <div class="upload-item">
-      <div class="upload-item-title">
-        Transferência para Bazar
-        <a href="https://dapic.app/relatorio/transferenciaestoquereport" target="_blank" class="btn btn-outline btn-sm" style="text-decoration:none;font-size:10px">↗ DAPIC</a>
-      </div>
-      <div style="font-size:10px;color:var(--muted);margin-bottom:5px">Origem: Estoque Produção → Destino: Bazar</div>
-      <div class="upload-zone">
-        <input type="file" accept=".xlsx,.xls" onchange="handleUpload('bazar','${p}',this)">
-        <div class="upload-zone-text">↓ clique ou arraste .xlsx</div>
-      </div>
-      <div class="upload-status">
-        <div style="display:flex;align-items:center;gap:4px">
-          <div class="status-dot${baz?' ok':''}" id="dot-bazar${p}"></div>
-          <span id="txt-bazar${p}" style="color:${baz?'var(--green)':'var(--muted)'}">${baz?`✓ ${baz.length} itens · ${baz.label}`:'Nenhum arquivo'}</span>
-        </div>
-        <button id="btn-limpar-bazar${p}" onclick="limparUpload('bazar','${p}')" style="display:${baz?'inline':'none'};background:none;border:none;color:var(--red);cursor:pointer;font-size:10px">✕ limpar</button>
-      </div>
-    </div>
-
-    <div class="upload-item">
-      <div class="upload-item-title">
-        Estoque Comprometido
-        <a href="https://dapic.app/pivot/gestaoestoquepivot" target="_blank" class="btn btn-outline btn-sm" style="text-decoration:none;font-size:10px">↗ DAPIC</a>
-      </div>
-      <div style="font-size:10px;color:var(--orange);margin-bottom:5px">⚠ Selecionar modelo: <strong>RELATÓRIO - PERFORMANCE</strong></div>
-      <div class="upload-zone">
-        <input type="file" accept=".xlsx,.xls,.csv" onchange="handleUpload('comp','${p}',this)">
-        <div class="upload-zone-text">↓ clique ou arraste .xlsx / .csv</div>
-      </div>
-      <div class="upload-status">
-        <div style="display:flex;align-items:center;gap:4px">
-          <div class="status-dot${comp?' ok':''}" id="dot-comp${p}"></div>
-          <span id="txt-comp${p}" style="color:${comp?'var(--green)':'var(--muted)'}">${comp?`✓ ${comp.length} itens · ${comp.label}`:'Nenhum arquivo'}</span>
-        </div>
-        <button id="btn-limpar-comp${p}" onclick="limparUpload('comp','${p}')" style="display:${comp?'inline':'none'};background:none;border:none;color:var(--red);cursor:pointer;font-size:10px">✕ limpar</button>
-      </div>
-    </div>
-
-  </div>`;
-
-  updateUploadTabBadges();
-}
-
-  el.innerHTML=`<div class="upload-row">
-
-    <div class="upload-item">
-      <div class="upload-item-title">
-        Histórico produto acabado
-        <a href="https://dapic.app/relatorio/historicoprodutoacabadoreport" target="_blank" class="btn btn-outline btn-sm" style="text-decoration:none;font-size:10px">↗ DAPIC</a>
-      </div>
-      <div class="upload-zone">
-        <input type="file" accept=".xlsx,.xls" onchange="handleUpload('historico','${p}',this)">
-        <div class="upload-zone-text">↓ clique ou arraste .xlsx</div>
-      </div>
-      <div class="upload-status">
-        <div style="display:flex;align-items:center;gap:4px">
-          <div class="status-dot${hist?' ok':''}" id="dot-historico${p}"></div>
-          <span id="txt-historico${p}" style="color:${hist?'var(--green)':'var(--muted)'}">${hist?`✓ ${hist.total} produtos · ${hist.label}`:'Nenhum arquivo'}</span>
-        </div>
-        <button id="btn-limpar-historico${p}" onclick="limparUpload('historico','${p}')" style="display:${hist?'inline':'none'};background:none;border:none;color:var(--red);cursor:pointer;font-size:10px">✕ limpar</button>
-      </div>
-    </div>
-
-    <div class="upload-item">
-      <div class="upload-item-title">
-        Transferência para Bazar
-        <a href="https://dapic.app/relatorio/transferenciaestoquereport" target="_blank" class="btn btn-outline btn-sm" style="text-decoration:none;font-size:10px">↗ DAPIC</a>
-      </div>
-      <div class="upload-zone">
-        <input type="file" accept=".xlsx,.xls" onchange="handleUpload('bazar','${p}',this)">
-        <div class="upload-zone-text">↓ clique ou arraste .xlsx</div>
-      </div>
-      <div class="upload-status">
-        <div style="display:flex;align-items:center;gap:4px">
-          <div class="status-dot${baz?' ok':''}" id="dot-bazar${p}"></div>
-          <span id="txt-bazar${p}" style="color:${baz?'var(--green)':'var(--muted)'}">${baz?`✓ ${baz.length} itens · ${baz.label}`:'Nenhum arquivo'}</span>
-        </div>
-        <button id="btn-limpar-bazar${p}" onclick="limparUpload('bazar','${p}')" style="display:${baz?'inline':'none'};background:none;border:none;color:var(--red);cursor:pointer;font-size:10px">✕ limpar</button>
-      </div>
-    </div>
-
-    <div class="upload-item">
-      <div class="upload-item-title">
-        Estoque Comprometido
-        <a href="https://dapic.app/pivot/gestaoestoquepivot" target="_blank" class="btn btn-outline btn-sm" style="text-decoration:none;font-size:10px">↗ DAPIC</a>
-      </div>
-      <div style="font-size:10px;color:var(--orange);margin-bottom:5px">⚠ Selecionar modelo: <strong>RELATÓRIO - PERFORMANCE</strong></div>
-      <div class="upload-zone">
-        <input type="file" accept=".xlsx,.xls,.csv" onchange="handleUpload('comp','${p}',this)">
-        <div class="upload-zone-text">↓ clique ou arraste .xlsx / .csv</div>
-      </div>
-      <div class="upload-status">
-        <div style="display:flex;align-items:center;gap:4px">
-          <div class="status-dot${comp?' ok':''}" id="dot-comp${p}"></div>
-          <span id="txt-comp${p}" style="color:${comp?'var(--green)':'var(--muted)'}">${comp?`✓ ${comp.length} itens · ${comp.label}`:'Nenhum arquivo'}</span>
-        </div>
-        <button id="btn-limpar-comp${p}" onclick="limparUpload('comp','${p}')" style="display:${comp?'inline':'none'};background:none;border:none;color:var(--red);cursor:pointer;font-size:10px">✕ limpar</button>
-      </div>
-    </div>
-
-  </div>`;
+  el.innerHTML='<div class="upload-row">'
+    + mkSlot('historico','Histórico produto acabado','https://dapic.app/relatorio/historicoprodutoacabadoreport','',
+        hist, hist?'&#10003; '+hist.total+' produtos &middot; '+hist.label:null)
+    + mkSlot('loja','Transferência para Loja','https://dapic.app/relatorio/transferenciaestoquereport',
+        'Origem: Estoque Produção &rarr; Destino: Estoque Loja',
+        loja, loja?'&#10003; '+loja.length+' itens &middot; '+loja.label:null)
+    + mkSlot('bazar','Transferência para Bazar','https://dapic.app/relatorio/transferenciaestoquereport',
+        'Origem: Estoque Produção &rarr; Destino: Bazar',
+        baz, baz?'&#10003; '+baz.length+' itens &middot; '+baz.label:null)
+    + mkSlot('comp','Estoque Comprometido','https://dapic.app/pivot/gestaoestoquepivot',
+        '<span style="color:var(--orange)">&#9888; Selecionar modelo: <strong>RELATÓRIO - PERFORMANCE</strong></span>',
+        comp, comp?'&#10003; '+comp.length+' itens &middot; '+comp.label:null)
+    + '</div>';
 
   updateUploadTabBadges();
 }
@@ -624,12 +505,12 @@ async function criarColecao(){
     await onColecaoChange();
     closeModal();
   }catch(e){
-    document.getElementById('modal-msg').innerHTML=`<div class="msg msg-err">${e.message.includes('unique')?'Já existe.':e.message}</div>`;
+    document.getElementById('modal-msg').innerHTML='<div class="msg msg-err">'+(e.message.includes('unique')?'Já existe.':e.message)+'</div>';
   }
 }
 
 async function deletarColecao(){
-  if(!currentColecao||!confirm(`Excluir "${currentColecao}"?`))return;
+  if(!currentColecao||!confirm('Excluir "'+currentColecao+'"?'))return;
   try{
     await sbFetch('perf_colecoes?id=eq.'+currentColecaoId,'DELETE');
     currentColecao=null;currentColecaoId=null;
@@ -647,11 +528,7 @@ async function salvarProduzidos(arr){
   if(!currentColecaoId)return;
   await sbFetch('perf_produzidos?colecao_id=eq.'+currentColecaoId,'DELETE');
   if(arr.length)await sbFetch('perf_produzidos','POST',arr.map(p=>({
-    colecao_id:currentColecaoId,
-    nome:p.nome,
-    total:p.total,
-    ref:p.ref||null,
-    cores:p.cores||null
+    colecao_id:currentColecaoId,nome:p.nome,total:p.total,ref:p.ref||null,cores:p.cores||null
   })));
   _cache.produzidos=arr;
 }
@@ -702,11 +579,8 @@ function handleUpload(tipo,periodo,input){
   reader.readAsArrayBuffer(file);
 }
 
-// Histórico produto acabado — mapeamento REAL verificado via openpyxl:
-// Col0=Produto | Col3=NF Compra Ent | Col5=OP Ent | Col6=Devol Ent
-// Col9=Balanço Ent | Col10=Balanço Saí | Col11=MovEst Ent | Col12=MovEst Saí
-// Col13=Transf Ent | Col14=Transf Saí | Col15=Consig Remessa | Col16=Consig Retorno
-// Col18=Venda Normal | Col19=Venda Brinde | Col20=Resultado
+// Historico: Col5=OP, Col6=Devol, Col9=BalEnt, Col10=BalSai, Col11=MovEnt, Col12=MovSai
+// Col13=TransfEnt, Col14=TransfSai, Col15=ConsRem, Col16=ConsRet, Col18=VendNorm, Col19=VendBrind, Col20=Resultado
 async function parseHistorico(rows,periodo){
   const nomesFiltro=new Set((_cache.produzidos||[]).map(p=>p.nome.toLowerCase()));
   const produtos=[];
@@ -718,50 +592,17 @@ async function parseHistorico(rows,periodo){
     const nome=normName(col0);
     if(nomesFiltro.size>0&&!nomesFiltro.has(nome.toLowerCase()))continue;
     const gi=idx=>parseInt(r[idx])||0;
-    produtos.push({
-      nome,op:gi(5),devol:gi(6),
-      balEnt:gi(9),balSai:gi(10),
-      movEnt:gi(11),movSai:gi(12),
-      transfEnt:gi(13),transfSai:gi(14),
-      consRem:gi(15),consRet:gi(16),
-      vendNorm:gi(18),vendBrind:gi(19),
-      res:gi(20)
-    });
+    produtos.push({nome,op:gi(5),devol:gi(6),balEnt:gi(9),balSai:gi(10),
+      movEnt:gi(11),movSai:gi(12),transfEnt:gi(13),transfSai:gi(14),
+      consRem:gi(15),consRet:gi(16),vendNorm:gi(18),vendBrind:gi(19),res:gi(20)});
   }
   const chave='historico'+periodo;
   _cache.uploads[chave]={produtos,total:produtos.length,label:nowLabel()};
   await salvarUploadSB('historico',periodo,produtos,nowLabel(),produtos.length);
 }
 
-// Bazar — Transferência Analítico
-// Estrutura hierárquica: col0=Produto (repete por cor), col5=total produto,
-// col7=Cor, col10=qtd cor, col13=Tamanho, col15=qtd tamanho (mais granular)
-// CORRETO: somar col15 por tamanho rastreando o produto atual (evita dupla contagem)
-async function parseBazar(rows,periodo){
-  const res={};
-  let currentNome=null;
-  for(let i=0;i<rows.length;i++){
-    const r=rows[i];
-    const col0=String(r[0]||'').trim();
-    // Pular linhas de cabeçalho/metadados
-    if(col0&&!/^\d{4}[.\-]/.test(col0))continue;
-    // Novo produto
-    if(col0&&/^\d{4}[.\-]/.test(col0)&&!col0.toLowerCase().includes('totais')){
-      currentNome=normName(col0);
-    }
-    // Quantidade por tamanho (col15) — nível mais granular, sem dupla contagem
-    const qtd=parseInt(r[15])||0;
-    if(currentNome&&qtd>0)res[currentNome]=(res[currentNome]||0)+qtd;
-  }
-  const arr=Object.entries(res).map(([nome,qtd])=>({nome,qtd}));
-  const chave='bazar'+periodo;
-  _cache.uploads[chave]={dados:arr,length:arr.length,label:nowLabel()};
-  await salvarUploadSB('bazar',periodo,arr,nowLabel(),arr.length);
-}
-
-// Transferência para Loja — mesma estrutura analítica do Bazar
-// col0=Produto, col15=quantidade por tamanho (nível mais granular)
-async function parseLoja(rows,periodo){
+// Transferência Loja / Bazar — Analítico col0=Produto, col15=qtd por tamanho
+async function parseTransferencia(rows,tipo,periodo){
   const res={};
   let currentNome=null;
   for(let i=0;i<rows.length;i++){
@@ -775,14 +616,14 @@ async function parseLoja(rows,periodo){
     if(currentNome&&qtd>0)res[currentNome]=(res[currentNome]||0)+qtd;
   }
   const arr=Object.entries(res).map(([nome,qtd])=>({nome,qtd}));
-  const chave='loja'+periodo;
+  const chave=tipo+periodo;
   _cache.uploads[chave]={dados:arr,length:arr.length,label:nowLabel()};
-  await salvarUploadSB('loja',periodo,arr,nowLabel(),arr.length);
+  await salvarUploadSB(tipo,periodo,arr,nowLabel(),arr.length);
 }
+async function parseLoja(rows,periodo){await parseTransferencia(rows,'loja',periodo);}
+async function parseBazar(rows,periodo){await parseTransferencia(rows,'bazar',periodo);}
 
-// Comprometido — CSV pivot col1=Nome, col4=Qtd comprometida (formato "14,00")
-// BUG: xlsx.js lê "14,00" como 1400 (trata vírgula como separador de milhar)
-// FIX: se o valor vier como número, dividir por 100; se string, substituir vírgula
+// Comprometido — CSV col1=Nome, col4=Qtd ("14,00" → xlsx lê como 1400 → dividir por 100)
 async function parseComp(rows,periodo){
   const res={};
   for(let i=0;i<rows.length;i++){
@@ -791,12 +632,8 @@ async function parseComp(rows,periodo){
     if(!col1||col1.toLowerCase().includes('nome')||col1.toLowerCase().includes('produto'))continue;
     const rawVal=r[4];
     let qtd;
-    if(typeof rawVal==='number'){
-      // xlsx.js parseou "14,00" como 1400 — dividir por 100
-      qtd=Math.round(rawVal/100);
-    }else{
-      qtd=Math.round(parseFloat(String(rawVal||'0').replace(',','.'))||0);
-    }
+    if(typeof rawVal==='number'){qtd=Math.round(rawVal/100);}
+    else{qtd=Math.round(parseFloat(String(rawVal||'0').replace(',','.'))||0);}
     if(col1&&qtd>0)res[col1]=(res[col1]||0)+qtd;
   }
   const arr=Object.entries(res).map(([nome,qtd])=>({nome,qtd}));
@@ -806,7 +643,7 @@ async function parseComp(rows,periodo){
 }
 
 // ── IMPORTAÇÃO DAPIC — PRODUTOS PRODUZIDOS POR PERÍODO ────────────────────────
-let _importProdutos=[]; // produtos parseados aguardando seleção
+let _importProdutos=[];
 
 function handleUploadProducao(input){
   if(!currentColecao){alert('Selecione uma coleção primeiro.');input.value='';return;}
@@ -818,7 +655,7 @@ function handleUploadProducao(input){
       const ws=wb.Sheets[wb.SheetNames[0]];
       const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
       const produtos=parseProduzidosPeriodo(rows);
-      if(!produtos.length){alert('Nenhum produto encontrado no arquivo. Verifique se é o relatório correto.');return;}
+      if(!produtos.length){alert('Nenhum produto encontrado. Verifique se é o relatório correto.');return;}
       abrirModalImportar(produtos);
     }catch(err){alert('Erro ao processar arquivo: '+err.message);console.error(err);}
     input.value='';
@@ -830,46 +667,24 @@ function parseProduzidosPeriodo(rows){
   const produtos=[];
   let currentProd=null;
   let currentCor=null;
-
   for(let i=0;i<rows.length;i++){
     const r=rows[i];
     const col0=String(r[0]||'').trim();
     const col3=String(r[3]||'').trim();
     const col6=String(r[6]||'').trim();
     const col7=parseInt(r[7])||0;
-
-    // Pular linhas de cabeçalho/rodapé
     if(!col0&&!col3&&!col6)continue;
     const c0l=col0.toLowerCase();
-    if(c0l.startsWith('produto')||c0l.startsWith('período')||c0l.startsWith('período')
-      ||c0l.startsWith('coleç')||c0l.startsWith('total')||c0l.startsWith('admin')
-      ||c0l.startsWith('produtos produzidos'))continue;
-
-    // Novo produto — linha com ref numérica no col0
+    if(c0l.startsWith('produto')||c0l.startsWith('período')||c0l.startsWith('coleç')
+      ||c0l.startsWith('total')||c0l.startsWith('admin')||c0l.startsWith('produtos produzidos'))continue;
     if(/^\d{3,}[\.\-]/.test(col0)){
       const parts=col0.match(/^(\d[\d.]*)\s*[-–]\s*(.+)$/);
-      currentProd={
-        ref:parts?parts[1].trim():col0,
-        nome:parts?parts[2].trim():col0,
-        total:0,
-        cores:{}
-      };
+      currentProd={ref:parts?parts[1].trim():col0,nome:parts?parts[2].trim():col0,total:0,cores:{}};
       currentCor=null;
       produtos.push(currentProd);
     }
-
-    // Nova cor
-    if(col3&&currentProd){
-      const corParts=col3.match(/^(\d+)\s*[-–]\s*(.+)$/);
-      currentCor=corParts?col3.trim():col3.trim(); // guarda o label completo "150 - Ameixa"
-      if(!currentProd.cores[currentCor])currentProd.cores[currentCor]=0;
-    }
-
-    // Tamanho + quantidade
-    if(col6&&col7>0&&currentProd){
-      currentProd.total+=col7;
-      if(currentCor)currentProd.cores[currentCor]=(currentProd.cores[currentCor]||0)+col7;
-    }
+    if(col3&&currentProd){currentCor=col3.trim();if(!currentProd.cores[currentCor])currentProd.cores[currentCor]=0;}
+    if(col6&&col7>0&&currentProd){currentProd.total+=col7;if(currentCor)currentProd.cores[currentCor]=(currentProd.cores[currentCor]||0)+col7;}
   }
   return produtos.filter(p=>p.total>0);
 }
@@ -877,36 +692,27 @@ function parseProduzidosPeriodo(rows){
 function abrirModalImportar(produtos){
   _importProdutos=produtos;
   document.getElementById('import-subtitle').textContent=
-    `${produtos.length} produto${produtos.length!==1?'s':''} encontrado${produtos.length!==1?'s':''}. Marque os que deseja incluir na coleção.`;
+    produtos.length+' produto'+(produtos.length!==1?'s':'')+' encontrado'+(produtos.length!==1?'s':'')+'. Marque os que deseja incluir na coleção.';
   renderImportLista();
   document.getElementById('modal-importar').classList.add('open');
 }
-
-function fecharModalImportar(){
-  document.getElementById('modal-importar').classList.remove('open');
-  _importProdutos=[];
-}
+function fecharModalImportar(){document.getElementById('modal-importar').classList.remove('open');_importProdutos=[];}
 
 function renderImportLista(){
-  const lista=document.getElementById('import-lista');
-  lista.innerHTML=_importProdutos.map((p,i)=>{
+  document.getElementById('import-lista').innerHTML=_importProdutos.map((p,i)=>{
     const coresEntries=Object.entries(p.cores||{});
     const temCores=coresEntries.length>0;
-    const coresHtml=temCores?`<div class="import-cores-wrap" id="imp-cores-${i}">
-      ${coresEntries.map(([cor,qtd])=>`<div class="import-cor-row"><span>${cor}</span><span>${qtd} pçs</span></div>`).join('')}
-    </div>`:'';
-    return`<div class="import-prod-wrap">
-      <div class="import-prod-row">
-        <input type="checkbox" id="imp-chk-${i}" checked onchange="atualizarContadorImport()">
-        ${temCores
-          ?`<button class="import-expand" onclick="toggleImportCores(${i})">+</button>`
-          :`<span style="width:20px;display:inline-block"></span>`}
-        <span class="import-prod-ref">${p.ref}</span>
-        <span class="import-prod-nome">${p.nome}</span>
-        <span class="import-prod-total">${p.total} pçs</span>
-      </div>
-      ${coresHtml}
-    </div>`;
+    const coresHtml=temCores
+      ?'<div class="import-cores-wrap" id="imp-cores-'+i+'">'+coresEntries.map(([cor,qtd])=>'<div class="import-cor-row"><span>'+cor+'</span><span>'+qtd+' pcs</span></div>').join('')+'</div>'
+      :'';
+    return '<div class="import-prod-wrap">'
+      +'<div class="import-prod-row">'
+      +'<input type="checkbox" id="imp-chk-'+i+'" checked onchange="atualizarContadorImport()">'
+      +(temCores?'<button class="import-expand" onclick="toggleImportCores('+i+')">+</button>':'<span style="width:20px;display:inline-block"></span>')
+      +'<span class="import-prod-ref">'+p.ref+'</span>'
+      +'<span class="import-prod-nome">'+p.nome+'</span>'
+      +'<span class="import-prod-total">'+p.total+' pcs</span>'
+      +'</div>'+coresHtml+'</div>';
   }).join('');
   atualizarContadorImport();
 }
@@ -914,54 +720,33 @@ function renderImportLista(){
 function toggleImportCores(i){
   const el=document.getElementById('imp-cores-'+i);
   if(!el)return;
-  const btn=el.previousElementSibling?.querySelector('.import-expand');
+  const btn=el.previousElementSibling&&el.previousElementSibling.querySelector('.import-expand');
   if(el.classList.contains('open')){el.classList.remove('open');if(btn)btn.textContent='+';}
-  else{el.classList.add('open');if(btn)btn.textContent='−';}
+  else{el.classList.add('open');if(btn)btn.textContent='-';}
 }
-
 function toggleImportSelect(check){
-  _importProdutos.forEach((_,i)=>{
-    const chk=document.getElementById('imp-chk-'+i);
-    if(chk)chk.checked=check;
-  });
+  _importProdutos.forEach((_,i)=>{const chk=document.getElementById('imp-chk-'+i);if(chk)chk.checked=check;});
   atualizarContadorImport();
 }
-
 function atualizarContadorImport(){
-  const selecionados=_importProdutos.filter((_,i)=>{
-    const chk=document.getElementById('imp-chk-'+i);
-    return chk&&chk.checked;
-  }).length;
-  document.getElementById('import-count-label').textContent=`${selecionados} de ${_importProdutos.length} selecionado${selecionados!==1?'s':''}`;
+  const sel=_importProdutos.filter((_,i)=>{const chk=document.getElementById('imp-chk-'+i);return chk&&chk.checked;}).length;
+  document.getElementById('import-count-label').textContent=sel+' de '+_importProdutos.length+' selecionado'+(sel!==1?'s':'');
   const btn=document.getElementById('btn-confirmar-import');
-  if(btn)btn.textContent=`Confirmar (${selecionados})`;
+  if(btn)btn.textContent='Confirmar ('+sel+')';
 }
-
 async function confirmarImportacao(){
-  const selecionados=_importProdutos.filter((_,i)=>{
-    const chk=document.getElementById('imp-chk-'+i);
-    return chk&&chk.checked;
-  });
+  const selecionados=_importProdutos.filter((_,i)=>{const chk=document.getElementById('imp-chk-'+i);return chk&&chk.checked;});
   if(!selecionados.length){alert('Selecione ao menos um produto.');return;}
-
   const btn=document.getElementById('btn-confirmar-import');
   btn.disabled=true;btn.textContent='Salvando...';
-
   try{
-    // Mescla com produzidos existentes (não sobrescreve manuais não importados)
     const existentes=_cache.produzidos||[];
     const novosNomes=new Set(selecionados.map(p=>p.nome.toLowerCase()));
-    // Remove da lista existente os que vieram na importação (serão substituídos)
     const mantidos=existentes.filter(e=>!novosNomes.has(e.nome.toLowerCase()));
-    const final=[...mantidos,...selecionados];
-    await salvarProduzidos(final);
-    renderListaProduzidos();
-    renderTable();updateSummary();renderAlertas();
+    await salvarProduzidos([...mantidos,...selecionados]);
+    renderListaProduzidos();renderTable();updateSummary();renderAlertas();
     fecharModalImportar();
-  }catch(e){
-    alert('Erro ao salvar: '+e.message);
-    btn.disabled=false;btn.textContent='Confirmar';
-  }
+  }catch(e){alert('Erro ao salvar: '+e.message);btn.disabled=false;btn.textContent='Confirmar';}
 }
 
 // ── ENTRADA MANUAL ────────────────────────────────────────────────────────────
@@ -985,66 +770,54 @@ async function salvarManual(){
     const ex=prods.find(p=>p.nome.toLowerCase()===nome.toLowerCase());
     if(ex)ex.total=qtd;else prods.push({nome,total:qtd});
     await salvarProduzidos(prods);
-    renderListaProduzidos();
-    renderTable();updateSummary();renderAlertas();
+    renderListaProduzidos();renderTable();updateSummary();renderAlertas();
     fecharModalManual();
-  }catch(e){document.getElementById('modal-manual-msg').innerHTML=`<div class="msg msg-err">${e.message}</div>`;}
+  }catch(e){document.getElementById('modal-manual-msg').innerHTML='<div class="msg msg-err">'+e.message+'</div>';}
 }
 
 async function removerProduzido(nome){
-  if(!confirm(`Remover "${nome}"?`))return;
-  const prods=(_cache.produzidos||[]).filter(p=>p.nome!==nome);
-  await salvarProduzidos(prods);
-  renderListaProduzidos();
-  renderTable();updateSummary();renderAlertas();
+  if(!confirm('Remover "'+nome+'"?'))return;
+  await salvarProduzidos((_cache.produzidos||[]).filter(p=>p.nome!==nome));
+  renderListaProduzidos();renderTable();updateSummary();renderAlertas();
 }
 
 function renderListaProduzidos(){
   const el=document.getElementById('lista-produzidos');
   if(!el)return;
   const prod=_cache.produzidos||[];
-  if(!prod.length){
-    el.innerHTML='<div style="padding:12px;font-size:12px;color:var(--muted);text-align:center">Nenhum produto cadastrado.</div>';
-    return;
-  }
+  if(!prod.length){el.innerHTML='<div style="padding:12px;font-size:12px;color:var(--muted);text-align:center">Nenhum produto cadastrado.</div>';return;}
   el.innerHTML=prod.map(p=>{
     const safeNome=p.nome.replace(/'/g,"\\'");
-    const cores=p.cores&&typeof p.cores==='object'?p.cores:null;
-    const coresEntries=cores?Object.entries(cores):[];
-    const expandBtn=coresEntries.length>0
-      ?`<button class="import-expand" onclick="toggleListaCores('cores-${p.ref||p.nome.replace(/\s+/g,'_')}')" title="Ver por cor">+</button>`
+    const coresEntries=p.cores&&typeof p.cores==='object'?Object.entries(p.cores):[];
+    const temCores=coresEntries.length>0;
+    const id='cores-'+(p.ref||p.nome.replace(/\s+/g,'_'));
+    const expandBtn=temCores
+      ?'<button class="import-expand" onclick="toggleListaCores(\''+id+'\')" title="Ver por cor">+</button>'
       :'<span style="width:20px;display:inline-block"></span>';
-    const coresHtml=coresEntries.length>0
-      ?`<div class="prod-item-cores" id="cores-${(p.ref||p.nome.replace(/\s+/g,'_'))}">
-          ${coresEntries.map(([cor,qtd])=>`<div class="prod-cor-row"><span>${cor}</span><span>${qtd} pçs</span></div>`).join('')}
-        </div>`
+    const coresHtml=temCores
+      ?'<div class="prod-item-cores" id="'+id+'">'+coresEntries.map(([cor,qtd])=>'<div class="prod-cor-row"><span>'+cor+'</span><span>'+qtd+' pcs</span></div>').join('')+'</div>'
       :'';
-    return`<div>
-      <div class="prod-item">
-        <div style="display:flex;align-items:center;gap:6px">
-          ${expandBtn}
-          ${p.ref?`<span style="color:var(--muted);font-size:10px;min-width:76px">${p.ref}</span>`:''}
-          <span style="color:var(--text)">${p.nome}</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <span style="color:var(--gold);font-weight:600">${p.total} pçs</span>
-          <button onclick="abrirEditarProduzido('${safeNome}',${p.total})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:11px" title="Editar">✎</button>
-          <button onclick="removerProduzido('${safeNome}');" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:11px" title="Remover">✕</button>
-        </div>
-      </div>
-      ${coresHtml}
-    </div>`;
+    return '<div>'
+      +'<div class="prod-item">'
+      +'<div style="display:flex;align-items:center;gap:6px">'
+      +expandBtn
+      +(p.ref?'<span style="color:var(--muted);font-size:10px;min-width:76px">'+p.ref+'</span>':'')
+      +'<span style="color:var(--text)">'+p.nome+'</span>'
+      +'</div>'
+      +'<div style="display:flex;align-items:center;gap:8px">'
+      +'<span style="color:var(--gold);font-weight:600">'+p.total+' pcs</span>'
+      +'<button onclick="abrirEditarProduzido(\''+safeNome+'\','+p.total+')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:11px">&#9998;</button>'
+      +'<button onclick="removerProduzido(\''+safeNome+'\')" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:11px">&#10005;</button>'
+      +'</div></div>'+coresHtml+'</div>';
   }).join('');
 }
 
 function toggleListaCores(id){
-  const el=document.getElementById(id);
-  if(!el)return;
-  const btn=el.previousElementSibling?.querySelector('.import-expand');
+  const el=document.getElementById(id);if(!el)return;
+  const btn=el.previousElementSibling&&el.previousElementSibling.querySelector('.import-expand');
   if(el.classList.contains('open')){el.classList.remove('open');if(btn)btn.textContent='+';}
-  else{el.classList.add('open');if(btn)btn.textContent='−';}
+  else{el.classList.add('open');if(btn)btn.textContent='-';}
 }
-
 function abrirEditarProduzido(nome,qtd){
   document.getElementById('manual-nome').value=nome;
   document.getElementById('manual-qtd').value=qtd;
@@ -1088,31 +861,21 @@ function aggregate(){
     const tLoja=lojaMap[nome]||0;
     const bazarQtd=bazarMap[nome]||0;
     const compQtd=compMap[nome]||0;
-
-    const op=h.op||0;
-    const devol=h.devol||0;
-    const movEnt=h.movEnt||0;
-    const movSai=h.movSai||0;
-    const transfEnt=h.transfEnt||0;
-    const transfSai=h.transfSai||0;
-    const consRem=h.consRem||0;
-    const consRet=h.consRet||0;
-    const vendNorm=h.vendNorm||0;
-    const vendBrind=h.vendBrind||0;
+    const op=h.op||0;const devol=h.devol||0;
+    const movEnt=h.movEnt||0;const movSai=h.movSai||0;
+    const transfEnt=h.transfEnt||0;const transfSai=h.transfSai||0;
+    const consRem=h.consRem||0;const consRet=h.consRet||0;
+    const vendNorm=h.vendNorm||0;const vendBrind=h.vendBrind||0;
     const resultado=h.res||0;
     const consigPend=consRem-consRet;
     const disponivel=resultado-compQtd;
-
     const movAlert=movEnt>0||(movSai>0&&movSai!==bazarQtd)||(bazarQtd>0&&movSai!==bazarQtd);
     const transfAlert=transfEnt>0||transfSai>0;
-
-    // Performance: (VendNorm + ConsigPend) / (T.Loja − Bazar − Brinde)
     const basePerf=Math.max(0,tLoja-bazarQtd-vendBrind);
     const perf=basePerf>0?((vendNorm+consigPend)/basePerf)*100:0;
-    // Alerta: perf > 100% = vendas/consig excedem T.Loja → contaminação de coleção anterior
     const contamAlert=tLoja>0&&perf>100;
-
-    rows.push({nome,op,tLoja,devol,movEnt,movSai,movAlert,transfEnt,transfSai,transfAlert,consRem,consRet,consigPend,vendNorm,vendBrind,resultado,compQtd,disponivel,bazarQtd,perf,contamAlert});
+    rows.push({nome,op,tLoja,devol,movEnt,movSai,movAlert,transfEnt,transfSai,transfAlert,
+      consRem,consRet,consigPend,vendNorm,vendBrind,resultado,compQtd,disponivel,bazarQtd,perf,contamAlert});
   });
 
   rows.sort((a,b)=>{
@@ -1127,57 +890,55 @@ function aggregate(){
 // ── ALERTAS ───────────────────────────────────────────────────────────────────
 function renderAlertas(){
   const rows=aggregate();
-  const alertas=[];
+  const oranges=[];const reds=[];
   rows.forEach(r=>{
     if(r.contamAlert){
-      alertas.push({icon:'🔁',nome:r.nome,desc:`Performance ${r.perf.toFixed(0)}% — vendas/consig (${r.vendNorm+r.consigPend}) excedem T.Loja (${r.tLoja}). Possível contaminação de coleção anterior.`,cor:'orange'});
+      oranges.push({nome:r.nome,desc:'Performance '+r.perf.toFixed(0)+'% — vendas/consig ('+(r.vendNorm+r.consigPend)+') excedem T.Loja ('+r.tLoja+'). Possivel contaminacao de colecao anterior.'});
     }
     if(r.movAlert&&r.op>0){
       let desc='';
-      if(r.movEnt>0)desc+=`Mov. Entrada: ${r.movEnt} — sem justificativa. `;
-      if(r.movSai!==r.bazarQtd&&(r.movSai>0||r.bazarQtd>0))desc+=`Mov. Saída (${r.movSai}) ≠ Bazar (${r.bazarQtd}) — ${Math.abs(r.movSai-r.bazarQtd)} peça(s) sem justificativa.`;
-      if(desc)alertas.push({icon:'↔',nome:r.nome,desc:desc.trim(),cor:'red'});
+      if(r.movEnt>0)desc+='Mov. Entrada: '+r.movEnt+' - sem justificativa. ';
+      if(r.movSai!==r.bazarQtd&&(r.movSai>0||r.bazarQtd>0))desc+='Mov. Saida ('+r.movSai+') != Bazar ('+r.bazarQtd+') - '+Math.abs(r.movSai-r.bazarQtd)+' peca(s) sem justificativa.';
+      if(desc)reds.push({icon:'>', nome:r.nome,desc:desc.trim()});
     }
     if(r.transfAlert&&r.op>0){
-      alertas.push({icon:'🏢',nome:r.nome,desc:`Transf. Empresas: Entrada ${r.transfEnt} · Saída ${r.transfSai}`,cor:'red'});
+      reds.push({icon:'E',nome:r.nome,desc:'Transf. Empresas: Entrada '+r.transfEnt+' - Saida '+r.transfSai});
     }
     if(r.disponivel<0){
-      alertas.push({icon:'⚠',nome:r.nome,desc:`Disponível negativo (${r.disponivel}) — comprometido maior que resultado`,cor:'red'});
+      reds.push({icon:'!',nome:r.nome,desc:'Disponivel negativo ('+r.disponivel+') - comprometido maior que resultado'});
     }
   });
   const el=document.getElementById('alertas-container');
-  if(!alertas.length){el.innerHTML='';return;}
-  const oranges=alertas.filter(a=>a.cor==='orange');
-  const reds=alertas.filter(a=>a.cor==='red');
+  if(!oranges.length&&!reds.length){el.innerHTML='';return;}
   let html='';
-  if(oranges.length)html+=`<div class="alertas-box" style="background:rgba(201,138,74,0.08);border-color:rgba(201,138,74,0.25);margin-bottom:8px">
-    <div class="alertas-title" style="color:var(--orange)">🔁 ${oranges.length} possível contaminação de coleção anterior</div>
-    ${oranges.map(a=>`<div class="alerta-item"><span style="flex-shrink:0">${a.icon}</span>
-      <div><div style="color:var(--text);font-weight:500">${a.nome}</div><div style="color:var(--muted);margin-top:2px">${a.desc}</div></div>
-    </div>`).join('')}</div>`;
-  if(reds.length)html+=`<div class="alertas-box">
-    <div class="alertas-title">⚠ ${reds.length} alerta${reds.length!==1?'s':''}</div>
-    ${reds.map(a=>`<div class="alerta-item"><span style="flex-shrink:0">${a.icon}</span>
-      <div><div style="color:var(--text);font-weight:500">${a.nome}</div><div style="color:var(--muted);margin-top:2px">${a.desc}</div></div>
-    </div>`).join('')}</div>`;
+  if(oranges.length){
+    html+='<div class="alertas-box" style="background:rgba(201,138,74,0.08);border:1px solid rgba(201,138,74,0.25);border-radius:var(--radius);padding:12px 16px;margin-bottom:8px">'
+      +'<div class="alertas-title" style="color:var(--orange);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Possivel contaminacao de colecao anterior ('+oranges.length+')</div>'
+      +oranges.map(a=>'<div class="alerta-item"><span style="flex-shrink:0;margin-right:8px">!</span>'
+        +'<div><div style="color:var(--text);font-weight:500">'+a.nome+'</div>'
+        +'<div style="color:var(--muted);margin-top:2px">'+a.desc+'</div></div></div>').join('')
+      +'</div>';
+  }
+  if(reds.length){
+    html+='<div class="alertas-box">'
+      +'<div class="alertas-title">Alertas ('+reds.length+')</div>'
+      +reds.map(a=>'<div class="alerta-item"><span style="flex-shrink:0;margin-right:8px">'+a.icon+'</span>'
+        +'<div><div style="color:var(--text);font-weight:500">'+a.nome+'</div>'
+        +'<div style="color:var(--muted);margin-top:2px">'+a.desc+'</div></div></div>').join('')
+      +'</div>';
+  }
   el.innerHTML=html;
 }
 
 // ── SUMMARY ───────────────────────────────────────────────────────────────────
 function updateSummary(){
   const rows=aggregate();
-  const tL=rows.reduce((s,r)=>s+r.tLoja,0);
-  const tV=rows.reduce((s,r)=>s+r.vendNorm,0);
-  const tC=rows.reduce((s,r)=>s+r.consigPend,0);
-  const tR=rows.reduce((s,r)=>s+r.resultado,0);
-  const tComp=rows.reduce((s,r)=>s+r.compQtd,0);
-  const tDisp=rows.reduce((s,r)=>s+r.disponivel,0);
-  document.getElementById('sum-produzido').textContent=tL||'—';
-  document.getElementById('sum-vendas').textContent=tV||'—';
-  document.getElementById('sum-consig').textContent=tC||'—';
-  document.getElementById('sum-resultado').textContent=tR||'—';
-  document.getElementById('sum-comprometido').textContent=tComp||'—';
-  document.getElementById('sum-disponivel').textContent=tDisp||'—';
+  document.getElementById('sum-produzido').textContent=rows.reduce((s,r)=>s+r.tLoja,0)||'—';
+  document.getElementById('sum-vendas').textContent=rows.reduce((s,r)=>s+r.vendNorm,0)||'—';
+  document.getElementById('sum-consig').textContent=rows.reduce((s,r)=>s+r.consigPend,0)||'—';
+  document.getElementById('sum-resultado').textContent=rows.reduce((s,r)=>s+r.resultado,0)||'—';
+  document.getElementById('sum-comprometido').textContent=rows.reduce((s,r)=>s+r.compQtd,0)||'—';
+  document.getElementById('sum-disponivel').textContent=rows.reduce((s,r)=>s+r.disponivel,0)||'—';
 }
 
 // ── RENDER TABLE ──────────────────────────────────────────────────────────────
@@ -1194,91 +955,90 @@ function setSort(col){
 
 function renderTable(){
   if(!currentColecao)return;
-  const search=(document.getElementById('searchInput')?.value||'').toLowerCase();
+  const search=(document.getElementById('searchInput')&&document.getElementById('searchInput').value||'').toLowerCase();
   let rows=aggregate();
   if(search)rows=rows.filter(r=>r.nome.toLowerCase().includes(search));
-  document.getElementById('table-info').textContent=`${rows.length} peça${rows.length!==1?'s':''}`;
+  document.getElementById('table-info').textContent=rows.length+' peca'+(rows.length!==1?'s':'');
 
   if(!rows.length){
-    document.getElementById('table-container').innerHTML='<div class="empty-state"><div style="font-size:28px;opacity:.3;margin-bottom:10px">✦</div><div>Adicione produtos à coleção e carregue o Histórico.</div></div>';
+    document.getElementById('table-container').innerHTML='<div class="empty-state"><div style="font-size:28px;opacity:.3;margin-bottom:10px">*</div><div>Adicione produtos a colecao e carregue o Historico.</div></div>';
     return;
   }
 
-  const th=(key,label,tip='')=>{
+  const th=function(key,label,tip){
+    tip=tip||'';
     const s=sortCol===key?'sorted':'';
-    const arr=sortCol===key?(sortDir===1?' ↑':' ↓'):'';
-    return`<th class="${s}" onclick="setSort('${key}')" title="${tip}">${label}${arr}</th>`;
+    const arr=sortCol===key?(sortDir===1?' ^':' v'):'';
+    return '<th class="'+s+'" onclick="setSort(\''+key+'\')" title="'+tip+'">'+label+arr+'</th>';
   };
 
-  let html=`<table><thead><tr>
-    ${th('nome','Produto')}
-    ${th('op','OP Entrada','Entradas via OP no DAPIC — saída da facção')}
-    ${th('tLoja','T. Loja','Transferências Estoque Produção → Loja')}
-    ${th('devol','Devolução','Devoluções de clientes')}
-    ${th('vendNorm','Venda Normal','')}
-    ${th('vendBrind','Brinde','')}
-    ${th('consigPend','Consig. Pend.','Remessa − Retorno')}
-    ${th('bazarQtd','Bazar','Transferências para Bazar')}
-    ${th('resultado','Resultado','Estoque físico atual (do DAPIC)')}
-    ${th('compQtd','Comprometido','Separado, ainda não vendido')}
-    ${th('disponivel','Disponível','Resultado − Comprometido')}
-    ${th('perf','Performance','(Vendas + Consig.) / (T.Loja − Bazar − Brinde)')}
-  </tr></thead><tbody>`;
+  let html='<table><thead><tr>'
+    +th('nome','Produto')
+    +th('op','OP Entrada','Entradas via OP no DAPIC - saida da faccao')
+    +th('tLoja','T. Loja','Transferencias Estoque Producao -> Loja')
+    +th('devol','Devolucao','Devolucoes de clientes')
+    +th('vendNorm','Venda Normal')
+    +th('vendBrind','Brinde')
+    +th('consigPend','Consig. Pend.','Remessa - Retorno')
+    +th('bazarQtd','Bazar','Transferencias para Bazar')
+    +th('resultado','Resultado','Estoque fisico atual (do DAPIC)')
+    +th('compQtd','Comprometido','Separado, ainda nao vendido')
+    +th('disponivel','Disponivel','Resultado - Comprometido')
+    +th('perf','Performance','(Vendas + Consig.) / (T.Loja - Bazar - Brinde)')
+    +'</tr></thead><tbody>';
 
   let tOP=0,tL=0,tD=0,tVN=0,tVB=0,tC=0,tB=0,tR=0,tComp=0,tDisp=0;
 
-  rows.forEach(r=>{
+  rows.forEach(function(r){
     const color=r.contamAlert?'var(--orange)':pc(r.perf);
     const pw=Math.min(r.perf,100);
     const dispCls=r.disponivel<0?'td-red':r.disponivel===0?'td-muted':'td-num';
-    const movBadge=r.movAlert?'<span class="chip chip-orange" style="margin-left:4px;font-size:9px">⚠ Mov</span>':'';
-    const transfBadge=r.transfAlert?'<span class="chip chip-orange" style="margin-left:4px;font-size:9px">🏢</span>':'';
-    const contamBadge=r.contamAlert?'<span class="chip chip-orange" style="margin-left:4px;font-size:9px">🔁 +Ant.</span>':'';
+    const movBadge=r.movAlert?'<span class="chip chip-orange" style="margin-left:4px;font-size:9px">Mov</span>':'';
+    const transfBadge=r.transfAlert?'<span class="chip chip-orange" style="margin-left:4px;font-size:9px">Emp</span>':'';
+    const contamBadge=r.contamAlert?'<span class="chip chip-orange" style="margin-left:4px;font-size:9px">+Ant.</span>':'';
     const rowStyle=r.contamAlert?'background:rgba(201,138,74,0.04);':'';
-
     tOP+=r.op;tL+=r.tLoja;tD+=r.devol;tVN+=r.vendNorm;
     tVB+=r.vendBrind;tC+=r.consigPend;tB+=r.bazarQtd;
     tR+=r.resultado;tComp+=r.compQtd;tDisp+=r.disponivel;
-
-    html+=`<tr style="${rowStyle}">
-      <td style="color:var(--text);font-weight:500">${r.nome}${movBadge}${transfBadge}${contamBadge}</td>
-      <td class="td-num">${r.op||'—'}</td>
-      <td class="${r.tLoja>0?'td-num':'td-muted'}">${r.tLoja||'—'}</td>
-      <td class="${r.devol>0?'td-green':'td-muted'}">${r.devol||'—'}</td>
-      <td class="td-num">${r.vendNorm||'—'}</td>
-      <td class="td-muted">${r.vendBrind||'—'}</td>
-      <td class="${r.consigPend>0?'td-orange':'td-muted'}">${r.consigPend||'—'}</td>
-      <td class="${r.bazarQtd>0?'td-blue':'td-muted'}">${r.bazarQtd||'—'}</td>
-      <td class="td-num" style="font-weight:600">${r.resultado!==0?r.resultado:'—'}</td>
-      <td class="${r.compQtd>0?'td-orange':'td-muted'}">${r.compQtd||'—'}</td>
-      <td class="${dispCls}" style="font-weight:600">${r.disponivel!==0?r.disponivel:'—'}</td>
-      <td><div class="perf-bar-wrap">
-        <div class="perf-bar"><div class="perf-bar-fill" style="width:${pw}%;background:${color}"></div></div>
-        <span class="perf-val" style="color:${color}">${r.tLoja>0&&r.perf>0?r.perf.toFixed(0)+'%':'—'}</span>
-      </div></td>
-    </tr>`;
+    html+='<tr style="'+rowStyle+'">'
+      +'<td style="color:var(--text);font-weight:500">'+r.nome+movBadge+transfBadge+contamBadge+'</td>'
+      +'<td class="td-num">'+(r.op||'—')+'</td>'
+      +'<td class="'+(r.tLoja>0?'td-num':'td-muted')+'">'+(r.tLoja||'—')+'</td>'
+      +'<td class="'+(r.devol>0?'td-green':'td-muted')+'">'+(r.devol||'—')+'</td>'
+      +'<td class="td-num">'+(r.vendNorm||'—')+'</td>'
+      +'<td class="td-muted">'+(r.vendBrind||'—')+'</td>'
+      +'<td class="'+(r.consigPend>0?'td-orange':'td-muted')+'">'+(r.consigPend||'—')+'</td>'
+      +'<td class="'+(r.bazarQtd>0?'td-blue':'td-muted')+'">'+(r.bazarQtd||'—')+'</td>'
+      +'<td class="td-num" style="font-weight:600">'+(r.resultado!==0?r.resultado:'—')+'</td>'
+      +'<td class="'+(r.compQtd>0?'td-orange':'td-muted')+'">'+(r.compQtd||'—')+'</td>'
+      +'<td class="'+dispCls+'" style="font-weight:600">'+(r.disponivel!==0?r.disponivel:'—')+'</td>'
+      +'<td><div class="perf-bar-wrap">'
+      +'<div class="perf-bar"><div class="perf-bar-fill" style="width:'+pw+'%;background:'+color+'"></div></div>'
+      +'<span class="perf-val" style="color:'+color+'">'+(r.tLoja>0&&r.perf>0?r.perf.toFixed(0)+'%':'—')+'</span>'
+      +'</div></td>'
+      +'</tr>';
   });
 
   const baseTotal=Math.max(0,tL-tB-tVB);
   const tPerf=baseTotal>0?((tVN+tC)/baseTotal*100).toFixed(0)+'%':'—';
-  html+=`</tbody><tr class="totals-row">
-    <td>TOTAL</td>
-    <td>${tOP||'—'}</td><td>${tL||'—'}</td><td>${tD||'—'}</td>
-    <td>${tVN||'—'}</td><td>${tVB||'—'}</td><td>${tC||'—'}</td>
-    <td>${tB||'—'}</td><td>${tR||'—'}</td><td>${tComp||'—'}</td>
-    <td>${tDisp||'—'}</td><td>${tPerf}</td>
-  </tr></table>`;
+  html+='</tbody><tr class="totals-row">'
+    +'<td>TOTAL</td>'
+    +'<td>'+(tOP||'—')+'</td><td>'+(tL||'—')+'</td><td>'+(tD||'—')+'</td>'
+    +'<td>'+(tVN||'—')+'</td><td>'+(tVB||'—')+'</td><td>'+(tC||'—')+'</td>'
+    +'<td>'+(tB||'—')+'</td><td>'+(tR||'—')+'</td><td>'+(tComp||'—')+'</td>'
+    +'<td>'+(tDisp||'—')+'</td><td>'+tPerf+'</td>'
+    +'</tr></table>';
 
   document.getElementById('table-container').innerHTML=html;
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
-(async()=>{
+(async function(){
   await renderColecoes();
-  document.getElementById('modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal();});
-  document.getElementById('modal-manual').addEventListener('click',e=>{if(e.target===e.currentTarget)fecharModalManual();});
-  document.getElementById('modal-importar').addEventListener('click',e=>{if(e.target===e.currentTarget)fecharModalImportar();});
+  document.getElementById('modal').addEventListener('click',function(e){if(e.target===e.currentTarget)closeModal();});
+  document.getElementById('modal-manual').addEventListener('click',function(e){if(e.target===e.currentTarget)fecharModalManual();});
+  document.getElementById('modal-importar').addEventListener('click',function(e){if(e.target===e.currentTarget)fecharModalImportar();});
 })();
+
 </script>
 </body>
-</html>
