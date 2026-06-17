@@ -113,6 +113,36 @@ td{padding:9px 10px;white-space:nowrap;font-size:13px;}
 .modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;}
 .msg{font-size:11px;padding:7px 11px;border-radius:6px;margin-top:8px;}
 .msg-err{background:rgba(192,97,74,0.15);color:var(--red);border:1px solid rgba(192,97,74,0.3);}
+
+/* MODAL IMPORTAÇÃO */
+.modal-lg{width:640px;max-height:82vh;display:flex;flex-direction:column;padding:24px 0 0;}
+.modal-lg .modal-header{padding:0 24px 16px;border-bottom:1px solid var(--border);}
+.modal-lg .modal-body{overflow-y:auto;padding:14px 24px;flex:1;}
+.modal-lg .modal-footer{padding:14px 24px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;}
+.import-ctrl{display:flex;align-items:center;gap:14px;margin-bottom:12px;font-size:11px;color:var(--muted);}
+.import-ctrl-btn{background:none;border:none;color:var(--gold);cursor:pointer;font-size:11px;font-family:'DM Sans',sans-serif;text-decoration:underline;padding:0;}
+.import-prod-wrap{border-bottom:1px solid rgba(201,169,110,0.06);}
+.import-prod-wrap:last-child{border-bottom:none;}
+.import-prod-row{display:flex;align-items:center;gap:10px;padding:9px 0;}
+.import-prod-row input[type=checkbox]{accent-color:var(--gold);width:14px;height:14px;cursor:pointer;flex-shrink:0;}
+.import-expand{background:none;border:1px solid var(--border);color:var(--muted);width:20px;height:20px;border-radius:4px;cursor:pointer;font-size:11px;line-height:1;flex-shrink:0;font-family:monospace;transition:all 0.1s;}
+.import-expand:hover{border-color:var(--gold);color:var(--gold);}
+.import-prod-ref{font-size:10px;color:var(--muted);font-variant-numeric:tabular-nums;min-width:80px;}
+.import-prod-nome{color:var(--text);font-size:13px;font-weight:500;flex:1;}
+.import-prod-total{color:var(--gold);font-weight:600;font-size:12px;min-width:60px;text-align:right;}
+.import-cores-wrap{display:none;background:var(--bg3);border-radius:6px;padding:8px 12px;margin:0 0 8px 44px;}
+.import-cores-wrap.open{display:block;}
+.import-cor-row{display:flex;justify-content:space-between;padding:3px 0;font-size:11px;color:var(--muted);border-bottom:1px solid rgba(201,169,110,0.04);}
+.import-cor-row:last-child{border-bottom:none;}
+.import-cor-row span:last-child{color:var(--text);font-variant-numeric:tabular-nums;}
+/* Lista produzidos expandível */
+.prod-item-cores{display:none;background:var(--bg3);border-radius:6px;padding:7px 10px;margin:0 0 6px 28px;}
+.prod-item-cores.open{display:block;}
+.prod-cor-row{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);padding:2px 0;}
+.prod-cor-row span:last-child{color:var(--text);}
+/* Botão import DAPIC */
+.btn-import{background:rgba(201,169,110,0.1);border:1px solid rgba(201,169,110,0.3);color:var(--gold);font-size:12px;padding:6px 12px;}
+.btn-import:hover{background:rgba(201,169,110,0.18);border-color:var(--gold);}
 </style>
 </head>
 <body>
@@ -143,10 +173,15 @@ td{padding:9px 10px;white-space:nowrap;font-size:13px;}
     <div class="prod-card">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
         <div>
-          <div style="font-size:12px;font-weight:600;color:var(--gold)">Lista de produtos</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:2px">Define quais produtos pertencem a esta coleção. O Histórico filtrará apenas estes produtos.</div>
+          <div style="font-size:12px;font-weight:600;color:var(--gold)">Produtos da coleção</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">Importe do DAPIC ou adicione manualmente. O Histórico filtrará apenas estes produtos.</div>
         </div>
-        <button class="btn btn-outline btn-sm" onclick="abrirModalManual()">+ Adicionar produto</button>
+        <div style="display:flex;gap:6px;align-items:center">
+          <a href="https://dapic.app/relatorio/produtosproduzidosporperiodoreport" target="_blank" style="font-size:10px;color:var(--muted);text-decoration:none;padding:4px 0" title="Abrir relatório no DAPIC">↗ DAPIC</a>
+          <button class="btn btn-import btn-sm" onclick="document.getElementById('input-producao').click()">↑ Importar DAPIC</button>
+          <input type="file" id="input-producao" style="display:none" accept=".xlsx,.xls" onchange="handleUploadProducao(this)">
+          <button class="btn btn-outline btn-sm" onclick="abrirModalManual()">+ Manual</button>
+        </div>
       </div>
       <div class="prod-list" id="lista-produzidos">
         <div style="padding:12px;font-size:12px;color:var(--muted);text-align:center">Nenhum produto cadastrado.</div>
@@ -240,6 +275,28 @@ td{padding:9px 10px;white-space:nowrap;font-size:13px;}
     <div class="modal-footer">
       <button class="btn btn-outline btn-sm" onclick="fecharModalManual()">Cancelar</button>
       <button class="btn btn-gold btn-sm" onclick="salvarManual()">Adicionar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL IMPORTAÇÃO DAPIC -->
+<div class="modal-overlay" id="modal-importar">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <div class="modal-title" style="margin-bottom:4px">Selecionar produtos</div>
+      <div style="font-size:11px;color:var(--muted)" id="import-subtitle">Marque os produtos que deseja incluir na coleção.</div>
+    </div>
+    <div class="modal-body">
+      <div class="import-ctrl">
+        <span id="import-count-label" style="color:var(--text)"></span>
+        <button class="import-ctrl-btn" onclick="toggleImportSelect(true)">Selecionar todos</button>
+        <button class="import-ctrl-btn" onclick="toggleImportSelect(false)">Nenhum</button>
+      </div>
+      <div id="import-lista"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline btn-sm" onclick="fecharModalImportar()">Cancelar</button>
+      <button class="btn btn-gold btn-sm" onclick="confirmarImportacao()" id="btn-confirmar-import">Confirmar</button>
     </div>
   </div>
 </div>
@@ -403,7 +460,7 @@ async function carregarDadosColecao(){
   if(!currentColecaoId)return;
   try{
     const[prods,uploads]=await Promise.all([
-      sbFetch('perf_produzidos?colecao_id=eq.'+currentColecaoId+'&select=nome,total&order=nome.asc'),
+      sbFetch('perf_produzidos?colecao_id=eq.'+currentColecaoId+'&select=nome,total,ref,cores&order=nome.asc'),
       sbFetch('perf_uploads?colecao_id=eq.'+currentColecaoId+'&select=tipo,dados,label,total')
     ]);
     _cache.produzidos=prods;
@@ -465,7 +522,13 @@ async function deletarColecao(){
 async function salvarProduzidos(arr){
   if(!currentColecaoId)return;
   await sbFetch('perf_produzidos?colecao_id=eq.'+currentColecaoId,'DELETE');
-  if(arr.length)await sbFetch('perf_produzidos','POST',arr.map(p=>({colecao_id:currentColecaoId,nome:p.nome,total:p.total})));
+  if(arr.length)await sbFetch('perf_produzidos','POST',arr.map(p=>({
+    colecao_id:currentColecaoId,
+    nome:p.nome,
+    total:p.total,
+    ref:p.ref||null,
+    cores:p.cores||null
+  })));
   _cache.produzidos=arr;
 }
 
@@ -576,6 +639,165 @@ async function parseComp(rows,periodo){
   await salvarUploadSB('comp',periodo,arr,nowLabel(),arr.length);
 }
 
+// ── IMPORTAÇÃO DAPIC — PRODUTOS PRODUZIDOS POR PERÍODO ────────────────────────
+let _importProdutos=[]; // produtos parseados aguardando seleção
+
+function handleUploadProducao(input){
+  if(!currentColecao){alert('Selecione uma coleção primeiro.');input.value='';return;}
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const wb=XLSX.read(e.target.result,{type:'array'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+      const produtos=parseProduzidosPeriodo(rows);
+      if(!produtos.length){alert('Nenhum produto encontrado no arquivo. Verifique se é o relatório correto.');return;}
+      abrirModalImportar(produtos);
+    }catch(err){alert('Erro ao processar arquivo: '+err.message);console.error(err);}
+    input.value='';
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function parseProduzidosPeriodo(rows){
+  const produtos=[];
+  let currentProd=null;
+  let currentCor=null;
+
+  for(let i=0;i<rows.length;i++){
+    const r=rows[i];
+    const col0=String(r[0]||'').trim();
+    const col3=String(r[3]||'').trim();
+    const col6=String(r[6]||'').trim();
+    const col7=parseInt(r[7])||0;
+
+    // Pular linhas de cabeçalho/rodapé
+    if(!col0&&!col3&&!col6)continue;
+    const c0l=col0.toLowerCase();
+    if(c0l.startsWith('produto')||c0l.startsWith('período')||c0l.startsWith('período')
+      ||c0l.startsWith('coleç')||c0l.startsWith('total')||c0l.startsWith('admin')
+      ||c0l.startsWith('produtos produzidos'))continue;
+
+    // Novo produto — linha com ref numérica no col0
+    if(/^\d{3,}[\.\-]/.test(col0)){
+      const parts=col0.match(/^(\d[\d.]*)\s*[-–]\s*(.+)$/);
+      currentProd={
+        ref:parts?parts[1].trim():col0,
+        nome:parts?parts[2].trim():col0,
+        total:0,
+        cores:{}
+      };
+      currentCor=null;
+      produtos.push(currentProd);
+    }
+
+    // Nova cor
+    if(col3&&currentProd){
+      const corParts=col3.match(/^(\d+)\s*[-–]\s*(.+)$/);
+      currentCor=corParts?col3.trim():col3.trim(); // guarda o label completo "150 - Ameixa"
+      if(!currentProd.cores[currentCor])currentProd.cores[currentCor]=0;
+    }
+
+    // Tamanho + quantidade
+    if(col6&&col7>0&&currentProd){
+      currentProd.total+=col7;
+      if(currentCor)currentProd.cores[currentCor]=(currentProd.cores[currentCor]||0)+col7;
+    }
+  }
+  return produtos.filter(p=>p.total>0);
+}
+
+function abrirModalImportar(produtos){
+  _importProdutos=produtos;
+  document.getElementById('import-subtitle').textContent=
+    `${produtos.length} produto${produtos.length!==1?'s':''} encontrado${produtos.length!==1?'s':''}. Marque os que deseja incluir na coleção.`;
+  renderImportLista();
+  document.getElementById('modal-importar').classList.add('open');
+}
+
+function fecharModalImportar(){
+  document.getElementById('modal-importar').classList.remove('open');
+  _importProdutos=[];
+}
+
+function renderImportLista(){
+  const lista=document.getElementById('import-lista');
+  lista.innerHTML=_importProdutos.map((p,i)=>{
+    const coresEntries=Object.entries(p.cores||{});
+    const temCores=coresEntries.length>0;
+    const coresHtml=temCores?`<div class="import-cores-wrap" id="imp-cores-${i}">
+      ${coresEntries.map(([cor,qtd])=>`<div class="import-cor-row"><span>${cor}</span><span>${qtd} pçs</span></div>`).join('')}
+    </div>`:'';
+    return`<div class="import-prod-wrap">
+      <div class="import-prod-row">
+        <input type="checkbox" id="imp-chk-${i}" checked onchange="atualizarContadorImport()">
+        ${temCores
+          ?`<button class="import-expand" onclick="toggleImportCores(${i})">+</button>`
+          :`<span style="width:20px;display:inline-block"></span>`}
+        <span class="import-prod-ref">${p.ref}</span>
+        <span class="import-prod-nome">${p.nome}</span>
+        <span class="import-prod-total">${p.total} pçs</span>
+      </div>
+      ${coresHtml}
+    </div>`;
+  }).join('');
+  atualizarContadorImport();
+}
+
+function toggleImportCores(i){
+  const el=document.getElementById('imp-cores-'+i);
+  if(!el)return;
+  const btn=el.previousElementSibling?.querySelector('.import-expand');
+  if(el.classList.contains('open')){el.classList.remove('open');if(btn)btn.textContent='+';}
+  else{el.classList.add('open');if(btn)btn.textContent='−';}
+}
+
+function toggleImportSelect(check){
+  _importProdutos.forEach((_,i)=>{
+    const chk=document.getElementById('imp-chk-'+i);
+    if(chk)chk.checked=check;
+  });
+  atualizarContadorImport();
+}
+
+function atualizarContadorImport(){
+  const selecionados=_importProdutos.filter((_,i)=>{
+    const chk=document.getElementById('imp-chk-'+i);
+    return chk&&chk.checked;
+  }).length;
+  document.getElementById('import-count-label').textContent=`${selecionados} de ${_importProdutos.length} selecionado${selecionados!==1?'s':''}`;
+  const btn=document.getElementById('btn-confirmar-import');
+  if(btn)btn.textContent=`Confirmar (${selecionados})`;
+}
+
+async function confirmarImportacao(){
+  const selecionados=_importProdutos.filter((_,i)=>{
+    const chk=document.getElementById('imp-chk-'+i);
+    return chk&&chk.checked;
+  });
+  if(!selecionados.length){alert('Selecione ao menos um produto.');return;}
+
+  const btn=document.getElementById('btn-confirmar-import');
+  btn.disabled=true;btn.textContent='Salvando...';
+
+  try{
+    // Mescla com produzidos existentes (não sobrescreve manuais não importados)
+    const existentes=_cache.produzidos||[];
+    const novosNomes=new Set(selecionados.map(p=>p.nome.toLowerCase()));
+    // Remove da lista existente os que vieram na importação (serão substituídos)
+    const mantidos=existentes.filter(e=>!novosNomes.has(e.nome.toLowerCase()));
+    const final=[...mantidos,...selecionados];
+    await salvarProduzidos(final);
+    renderListaProduzidos();
+    renderTable();updateSummary();renderAlertas();
+    fecharModalImportar();
+  }catch(e){
+    alert('Erro ao salvar: '+e.message);
+    btn.disabled=false;btn.textContent='Confirmar';
+  }
+}
+
 // ── ENTRADA MANUAL ────────────────────────────────────────────────────────────
 function abrirModalManual(){
   if(!currentColecao){alert('Selecione uma coleção primeiro.');return;}
@@ -619,15 +841,42 @@ function renderListaProduzidos(){
     el.innerHTML='<div style="padding:12px;font-size:12px;color:var(--muted);text-align:center">Nenhum produto cadastrado.</div>';
     return;
   }
-  el.innerHTML=`<div class="prod-list">${prod.map(p=>`
-    <div class="prod-item">
-      <span style="color:var(--text)">${p.nome}</span>
-      <div style="display:flex;align-items:center;gap:8px">
-        <span style="color:var(--gold);font-weight:600">${p.total} pçs</span>
-        <button onclick="abrirEditarProduzido('${p.nome.replace(/'/g,"\\'")}',${p.total})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:11px">✎</button>
-        <button onclick="removerProduzido('${p.nome.replace(/'/g,"\\'")}');" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:11px">✕</button>
+  el.innerHTML=prod.map(p=>{
+    const safeNome=p.nome.replace(/'/g,"\\'");
+    const cores=p.cores&&typeof p.cores==='object'?p.cores:null;
+    const coresEntries=cores?Object.entries(cores):[];
+    const expandBtn=coresEntries.length>0
+      ?`<button class="import-expand" onclick="toggleListaCores('cores-${p.ref||p.nome.replace(/\s+/g,'_')}')" title="Ver por cor">+</button>`
+      :'<span style="width:20px;display:inline-block"></span>';
+    const coresHtml=coresEntries.length>0
+      ?`<div class="prod-item-cores" id="cores-${(p.ref||p.nome.replace(/\s+/g,'_'))}">
+          ${coresEntries.map(([cor,qtd])=>`<div class="prod-cor-row"><span>${cor}</span><span>${qtd} pçs</span></div>`).join('')}
+        </div>`
+      :'';
+    return`<div>
+      <div class="prod-item">
+        <div style="display:flex;align-items:center;gap:6px">
+          ${expandBtn}
+          ${p.ref?`<span style="color:var(--muted);font-size:10px;min-width:76px">${p.ref}</span>`:''}
+          <span style="color:var(--text)">${p.nome}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="color:var(--gold);font-weight:600">${p.total} pçs</span>
+          <button onclick="abrirEditarProduzido('${safeNome}',${p.total})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:11px" title="Editar">✎</button>
+          <button onclick="removerProduzido('${safeNome}');" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:11px" title="Remover">✕</button>
+        </div>
       </div>
-    </div>`).join('')}</div>`;
+      ${coresHtml}
+    </div>`;
+  }).join('');
+}
+
+function toggleListaCores(id){
+  const el=document.getElementById(id);
+  if(!el)return;
+  const btn=el.previousElementSibling?.querySelector('.import-expand');
+  if(el.classList.contains('open')){el.classList.remove('open');if(btn)btn.textContent='+';}
+  else{el.classList.add('open');if(btn)btn.textContent='−';}
 }
 
 function abrirEditarProduzido(nome,qtd){
@@ -848,6 +1097,7 @@ function renderTable(){
   await renderColecoes();
   document.getElementById('modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal();});
   document.getElementById('modal-manual').addEventListener('click',e=>{if(e.target===e.currentTarget)fecharModalManual();});
+  document.getElementById('modal-importar').addEventListener('click',e=>{if(e.target===e.currentTarget)fecharModalImportar();});
 })();
 </script>
 </body>
