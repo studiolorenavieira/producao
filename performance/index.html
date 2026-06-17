@@ -214,7 +214,7 @@ td{padding:9px 10px;white-space:nowrap;font-size:13px;}
     <!-- PAINEL -->
     <div class="section-label">Painel de performance</div>
     <div class="summary-row">
-      <div class="summary-card"><div class="summary-card-label">Total produzido</div><div class="summary-card-val" id="sum-produzido">—</div><div class="summary-card-sub">cadastrado na coleção</div></div>
+      <div class="summary-card"><div class="summary-card-label">T. Loja</div><div class="summary-card-val" id="sum-produzido">—</div><div class="summary-card-sub">transferido para loja</div></div>
       <div class="summary-card"><div class="summary-card-label">Venda normal</div><div class="summary-card-val" id="sum-vendas">—</div><div class="summary-card-sub">vendas efetivadas</div></div>
       <div class="summary-card"><div class="summary-card-label">Consig. pendente</div><div class="summary-card-val" id="sum-consig">—</div><div class="summary-card-sub">remessa − retorno</div></div>
       <div class="summary-card"><div class="summary-card-label">Resultado</div><div class="summary-card-val" id="sum-resultado">—</div><div class="summary-card-sub">estoque físico</div></div>
@@ -229,6 +229,7 @@ td{padding:9px 10px;white-space:nowrap;font-size:13px;}
       <div class="legenda-item"><div class="legenda-dot" style="background:var(--gold)"></div>50–79%</div>
       <div class="legenda-item"><div class="legenda-dot" style="background:var(--red)"></div>&lt; 50%</div>
       <div class="legenda-item"><div class="legenda-dot" style="background:var(--orange)"></div>⚠ Mov. Estoque suspeita</div>
+      <div class="legenda-item"><div class="legenda-dot" style="background:var(--orange)"></div>🔁 +Ant. — possível venda de coleção anterior</div>
     </div>
 
     <div class="period-tabs">
@@ -335,7 +336,7 @@ async function sbFetch(path,method='GET',body=null){
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
 let currentColecao=null,currentColecaoId=null,currentPeriod='total';
-let sortCol='produzido',sortDir=-1;
+let sortCol='tLoja',sortDir=-1;
 const PERIODOS=['7','30','60'];
 // Cache: produzidos=[], uploads={ historico7, bazar7, comp7, historico30, ... }
 let _cache={produzidos:[],uploads:{}};
@@ -380,23 +381,107 @@ function setUploadTab(p,btn){
 function updateUploadTabBadges(){
   ['7','30','60'].forEach(p=>{
     const hist=getUpload('historico',p);
+    const loja=getUpload('loja',p);
     const baz=getUpload('bazar',p);
     const comp=getUpload('comp',p);
-    const count=[hist,baz,comp].filter(Boolean).length;
+    const count=[hist,loja,baz,comp].filter(Boolean).length;
     const badge=document.getElementById('utab-badge-'+p);
     if(!badge)return;
     if(count===0){badge.textContent='';badge.className='utab-badge';return;}
-    badge.textContent=count+'/3';
-    badge.className='utab-badge'+(count===3?' full':' partial');
+    badge.textContent=count+'/4';
+    badge.className='utab-badge'+(count===4?' full':' partial');
   });
 }
 
 function renderPeriodoBlocks(){
   const p=currentUploadTab;
   const hist=getUpload('historico',p);
+  const loja=getUpload('loja',p);
   const baz=getUpload('bazar',p);
   const comp=getUpload('comp',p);
   const el=document.getElementById('periodo-blocks');
+
+  el.innerHTML=`<div class="upload-row">
+
+    <div class="upload-item">
+      <div class="upload-item-title">
+        Histórico produto acabado
+        <a href="https://dapic.app/relatorio/historicoprodutoacabadoreport" target="_blank" class="btn btn-outline btn-sm" style="text-decoration:none;font-size:10px">↗ DAPIC</a>
+      </div>
+      <div class="upload-zone">
+        <input type="file" accept=".xlsx,.xls" onchange="handleUpload('historico','${p}',this)">
+        <div class="upload-zone-text">↓ clique ou arraste .xlsx</div>
+      </div>
+      <div class="upload-status">
+        <div style="display:flex;align-items:center;gap:4px">
+          <div class="status-dot${hist?' ok':''}" id="dot-historico${p}"></div>
+          <span id="txt-historico${p}" style="color:${hist?'var(--green)':'var(--muted)'}">${hist?`✓ ${hist.total} produtos · ${hist.label}`:'Nenhum arquivo'}</span>
+        </div>
+        <button id="btn-limpar-historico${p}" onclick="limparUpload('historico','${p}')" style="display:${hist?'inline':'none'};background:none;border:none;color:var(--red);cursor:pointer;font-size:10px">✕ limpar</button>
+      </div>
+    </div>
+
+    <div class="upload-item">
+      <div class="upload-item-title">
+        Transferência para Loja
+        <a href="https://dapic.app/relatorio/transferenciaestoquereport" target="_blank" class="btn btn-outline btn-sm" style="text-decoration:none;font-size:10px">↗ DAPIC</a>
+      </div>
+      <div style="font-size:10px;color:var(--muted);margin-bottom:5px">Origem: Estoque Produção → Destino: Estoque Loja</div>
+      <div class="upload-zone">
+        <input type="file" accept=".xlsx,.xls" onchange="handleUpload('loja','${p}',this)">
+        <div class="upload-zone-text">↓ clique ou arraste .xlsx</div>
+      </div>
+      <div class="upload-status">
+        <div style="display:flex;align-items:center;gap:4px">
+          <div class="status-dot${loja?' ok':''}" id="dot-loja${p}"></div>
+          <span id="txt-loja${p}" style="color:${loja?'var(--green)':'var(--muted)'}">${loja?`✓ ${loja.length} itens · ${loja.label}`:'Nenhum arquivo'}</span>
+        </div>
+        <button id="btn-limpar-loja${p}" onclick="limparUpload('loja','${p}')" style="display:${loja?'inline':'none'};background:none;border:none;color:var(--red);cursor:pointer;font-size:10px">✕ limpar</button>
+      </div>
+    </div>
+
+    <div class="upload-item">
+      <div class="upload-item-title">
+        Transferência para Bazar
+        <a href="https://dapic.app/relatorio/transferenciaestoquereport" target="_blank" class="btn btn-outline btn-sm" style="text-decoration:none;font-size:10px">↗ DAPIC</a>
+      </div>
+      <div style="font-size:10px;color:var(--muted);margin-bottom:5px">Origem: Estoque Produção → Destino: Bazar</div>
+      <div class="upload-zone">
+        <input type="file" accept=".xlsx,.xls" onchange="handleUpload('bazar','${p}',this)">
+        <div class="upload-zone-text">↓ clique ou arraste .xlsx</div>
+      </div>
+      <div class="upload-status">
+        <div style="display:flex;align-items:center;gap:4px">
+          <div class="status-dot${baz?' ok':''}" id="dot-bazar${p}"></div>
+          <span id="txt-bazar${p}" style="color:${baz?'var(--green)':'var(--muted)'}">${baz?`✓ ${baz.length} itens · ${baz.label}`:'Nenhum arquivo'}</span>
+        </div>
+        <button id="btn-limpar-bazar${p}" onclick="limparUpload('bazar','${p}')" style="display:${baz?'inline':'none'};background:none;border:none;color:var(--red);cursor:pointer;font-size:10px">✕ limpar</button>
+      </div>
+    </div>
+
+    <div class="upload-item">
+      <div class="upload-item-title">
+        Estoque Comprometido
+        <a href="https://dapic.app/pivot/gestaoestoquepivot" target="_blank" class="btn btn-outline btn-sm" style="text-decoration:none;font-size:10px">↗ DAPIC</a>
+      </div>
+      <div style="font-size:10px;color:var(--orange);margin-bottom:5px">⚠ Selecionar modelo: <strong>RELATÓRIO - PERFORMANCE</strong></div>
+      <div class="upload-zone">
+        <input type="file" accept=".xlsx,.xls,.csv" onchange="handleUpload('comp','${p}',this)">
+        <div class="upload-zone-text">↓ clique ou arraste .xlsx / .csv</div>
+      </div>
+      <div class="upload-status">
+        <div style="display:flex;align-items:center;gap:4px">
+          <div class="status-dot${comp?' ok':''}" id="dot-comp${p}"></div>
+          <span id="txt-comp${p}" style="color:${comp?'var(--green)':'var(--muted)'}">${comp?`✓ ${comp.length} itens · ${comp.label}`:'Nenhum arquivo'}</span>
+        </div>
+        <button id="btn-limpar-comp${p}" onclick="limparUpload('comp','${p}')" style="display:${comp?'inline':'none'};background:none;border:none;color:var(--red);cursor:pointer;font-size:10px">✕ limpar</button>
+      </div>
+    </div>
+
+  </div>`;
+
+  updateUploadTabBadges();
+}
 
   el.innerHTML=`<div class="upload-row">
 
@@ -605,6 +690,7 @@ function handleUpload(tipo,periodo,input){
       const ws=wb.Sheets[wb.SheetNames[0]];
       const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
       if(tipo==='historico')await parseHistorico(rows,periodo);
+      else if(tipo==='loja')await parseLoja(rows,periodo);
       else if(tipo==='bazar')await parseBazar(rows,periodo);
       else if(tipo==='comp')await parseComp(rows,periodo);
       renderPeriodoBlocks();
@@ -671,6 +757,27 @@ async function parseBazar(rows,periodo){
   const chave='bazar'+periodo;
   _cache.uploads[chave]={dados:arr,length:arr.length,label:nowLabel()};
   await salvarUploadSB('bazar',periodo,arr,nowLabel(),arr.length);
+}
+
+// Transferência para Loja — mesma estrutura analítica do Bazar
+// col0=Produto, col15=quantidade por tamanho (nível mais granular)
+async function parseLoja(rows,periodo){
+  const res={};
+  let currentNome=null;
+  for(let i=0;i<rows.length;i++){
+    const r=rows[i];
+    const col0=String(r[0]||'').trim();
+    if(col0&&!/^\d{4}[\.\-]/.test(col0))continue;
+    if(col0&&/^\d{4}[\.\-]/.test(col0)&&!col0.toLowerCase().includes('totais')){
+      currentNome=normName(col0);
+    }
+    const qtd=parseInt(r[15])||0;
+    if(currentNome&&qtd>0)res[currentNome]=(res[currentNome]||0)+qtd;
+  }
+  const arr=Object.entries(res).map(([nome,qtd])=>({nome,qtd}));
+  const chave='loja'+periodo;
+  _cache.uploads[chave]={dados:arr,length:arr.length,label:nowLabel()};
+  await salvarUploadSB('loja',periodo,arr,nowLabel(),arr.length);
 }
 
 // Comprometido — CSV pivot col1=Nome, col4=Qtd comprometida (formato "14,00")
@@ -963,10 +1070,11 @@ function aggregate(){
   const{produtos:historico,periodo}=getHistoricoProdutos();
   const p=periodo||(currentPeriod==='total'?'60':currentPeriod);
   const produzidos=_cache.produzidos||[];
+  const lojaDados=((_cache.uploads['loja'+p]||{}).dados)||[];
   const bazarDados=((_cache.uploads['bazar'+p]||{}).dados)||[];
   const compDados=((_cache.uploads['comp'+p]||{}).dados)||[];
 
-  const prodMap={};produzidos.forEach(x=>prodMap[x.nome]=x.total);
+  const lojaMap={};lojaDados.forEach(l=>lojaMap[l.nome]=(lojaMap[l.nome]||0)+l.qtd);
   const bazarMap={};bazarDados.forEach(b=>bazarMap[b.nome]=(bazarMap[b.nome]||0)+b.qtd);
   const compMap={};compDados.forEach(c=>compMap[c.nome]=(compMap[c.nome]||0)+c.qtd);
 
@@ -977,7 +1085,7 @@ function aggregate(){
   const rows=[];
   nomes.forEach(nome=>{
     const h=historico.find(x=>x.nome===nome)||{};
-    const produzido=prodMap[nome]||0;
+    const tLoja=lojaMap[nome]||0;
     const bazarQtd=bazarMap[nome]||0;
     const compQtd=compMap[nome]||0;
 
@@ -995,15 +1103,16 @@ function aggregate(){
     const consigPend=consRem-consRet;
     const disponivel=resultado-compQtd;
 
-    // Mov. suspeita: entrada > 0 OU saída ≠ bazar
     const movAlert=movEnt>0||(movSai>0&&movSai!==bazarQtd)||(bazarQtd>0&&movSai!==bazarQtd);
     const transfAlert=transfEnt>0||transfSai>0;
 
-    // Performance: (vendNorm + consigPend) / (produzido - bazar - brinde)
-    const basePerf=Math.max(0,(produzido>0?produzido:op)-bazarQtd-vendBrind);
+    // Performance: (VendNorm + ConsigPend) / (T.Loja − Bazar − Brinde)
+    const basePerf=Math.max(0,tLoja-bazarQtd-vendBrind);
     const perf=basePerf>0?((vendNorm+consigPend)/basePerf)*100:0;
+    // Alerta: perf > 100% = vendas/consig excedem T.Loja → contaminação de coleção anterior
+    const contamAlert=tLoja>0&&perf>100;
 
-    rows.push({nome,produzido,op,devol,movEnt,movSai,movAlert,transfEnt,transfSai,transfAlert,consRem,consRet,consigPend,vendNorm,vendBrind,resultado,compQtd,disponivel,bazarQtd,perf});
+    rows.push({nome,op,tLoja,devol,movEnt,movSai,movAlert,transfEnt,transfSai,transfAlert,consRem,consRet,consigPend,vendNorm,vendBrind,resultado,compQtd,disponivel,bazarQtd,perf,contamAlert});
   });
 
   rows.sort((a,b)=>{
@@ -1020,40 +1129,50 @@ function renderAlertas(){
   const rows=aggregate();
   const alertas=[];
   rows.forEach(r=>{
+    if(r.contamAlert){
+      alertas.push({icon:'🔁',nome:r.nome,desc:`Performance ${r.perf.toFixed(0)}% — vendas/consig (${r.vendNorm+r.consigPend}) excedem T.Loja (${r.tLoja}). Possível contaminação de coleção anterior.`,cor:'orange'});
+    }
     if(r.movAlert&&r.op>0){
       let desc='';
       if(r.movEnt>0)desc+=`Mov. Entrada: ${r.movEnt} — sem justificativa. `;
       if(r.movSai!==r.bazarQtd&&(r.movSai>0||r.bazarQtd>0))desc+=`Mov. Saída (${r.movSai}) ≠ Bazar (${r.bazarQtd}) — ${Math.abs(r.movSai-r.bazarQtd)} peça(s) sem justificativa.`;
-      if(desc)alertas.push({icon:'↔',nome:r.nome,desc:desc.trim()});
+      if(desc)alertas.push({icon:'↔',nome:r.nome,desc:desc.trim(),cor:'red'});
     }
     if(r.transfAlert&&r.op>0){
-      alertas.push({icon:'🏢',nome:r.nome,desc:`Transf. Empresas: Entrada ${r.transfEnt} · Saída ${r.transfSai}`});
+      alertas.push({icon:'🏢',nome:r.nome,desc:`Transf. Empresas: Entrada ${r.transfEnt} · Saída ${r.transfSai}`,cor:'red'});
     }
     if(r.disponivel<0){
-      alertas.push({icon:'⚠',nome:r.nome,desc:`Disponível negativo (${r.disponivel}) — comprometido maior que resultado`});
+      alertas.push({icon:'⚠',nome:r.nome,desc:`Disponível negativo (${r.disponivel}) — comprometido maior que resultado`,cor:'red'});
     }
   });
   const el=document.getElementById('alertas-container');
   if(!alertas.length){el.innerHTML='';return;}
-  el.innerHTML=`<div class="alertas-box">
-    <div class="alertas-title">⚠ ${alertas.length} alerta${alertas.length!==1?'s':''}</div>
-    ${alertas.map(a=>`<div class="alerta-item">
-      <span style="flex-shrink:0">${a.icon}</span>
+  const oranges=alertas.filter(a=>a.cor==='orange');
+  const reds=alertas.filter(a=>a.cor==='red');
+  let html='';
+  if(oranges.length)html+=`<div class="alertas-box" style="background:rgba(201,138,74,0.08);border-color:rgba(201,138,74,0.25);margin-bottom:8px">
+    <div class="alertas-title" style="color:var(--orange)">🔁 ${oranges.length} possível contaminação de coleção anterior</div>
+    ${oranges.map(a=>`<div class="alerta-item"><span style="flex-shrink:0">${a.icon}</span>
       <div><div style="color:var(--text);font-weight:500">${a.nome}</div><div style="color:var(--muted);margin-top:2px">${a.desc}</div></div>
-    </div>`).join('')}
-  </div>`;
+    </div>`).join('')}</div>`;
+  if(reds.length)html+=`<div class="alertas-box">
+    <div class="alertas-title">⚠ ${reds.length} alerta${reds.length!==1?'s':''}</div>
+    ${reds.map(a=>`<div class="alerta-item"><span style="flex-shrink:0">${a.icon}</span>
+      <div><div style="color:var(--text);font-weight:500">${a.nome}</div><div style="color:var(--muted);margin-top:2px">${a.desc}</div></div>
+    </div>`).join('')}</div>`;
+  el.innerHTML=html;
 }
 
 // ── SUMMARY ───────────────────────────────────────────────────────────────────
 function updateSummary(){
   const rows=aggregate();
-  const tP=rows.reduce((s,r)=>s+(r.produzido||r.op||0),0);
+  const tL=rows.reduce((s,r)=>s+r.tLoja,0);
   const tV=rows.reduce((s,r)=>s+r.vendNorm,0);
   const tC=rows.reduce((s,r)=>s+r.consigPend,0);
   const tR=rows.reduce((s,r)=>s+r.resultado,0);
   const tComp=rows.reduce((s,r)=>s+r.compQtd,0);
   const tDisp=rows.reduce((s,r)=>s+r.disponivel,0);
-  document.getElementById('sum-produzido').textContent=tP||'—';
+  document.getElementById('sum-produzido').textContent=tL||'—';
   document.getElementById('sum-vendas').textContent=tV||'—';
   document.getElementById('sum-consig').textContent=tC||'—';
   document.getElementById('sum-resultado').textContent=tR||'—';
@@ -1093,8 +1212,8 @@ function renderTable(){
 
   let html=`<table><thead><tr>
     ${th('nome','Produto')}
-    ${th('produzido','Produzido','Total cadastrado na coleção')}
-    ${th('op','OP Entrada','Entradas via OP no DAPIC')}
+    ${th('op','OP Entrada','Entradas via OP no DAPIC — saída da facção')}
+    ${th('tLoja','T. Loja','Transferências Estoque Produção → Loja')}
     ${th('devol','Devolução','Devoluções de clientes')}
     ${th('vendNorm','Venda Normal','')}
     ${th('vendBrind','Brinde','')}
@@ -1103,26 +1222,28 @@ function renderTable(){
     ${th('resultado','Resultado','Estoque físico atual (do DAPIC)')}
     ${th('compQtd','Comprometido','Separado, ainda não vendido')}
     ${th('disponivel','Disponível','Resultado − Comprometido')}
-    ${th('perf','Performance','(Vendas + Consig.) / (Produzido − Bazar − Brinde)')}
+    ${th('perf','Performance','(Vendas + Consig.) / (T.Loja − Bazar − Brinde)')}
   </tr></thead><tbody>`;
 
-  let tP=0,tOP=0,tD=0,tVN=0,tVB=0,tC=0,tB=0,tR=0,tComp=0,tDisp=0;
+  let tOP=0,tL=0,tD=0,tVN=0,tVB=0,tC=0,tB=0,tR=0,tComp=0,tDisp=0;
 
   rows.forEach(r=>{
-    const color=pc(r.perf);
+    const color=r.contamAlert?'var(--orange)':pc(r.perf);
     const pw=Math.min(r.perf,100);
     const dispCls=r.disponivel<0?'td-red':r.disponivel===0?'td-muted':'td-num';
     const movBadge=r.movAlert?'<span class="chip chip-orange" style="margin-left:4px;font-size:9px">⚠ Mov</span>':'';
     const transfBadge=r.transfAlert?'<span class="chip chip-orange" style="margin-left:4px;font-size:9px">🏢</span>':'';
+    const contamBadge=r.contamAlert?'<span class="chip chip-orange" style="margin-left:4px;font-size:9px">🔁 +Ant.</span>':'';
+    const rowStyle=r.contamAlert?'background:rgba(201,138,74,0.04);':'';
 
-    tP+=r.produzido;tOP+=r.op;tD+=r.devol;tVN+=r.vendNorm;
+    tOP+=r.op;tL+=r.tLoja;tD+=r.devol;tVN+=r.vendNorm;
     tVB+=r.vendBrind;tC+=r.consigPend;tB+=r.bazarQtd;
     tR+=r.resultado;tComp+=r.compQtd;tDisp+=r.disponivel;
 
-    html+=`<tr>
-      <td style="color:var(--text);font-weight:500">${r.nome}${movBadge}${transfBadge}</td>
-      <td class="td-num">${r.produzido||'—'}</td>
+    html+=`<tr style="${rowStyle}">
+      <td style="color:var(--text);font-weight:500">${r.nome}${movBadge}${transfBadge}${contamBadge}</td>
       <td class="td-num">${r.op||'—'}</td>
+      <td class="${r.tLoja>0?'td-num':'td-muted'}">${r.tLoja||'—'}</td>
       <td class="${r.devol>0?'td-green':'td-muted'}">${r.devol||'—'}</td>
       <td class="td-num">${r.vendNorm||'—'}</td>
       <td class="td-muted">${r.vendBrind||'—'}</td>
@@ -1133,16 +1254,16 @@ function renderTable(){
       <td class="${dispCls}" style="font-weight:600">${r.disponivel!==0?r.disponivel:'—'}</td>
       <td><div class="perf-bar-wrap">
         <div class="perf-bar"><div class="perf-bar-fill" style="width:${pw}%;background:${color}"></div></div>
-        <span class="perf-val" style="color:${color}">${r.perf>0?r.perf.toFixed(0)+'%':'—'}</span>
+        <span class="perf-val" style="color:${color}">${r.tLoja>0&&r.perf>0?r.perf.toFixed(0)+'%':'—'}</span>
       </div></td>
     </tr>`;
   });
 
-  const baseTotal=Math.max(0,tP-tB-tVB);
+  const baseTotal=Math.max(0,tL-tB-tVB);
   const tPerf=baseTotal>0?((tVN+tC)/baseTotal*100).toFixed(0)+'%':'—';
   html+=`</tbody><tr class="totals-row">
     <td>TOTAL</td>
-    <td>${tP||'—'}</td><td>${tOP||'—'}</td><td>${tD||'—'}</td>
+    <td>${tOP||'—'}</td><td>${tL||'—'}</td><td>${tD||'—'}</td>
     <td>${tVN||'—'}</td><td>${tVB||'—'}</td><td>${tC||'—'}</td>
     <td>${tB||'—'}</td><td>${tR||'—'}</td><td>${tComp||'—'}</td>
     <td>${tDisp||'—'}</td><td>${tPerf}</td>
