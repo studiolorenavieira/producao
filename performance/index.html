@@ -866,8 +866,8 @@ function aggregate(){
     const transfEnt=h.transfEnt||0;const transfSai=h.transfSai||0;
     const consRem=h.consRem||0;const consRet=h.consRet||0;
     const vendNorm=h.vendNorm||0;const vendBrind=h.vendBrind||0;
-    const resultado=h.res||0;
     const consigPend=consRem-consRet;
+    const resultado=tLoja+devol-vendNorm-vendBrind-bazarQtd-consigPend;
     const disponivel=resultado-compQtd;
     const movAlert=movEnt>0||(movSai>0&&movSai!==bazarQtd)||(bazarQtd>0&&movSai!==bazarQtd);
     const transfAlert=transfEnt>0||transfSai>0;
@@ -981,7 +981,7 @@ function renderTable(){
     +th('vendBrind','Brinde')
     +th('consigPend','Consig. Pend.','Remessa - Retorno')
     +th('bazarQtd','Bazar','Transferencias para Bazar')
-    +th('resultado','Resultado','Estoque fisico atual (do DAPIC)')
+    +th('resultado','Resultado','T.Loja + Devol - Venda - Brinde - Bazar - Consig.')
     +th('compQtd','Comprometido','Separado, ainda nao vendido')
     +th('disponivel','Disponivel','Resultado - Comprometido')
     +th('perf','Performance','(Vendas + Consig.) / (T.Loja - Bazar - Brinde)')
