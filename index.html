@@ -2495,16 +2495,41 @@ async function abrirImpLanc(){
   document.getElementById('li-btn').textContent='Importar';
   abrirModal('mo-lanc-imp');
   try{
-    const rows=await db('acabamentos?select=modelo,colecao,qtd_pecas,status&status=eq.Conclu%C3%ADdo%20%2F%20Pago');
+    // Busca as duas fontes em paralelo
+    const [lotesRows, acabRows] = await Promise.all([
+      // Caminho 1: facção paga direto (sem acabamento)
+      db('lotes_faccao?select=modelo,colecao,qtd_enviada&status=in.(Conclu%C3%ADdo%20%2F%20Pago,Conclu%C3%ADdo%20%2F%20Pag.%20Parcial)'),
+      // Caminho 2: foi pro acabamento e acabamento foi pago
+      db('acabamentos?select=modelo,colecao,qtd_pecas&status=eq.Conclu%C3%ADdo%20%2F%20Pago')
+    ]);
+
     const map={};
-    rows.forEach(r=>{
+
+    // Adiciona do lotes_faccao (caminho sem acabamento)
+    lotesRows.forEach(r=>{
       const nome=(r.modelo||'').trim();if(!nome)return;
-      if(!map[nome])map[nome]={modelo:nome,colecao:(r.colecao||'').trim(),qtd:0};
-      map[nome].qtd+=(r.qtd_pecas||0);
+      if(!map[nome])map[nome]={modelo:nome,colecao:(r.colecao||'').trim(),qtd:0,fonte:'Facção'};
+      map[nome].qtd+=(r.qtd_enviada||0);
     });
-    lancImpList=Object.values(map);
+
+    // Adiciona/atualiza do acabamentos (caminho com acabamento)
+    // Se o modelo já existe via facção, usa a qtd do acabamento (mais precisa)
+    acabRows.forEach(r=>{
+      const nome=(r.modelo||'').trim();if(!nome)return;
+      if(!map[nome]){
+        map[nome]={modelo:nome,colecao:(r.colecao||'').trim(),qtd:0,fonte:'Acabamento'};
+      } else {
+        map[nome].fonte='Facção + Acabamento';
+      }
+      map[nome].qtd_acab=(map[nome].qtd_acab||0)+(r.qtd_pecas||0);
+    });
+
+    // Onde houver acabamento pago, usa a qtd do acabamento
+    Object.values(map).forEach(m=>{ if(m.qtd_acab) m.qtd=m.qtd_acab; });
+
+    lancImpList=Object.values(map).sort((a,b)=>a.modelo.localeCompare(b.modelo));
     if(!lancImpList.length){
-      document.getElementById('li-lista').innerHTML='<div class="nd">Nenhum modelo com status "Concluído / Pago".</div>';
+      document.getElementById('li-lista').innerHTML='<div class="nd">Nenhum modelo disponível para importar.</div>';
       return;
     }
     const existentes=new Set(lancMods.map(m=>m.modelo));
@@ -2519,10 +2544,16 @@ function renderImpLancLista(existentes){
   if(!existentes)existentes=new Set(lancMods.map(m=>m.modelo));
   document.getElementById('li-lista').innerHTML=lancImpList.map((c,i)=>{
     const ex=existentes.has(c.modelo);
+    const fonteBadge=c.fonte==='Facção + Acabamento'
+      ?'<span class="chip cb" style="font-size:9px">Fac+Acab</span>'
+      :c.fonte==='Acabamento'
+      ?'<span class="chip co" style="font-size:9px">Acabamento</span>'
+      :'<span class="chip cgr" style="font-size:9px">Facção</span>';
     return`<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--bd);font-size:12px">
       <input type="checkbox" id="lic-${i}" ${lancImpSel.has(i)?'checked':''} ${ex?'disabled':''} onchange="toggleImpLanc(${i})" style="accent-color:var(--yw);width:14px;height:14px;flex-shrink:0;cursor:pointer">
       <span style="flex:1;font-weight:600;color:${ex?'var(--t3)':'var(--tx)'}">${c.modelo}</span>
-      <span style="color:var(--t2);font-size:11px;min-width:90px">${c.colecao}</span>
+      <span style="color:var(--t2);font-size:11px;min-width:80px">${c.colecao}</span>
+      ${fonteBadge}
       <span style="color:var(--yw);font-weight:700;min-width:55px;text-align:right">${c.qtd} pcs</span>
       ${ex?'<span class="chip cgr" style="font-size:9px">já existe</span>':''}
     </div>`;
