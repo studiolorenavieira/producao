@@ -2666,7 +2666,16 @@ async function abrirImpLanc(){
       map[nome].qtd_acab=(map[nome].qtd_acab||0)+(r.qtd_pecas||0);
     });
     Object.values(map).forEach(m=>{if(m.qtd_acab)m.qtd=m.qtd_acab;});
-    lancImpListFull=Object.values(map).sort((a,b)=>a.modelo.localeCompare(b.modelo));
+    const mesOrd=col=>{
+      const MESES=['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
+      const p=(col||'').toUpperCase().split(' ');
+      const ano=p[1]||'0000';
+      const mes=MESES.indexOf((p[0]||'').substring(0,3))+1;
+      return ano+String(mes).padStart(2,'0');
+    };
+    lancImpListFull=Object.values(map).sort((a,b)=>
+      mesOrd(a.colecao).localeCompare(mesOrd(b.colecao)) || a.modelo.localeCompare(b.modelo)
+    );
     lancImpList=[...lancImpListFull];
     if(!lancImpListFull.length){
       document.getElementById('li-lista').innerHTML='<div class="nd">Nenhum modelo disponível para importar.</div>';
