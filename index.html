@@ -689,7 +689,8 @@ tr:hover td{background:rgba(255,255,255,.015);}
     <div id="li-msg"></div>
     <div class="md-f">
       <button class="btn bg" onclick="fecharModal('mo-lanc-imp')">Cancelar</button>
-      <button class="btn by" id="li-btn" onclick="confirmarImpLanc()" disabled>Importar</button>
+      <button class="btn bg" id="li-btn" onclick="confirmarImpLanc()">Importar</button>
+      <button class="btn by" id="li-btn2" onclick="impELancar()">↑ Importar e Lançar agora</button>
     </div>
   </div>
 </div>
@@ -2737,8 +2738,42 @@ function atualizarCntImpLanc(){
   const n=lancImpSel.size;
   document.getElementById('li-cnt').textContent=n+' selecionado'+(n!==1?'s':'');
   const btn=document.getElementById('li-btn');
-  btn.disabled=n===0;
-  btn.textContent=n>0?'Importar '+n+' modelo'+(n!==1?'s':''):'Importar';
+  const btn2=document.getElementById('li-btn2');
+  const label=n>0?n+' modelo'+(n!==1?'s':''):'';
+  if(btn){btn.disabled=n===0;btn.textContent=label?'Só importar ('+label+')':'Importar';}
+  if(btn2){btn2.disabled=n===0;btn2.textContent=label?'↑ Importar e Lançar ('+label+')':'↑ Importar e Lançar';}
+}
+
+async function impELancar(){
+  const btn2=document.getElementById('li-btn2');
+  if(btn2){btn2.disabled=true;btn2.textContent='Importando...';}
+  try{
+    // Filtra só os que ainda não existem
+    const novos=[...lancImpSel]
+      .map(i=>lancImpList[i])
+      .filter(c=>!lancExistentes.has(c.modelo));
+    if(novos.length){
+      await db('lanc_modelos','POST',novos.map(c=>({
+        modelo:c.modelo,
+        colecao_original:c.colecao||null,
+        colecao_atual:c.colecao||null,
+        qtd_total:c.qtd
+      })));
+    }
+    // Recarrega dados atualizados
+    await loadLancamentos();
+    // Seleciona os modelos recém-importados + os já existentes que estavam selecionados
+    const todosSelecionados=[...lancImpSel].map(i=>lancImpList[i].modelo);
+    lancSelIds=new Set(
+      lancMods.filter(m=>todosSelecionados.includes(m.modelo)).map(m=>m.id)
+    );
+    fecharModal('mo-lanc-imp');
+    // Abre direto o modal de lançamento em lote
+    abrirLoteLanc();
+  }catch(e){
+    document.getElementById('li-msg').innerHTML='<div style="color:var(--rd);font-size:11px;margin-top:6px">'+e.message+'</div>';
+    if(btn2){btn2.disabled=false;btn2.textContent='↑ Importar e Lançar';}
+  }
 }
 async function confirmarImpLanc(){
   const btn=document.getElementById('li-btn');btn.disabled=true;btn.textContent='Importando...';
