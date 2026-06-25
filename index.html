@@ -677,6 +677,12 @@ tr:hover td{background:rgba(255,255,255,.015);}
       <button class="btn bg bsm" onclick="impLancToggle(false)">Nenhum</button>
       <span id="li-cnt" style="font-size:11px;color:var(--t2);align-self:center"></span>
     </div>
+    <div style="margin-bottom:8px">
+      <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:11px;color:var(--t2)">
+        <input type="checkbox" id="li-show-exist" onchange="filtrarImpLanc()" style="accent-color:var(--yw);width:13px;height:13px">
+        <span id="li-exist-label">Mostrar já existentes</span>
+      </label>
+    </div>
     <div id="li-lista" style="max-height:320px;overflow-y:auto;border:1px solid var(--bd);border-radius:6px;padding:0 10px">
       <div class="nd"><span class="sp"></span>Buscando...</div>
     </div>
@@ -2654,13 +2660,11 @@ async function abrirImpLanc(){
     Object.values(map).forEach(m=>{if(m.qtd_acab)m.qtd=m.qtd_acab;});
     lancImpListFull=Object.values(map).sort((a,b)=>a.modelo.localeCompare(b.modelo));
     lancImpList=[...lancImpListFull];
-    if(!lancImpList.length){
+    if(!lancImpListFull.length){
       document.getElementById('li-lista').innerHTML='<div class="nd">Nenhum modelo disponível para importar.</div>';
       return;
     }
-    const existentes=new Set(lancMods.map(m=>m.modelo));
-    lancImpList.forEach((_,i)=>{if(!existentes.has(lancImpList[i].modelo))lancImpSel.add(i);});
-    renderImpLancLista(existentes);
+    filtrarImpLanc();
   }catch(e){
     document.getElementById('li-lista').innerHTML='<div class="nd" style="color:var(--rd)">Erro: '+e.message+'</div>';
   }
@@ -2668,10 +2672,18 @@ async function abrirImpLanc(){
 
 function filtrarImpLanc(){
   const q=(document.getElementById('li-srch').value||'').toLowerCase();
+  const mostrarExist=document.getElementById('li-show-exist')?.checked||false;
   const existentes=new Set(lancMods.map(m=>m.modelo));
-  if(!q){lancImpList=[...lancImpListFull];}
-  else{lancImpList=lancImpListFull.filter(c=>c.modelo.toLowerCase().includes(q));}
-  // Reconstrói índices de seleção para a lista filtrada
+  lancImpList=lancImpListFull.filter(c=>{
+    if(!mostrarExist && existentes.has(c.modelo)) return false;
+    if(q && !c.modelo.toLowerCase().includes(q)) return false;
+    return true;
+  });
+  // Atualiza label com contagem de ocultos
+  const ocultos=lancImpListFull.filter(c=>existentes.has(c.modelo)).length;
+  const lbl=document.getElementById('li-exist-label');
+  if(lbl) lbl.textContent=`Mostrar já existentes (${ocultos})`;
+  // Reconstrói seleção
   lancImpSel=new Set();
   lancImpList.forEach((c,i)=>{if(!existentes.has(c.modelo))lancImpSel.add(i);});
   renderImpLancLista(existentes);
