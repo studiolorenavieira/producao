@@ -113,6 +113,12 @@ tr:hover td{background:rgba(255,255,255,.015);}
 .prog-bar{flex:1;height:3px;background:var(--s3);border-radius:2px;overflow:hidden;min-width:60px;}
 .prog-fill{height:100%;border-radius:2px;}
 .prog-pct{font-size:10px;color:var(--t2);min-width:28px;}
+.lanc-sel-bar{display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(232,197,71,.07);border-top:1px solid rgba(232,197,71,.18);flex-wrap:wrap;}
+.lote-row{padding:9px 0;border-bottom:1px solid var(--bd);}
+.lote-row:last-child{border-bottom:none;}
+.lote-main{display:flex;align-items:center;gap:10px;}
+.lote-obs-wrap{display:none;padding:6px 0 2px 0;}
+.lote-obs-wrap.open{display:block;}
 .login-screen{display:none;position:fixed;inset:0;background:var(--bg);z-index:500;align-items:center;justify-content:center;}
 .login-screen.show{display:flex;}
 .login-box{background:var(--s1);border:1px solid var(--bd);border-radius:16px;padding:36px;width:100%;max-width:380px;}
@@ -384,12 +390,13 @@ tr:hover td{background:rgba(255,255,255,.015);}
   </div>
   <div class="card0"><div class="tw"><table style="min-width:820px">
     <thead><tr>
+      <th style="width:30px"><input type="checkbox" id="lanc-chk-all" onchange="lancCheckAll(this.checked)" style="accent-color:var(--yw);width:14px;height:14px;cursor:pointer"></th>
       <th style="width:30px"></th>
       <th>REF</th><th>Modelo</th><th>Coleção</th>
       <th>Total</th><th>Lançado</th><th>A Lançar</th>
       <th>Status</th><th>Último Lanç.</th><th></th>
     </tr></thead>
-    <tbody id="tb-lanc"><tr><td colspan="10" class="nd"><span class="sp"></span></td></tr></tbody>
+    <tbody id="tb-lanc"><tr><td colspan="11" class="nd"><span class="sp"></span></td></tr></tbody>
   </table></div></div>
 </div>
 
@@ -663,11 +670,12 @@ tr:hover td{background:rgba(255,255,255,.015);}
 <div class="mo" id="mo-lanc-imp">
   <div class="md" style="max-width:580px">
     <div class="md-t">Importar do Acabamento</div>
-    <div style="font-size:11px;color:var(--t2);margin-bottom:10px">Modelos com status <b style="color:var(--gn)">Concluído / Pago</b> — existentes não serão sobrescritos.</div>
-    <div style="display:flex;gap:8px;margin-bottom:10px">
+    <div style="font-size:11px;color:var(--t2);margin-bottom:10px">Modelos com facção ou acabamento pagos — existentes não serão sobrescritos.</div>
+    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+      <input type="text" id="li-srch" placeholder="Buscar modelo..." oninput="filtrarImpLanc()" style="background:var(--s2);border:1px solid var(--bd);border-radius:6px;color:var(--tx);font-family:'Inter',sans-serif;font-size:12px;padding:6px 10px;outline:none;flex:1;min-width:140px">
       <button class="btn bg bsm" onclick="impLancToggle(true)">Selecionar todos</button>
       <button class="btn bg bsm" onclick="impLancToggle(false)">Nenhum</button>
-      <span id="li-cnt" style="font-size:11px;color:var(--t2);align-self:center;margin-left:4px"></span>
+      <span id="li-cnt" style="font-size:11px;color:var(--t2);align-self:center"></span>
     </div>
     <div id="li-lista" style="max-height:320px;overflow-y:auto;border:1px solid var(--bd);border-radius:6px;padding:0 10px">
       <div class="nd"><span class="sp"></span>Buscando...</div>
@@ -705,6 +713,25 @@ tr:hover td{background:rgba(255,255,255,.015);}
     <div class="md-f">
       <button class="btn bg" onclick="fecharModal('mo-lanc-del')">Cancelar</button>
       <button class="btn br" onclick="confirmarDelLanc()">Remover</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL LANCAMENTO EM LOTE -->
+<div class="mo" id="mo-lanc-lote">
+  <div class="md" style="max-width:560px">
+    <div class="md-t" id="mll-title">Lançamento em Lote</div>
+    <div style="font-size:11px;color:var(--t2);margin-bottom:14px" id="mll-sub"></div>
+    <div class="fi" style="margin-bottom:14px">
+      <label>Data do Lançamento * <span style="color:var(--t3);font-weight:400">(aplicada a todos)</span></label>
+      <input type="date" id="ll-data">
+    </div>
+    <div style="font-size:10px;color:var(--t2);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:8px">Quantidade por modelo</div>
+    <div id="ll-lista" style="max-height:340px;overflow-y:auto;border:1px solid var(--bd);border-radius:6px;padding:0 12px"></div>
+    <div id="ll-msg"></div>
+    <div class="md-f">
+      <button class="btn bg" onclick="fecharModal('mo-lanc-lote')">Cancelar</button>
+      <button class="btn by" id="ll-btn" onclick="salvarLoteLanc()">Registrar</button>
     </div>
   </div>
 </div>
@@ -2286,6 +2313,445 @@ async function fazerLogout(){
 // ===== LANCAMENTOS =====
 let lancMods=[], lancEvts={}, lancEditId=null, lancDelId=null;
 let lancImpList=[], lancImpSel=new Set();
+let lancSelIds=new Set(); // selecionados para lançamento em lote
+let lancEditEvtId=null;   // evento sendo editado (null=novo)
+
+async function loadLancamentos(){
+  try{
+    const[mods,evts]=await Promise.all([
+      db('lanc_modelos?select=*&order=colecao_atual.asc,modelo.asc'),
+      db('lanc_eventos?select=*&order=data.asc')
+    ]);
+    lancMods=mods; lancEvts={};
+    evts.forEach(e=>{if(!lancEvts[e.modelo_id])lancEvts[e.modelo_id]=[];lancEvts[e.modelo_id].push(e);});
+    lancSelIds=new Set();
+    atualizarFiltrosLanc();renderLanc();renderSumLanc();
+  }catch(e){toast('Erro lançamentos: '+e.message,'err');}
+}
+
+function getLancEvs(id){return lancEvts[id]||[];}
+function getLancado(m){return getLancEvs(m.id).reduce((s,e)=>s+e.qtd,0);}
+function getLancStatus(m){
+  const l=getLancado(m);
+  if(l===0)return'Pendente';
+  if(l>=m.qtd_total)return'Completo';
+  return'Parcial';
+}
+function fmtLD(d){if(!d)return'—';const[y,mo,dy]=d.split('-');return dy+'/'+mo+'/'+y;}
+
+function renderSumLanc(){
+  const pend=lancMods.filter(m=>getLancStatus(m)==='Pendente').length;
+  const parc=lancMods.filter(m=>getLancStatus(m)==='Parcial').length;
+  const comp=lancMods.filter(m=>getLancStatus(m)==='Completo').length;
+  const alc=lancMods.reduce((s,m)=>s+Math.max(0,m.qtd_total-getLancado(m)),0);
+  document.getElementById('ls-tot').textContent=lancMods.length||'0';
+  document.getElementById('ls-pend').textContent=pend||'0';
+  document.getElementById('ls-parc').textContent=parc||'0';
+  document.getElementById('ls-comp').textContent=comp||'0';
+  document.getElementById('ls-alc').textContent=alc||'0';
+}
+
+function atualizarFiltrosLanc(){
+  const cols=[...new Set(lancMods.map(m=>m.colecao_atual||m.colecao_original||'').filter(Boolean))].sort();
+  const sc=document.getElementById('lf-col');const cv=sc.value;
+  sc.innerHTML='<option value="">Todas as coleções</option>'+cols.map(c=>`<option${c===cv?' selected':''} value="${c}">${c}</option>`).join('');
+  const meses=new Set();
+  Object.values(lancEvts).flat().forEach(e=>{
+    if(e.data){const d=new Date(e.data+'T12:00');meses.add(d.getFullYear()+'-'+(d.getMonth()+1).toString().padStart(2,'0'));}
+  });
+  const sm=document.getElementById('lf-mes');const mv=sm.value;
+  const MESES=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  sm.innerHTML='<option value="">Todos os meses de lançamento</option>'+[...meses].sort().reverse().map(m=>{
+    const[y,mo]=m.split('-');return`<option${m===mv?' selected':''} value="${m}">${MESES[+mo-1]}/${y}</option>`;
+  }).join('');
+}
+
+function renderLanc(){
+  const q=(document.getElementById('lf-srch').value||'').toLowerCase();
+  const fc=document.getElementById('lf-col').value;
+  const fs=document.getElementById('lf-st').value;
+  const fm=document.getElementById('lf-mes').value;
+  let rows=lancMods.map(m=>{
+    const evs=getLancEvs(m.id).slice().sort((a,b)=>a.data.localeCompare(b.data));
+    const lanc=evs.reduce((s,e)=>s+e.qtd,0);
+    const aLanc=Math.max(0,m.qtd_total-lanc);
+    const status=getLancStatus(m);
+    const ultimo=evs.length?evs.slice().sort((a,b)=>b.data.localeCompare(a.data))[0].data:null;
+    return{...m,lanc,aLanc,status,ultimo,_evs:evs};
+  });
+  if(q)rows=rows.filter(r=>(r.modelo||'').toLowerCase().includes(q)||(r.ref||'').toLowerCase().includes(q));
+  if(fc)rows=rows.filter(r=>(r.colecao_atual||r.colecao_original||'')===fc);
+  if(fs)rows=rows.filter(r=>r.status===fs);
+  if(fm)rows=rows.filter(r=>r._evs.some(e=>{
+    if(!e.data)return false;
+    const d=new Date(e.data+'T12:00');
+    return(d.getFullYear()+'-'+(d.getMonth()+1).toString().padStart(2,'0'))===fm;
+  }));
+  document.getElementById('lf-info').textContent=rows.length+' modelo'+(rows.length!==1?'s':'');
+  if(!rows.length){
+    document.getElementById('tb-lanc').innerHTML='<tr><td colspan="11" class="nd">Nenhum modelo encontrado.</td></tr>';
+    renderSelBarLanc();return;
+  }
+  const chipSt=s=>s==='Completo'?'<span class="chip cg">Completo</span>':s==='Parcial'?'<span class="chip co">Parcial</span>':'<span class="chip cr">Pendente</span>';
+  const barC=s=>s==='Completo'?'var(--gn)':s==='Parcial'?'var(--or)':'var(--rd)';
+  let html='';
+  rows.forEach(r=>{
+    const pct=r.qtd_total>0?Math.min(100,Math.round(r.lanc/r.qtd_total*100)):0;
+    const col=r.colecao_atual||r.colecao_original||'—';
+    const eid='lev-'+r.id;
+    const sn=r.modelo.replace(/'/g,"\\'");
+    const chk=lancSelIds.has(r.id);
+    html+=`<tr>
+      <td style="width:30px"><input type="checkbox" ${chk?'checked':''} onchange="toggleLancSel('${r.id}',this.checked)" style="accent-color:var(--yw);width:14px;height:14px;cursor:pointer"></td>
+      <td><button class="xbtn" onclick="toggleLancEv('${eid}',this)">+</button></td>
+      <td style="font-size:11px;color:var(--t2)">${r.ref||'—'}</td>
+      <td style="font-weight:700;color:var(--yw)">${r.modelo}</td>
+      <td>
+        <span style="font-size:12px">${col}</span>
+        <button class="btn bg bsm" style="font-size:10px;padding:2px 7px;margin-left:6px" onclick="abrirColLanc('${r.id}')">&#9998;</button>
+      </td>
+      <td style="font-weight:700">${r.qtd_total}</td>
+      <td style="font-weight:700;color:${r.lanc>0?'var(--gn)':'var(--t3)'}">${r.lanc||'—'}</td>
+      <td style="color:${r.aLanc>0?'var(--or)':'var(--t3)'}">${r.aLanc||'—'}</td>
+      <td>
+        ${chipSt(r.status)}
+        <div class="prog-wrap">
+          <div class="prog-bar"><div class="prog-fill" style="width:${pct}%;background:${barC(r.status)}"></div></div>
+          <span class="prog-pct">${pct}%</span>
+        </div>
+      </td>
+      <td style="font-size:12px;color:var(--t2)">${fmtLD(r.ultimo)}</td>
+      <td style="white-space:nowrap">
+        <button class="btn bgr bsm" onclick="abrirAddLanc('${r.id}','${sn}',${r.aLanc})">+ Lançar</button>
+        <button class="btn br bsm" style="margin-left:4px" onclick="delModLanc('${r.id}','${sn}')">&#10005;</button>
+      </td>
+    </tr>
+    <tr class="ev-row" id="${eid}"><td colspan="11"><div class="ev-inner">
+      ${r._evs.length===0
+        ?'<div style="font-size:11px;color:var(--t3);padding:6px 0">Nenhum lançamento registrado ainda.</div>'
+        :r._evs.slice().sort((a,b)=>b.data.localeCompare(a.data)).map(e=>`
+          <div class="ev-item">
+            <span class="ev-date">${fmtLD(e.data)}</span>
+            <span class="ev-qtd">${e.qtd} pcs</span>
+            <span class="ev-obs">${e.obs||''}</span>
+            <button class="btn bg bsm" style="font-size:10px" onclick="abrirEditLancEvt('${e.id}','${e.data}',${e.qtd},'${(e.obs||'').replace(/'/g,"\\'")}')">&#9998;</button>
+            <button class="btn br bsm" onclick="abrirDelLanc('${e.id}','${fmtLD(e.data)}',${e.qtd})">&#10005;</button>
+          </div>`).join('')
+      }
+      <div style="margin-top:10px">
+        <button class="btn bgr bsm" onclick="abrirAddLanc('${r.id}','${sn}',${r.aLanc})">+ Novo lançamento</button>
+      </div>
+    </div></td></tr>`;
+  });
+  document.getElementById('tb-lanc').innerHTML=html;
+  renderSelBarLanc();
+}
+
+// Barra de seleção em lote
+function renderSelBarLanc(){
+  const existing=document.getElementById('lanc-sel-bar');
+  if(existing)existing.remove();
+  if(lancSelIds.size===0)return;
+  const wrap=document.querySelector('#pg-lancamentos .card0');
+  if(!wrap)return;
+  const bar=document.createElement('div');
+  bar.id='lanc-sel-bar';
+  bar.className='lanc-sel-bar';
+  bar.innerHTML=`<span style="font-size:12px;color:var(--yw);font-weight:600">${lancSelIds.size} modelo${lancSelIds.size!==1?'s':''} selecionado${lancSelIds.size!==1?'s':''}</span>
+    <button class="btn by bsm" onclick="abrirLoteLanc()">&#9654; Lançar selecionados</button>
+    <button class="btn bg bsm" onclick="limparSelLanc()">Limpar seleção</button>`;
+  wrap.appendChild(bar);
+}
+
+function toggleLancSel(id,checked){
+  if(checked)lancSelIds.add(id);else lancSelIds.delete(id);
+  renderSelBarLanc();
+}
+function limparSelLanc(){lancSelIds=new Set();renderLanc();}
+
+function toggleLancEv(id,btn){
+  const el=document.getElementById(id);
+  if(el.classList.contains('open')){el.classList.remove('open');btn.textContent='+';}
+  else{el.classList.add('open');btn.textContent='\u2212';}
+}
+
+// LANÇAMENTO INDIVIDUAL
+function abrirAddLanc(modeloId,nome,aLanc){
+  lancEditId=modeloId; lancEditEvtId=null;
+  document.getElementById('mla-title').textContent='Registrar Lançamento';
+  document.getElementById('mla-sub').textContent=nome+(aLanc>0?' \u2014 '+aLanc+' pcs a lançar':'');
+  document.getElementById('la-data').value=hoje();
+  document.getElementById('la-qtd').value='';
+  document.getElementById('la-obs').value='';
+  document.getElementById('la-msg').innerHTML='';
+  const btn=document.getElementById('la-btn');btn.disabled=false;btn.textContent='Registrar';
+  abrirModal('mo-lanc-add');
+  setTimeout(()=>document.getElementById('la-qtd').focus(),120);
+}
+
+// EDITAR EVENTO EXISTENTE
+function abrirEditLancEvt(evId,data,qtd,obs){
+  lancEditEvtId=evId; lancEditId=null;
+  document.getElementById('mla-title').textContent='Editar Lançamento';
+  document.getElementById('mla-sub').textContent='';
+  document.getElementById('la-data').value=data;
+  document.getElementById('la-qtd').value=qtd;
+  document.getElementById('la-obs').value=obs||'';
+  document.getElementById('la-msg').innerHTML='';
+  const btn=document.getElementById('la-btn');btn.disabled=false;btn.textContent='Salvar';
+  abrirModal('mo-lanc-add');
+  setTimeout(()=>document.getElementById('la-data').focus(),120);
+}
+
+async function salvarLancEvt(){
+  const data=document.getElementById('la-data').value;
+  const qtd=parseInt(document.getElementById('la-qtd').value)||0;
+  const obs=document.getElementById('la-obs').value.trim();
+  if(!data){document.getElementById('la-msg').innerHTML='<div style="color:var(--rd);font-size:11px;margin-top:6px">Informe a data.</div>';return;}
+  if(!qtd){document.getElementById('la-msg').innerHTML='<div style="color:var(--rd);font-size:11px;margin-top:6px">Informe a quantidade.</div>';return;}
+  const btn=document.getElementById('la-btn');btn.disabled=true;btn.textContent='Salvando...';
+  try{
+    if(lancEditEvtId){
+      // Editar evento existente
+      await db('lanc_eventos?id=eq.'+lancEditEvtId,'PATCH',{data,qtd,obs:obs||null});
+    } else {
+      // Novo evento
+      await db('lanc_eventos','POST',{modelo_id:lancEditId,data,qtd,obs:obs||null});
+    }
+    await loadLancamentos();fecharModal('mo-lanc-add');
+  }catch(e){
+    document.getElementById('la-msg').innerHTML='<div style="color:var(--rd);font-size:11px;margin-top:6px">'+e.message+'</div>';
+    btn.disabled=false;btn.textContent=lancEditEvtId?'Salvar':'Registrar';
+  }
+}
+
+// LANÇAMENTO EM LOTE
+function abrirLoteLanc(){
+  if(!lancSelIds.size)return;
+  const selecionados=lancMods.filter(m=>lancSelIds.has(m.id));
+  document.getElementById('mll-title').textContent='Lançamento em Lote';
+  document.getElementById('mll-sub').textContent=selecionados.length+' modelo'+(selecionados.length!==1?'s':'')+' selecionado'+(selecionados.length!==1?'s':'');
+  document.getElementById('ll-data').value=hoje();
+  document.getElementById('ll-msg').innerHTML='';
+  const btn=document.getElementById('ll-btn');btn.disabled=false;btn.textContent='Registrar';
+  document.getElementById('ll-lista').innerHTML=selecionados.map((m,i)=>{
+    const aLanc=Math.max(0,m.qtd_total-getLancado(m));
+    return`<div class="lote-row">
+      <div class="lote-main">
+        <span style="flex:1;font-size:12px;font-weight:600;color:var(--yw)">${m.modelo}</span>
+        <span style="font-size:10px;color:var(--t2);margin-right:8px">${aLanc>0?aLanc+' a lançar':''}</span>
+        <input type="number" id="ll-qtd-${i}" data-id="${m.id}" min="1" placeholder="Qtd" value="${aLanc||''}"
+          style="background:var(--s2);border:1px solid var(--bd);border-radius:6px;color:var(--tx);font-family:'Inter',sans-serif;font-size:13px;padding:6px 8px;width:80px;outline:none;text-align:center">
+        <button onclick="toggleLoteObs('obs-${i}')" title="Adicionar observação"
+          style="background:none;border:1px solid var(--bd);color:var(--t2);width:26px;height:26px;border-radius:4px;cursor:pointer;font-size:14px;margin-left:6px;flex-shrink:0;font-weight:700">+</button>
+      </div>
+      <div class="lote-obs-wrap" id="obs-${i}">
+        <input type="text" id="ll-obs-${i}" placeholder="Observação para este modelo..."
+          style="background:var(--s2);border:1px solid var(--bd);border-radius:6px;color:var(--tx);font-family:'Inter',sans-serif;font-size:12px;padding:6px 9px;width:100%;outline:none;margin-top:2px">
+      </div>
+    </div>`;
+  }).join('');
+  abrirModal('mo-lanc-lote');
+  setTimeout(()=>document.getElementById('ll-data').focus(),120);
+}
+
+function toggleLoteObs(id){
+  const el=document.getElementById(id);
+  el.classList.toggle('open');
+  if(el.classList.contains('open'))el.querySelector('input').focus();
+}
+
+async function salvarLoteLanc(){
+  const data=document.getElementById('ll-data').value;
+  if(!data){document.getElementById('ll-msg').innerHTML='<div style="color:var(--rd);font-size:11px;margin-top:6px">Informe a data.</div>';return;}
+  const selecionados=lancMods.filter(m=>lancSelIds.has(m.id));
+  const eventos=[];
+  for(let i=0;i<selecionados.length;i++){
+    const qtd=parseInt(document.getElementById('ll-qtd-'+i)?.value)||0;
+    const obs=(document.getElementById('ll-obs-'+i)?.value||'').trim();
+    if(!qtd){document.getElementById('ll-msg').innerHTML='<div style="color:var(--rd);font-size:11px;margin-top:6px">Informe a quantidade para "'+selecionados[i].modelo+'".</div>';return;}
+    eventos.push({modelo_id:selecionados[i].id,data,qtd,obs:obs||null});
+  }
+  const btn=document.getElementById('ll-btn');btn.disabled=true;btn.textContent='Salvando...';
+  try{
+    await db('lanc_eventos','POST',eventos);
+    await loadLancamentos();fecharModal('mo-lanc-lote');
+    toast(eventos.length+' lançamentos registrados!');
+  }catch(e){
+    document.getElementById('ll-msg').innerHTML='<div style="color:var(--rd);font-size:11px;margin-top:6px">'+e.message+'</div>';
+    btn.disabled=false;btn.textContent='Registrar';
+  }
+}
+
+// EDITAR COLEÇÃO
+function abrirColLanc(modeloId){
+  lancEditId=modeloId;
+  const m=lancMods.find(x=>x.id===modeloId);
+  document.getElementById('mlc-sub').textContent=m.modelo;
+  document.getElementById('lc-orig').value=m.colecao_original||'';
+  document.getElementById('lc-nova').value=m.colecao_atual||m.colecao_original||'';
+  document.getElementById('lc-msg').innerHTML='';
+  abrirModal('mo-lanc-col');
+  setTimeout(()=>document.getElementById('lc-nova').focus(),120);
+}
+async function salvarColLanc(){
+  const nova=document.getElementById('lc-nova').value.trim();
+  if(!nova){document.getElementById('lc-msg').innerHTML='<div style="color:var(--rd);font-size:11px;margin-top:6px">Informe a coleção.</div>';return;}
+  try{
+    await db('lanc_modelos?id=eq.'+lancEditId,'PATCH',{colecao_atual:nova});
+    await loadLancamentos();fecharModal('mo-lanc-col');
+  }catch(e){document.getElementById('lc-msg').innerHTML='<div style="color:var(--rd);font-size:11px;margin-top:6px">'+e.message+'</div>';}
+}
+
+// REMOVER EVENTO — peças voltam automaticamente para "A Lançar"
+function abrirDelLanc(evId,data,qtd){
+  lancDelId=evId;
+  document.getElementById('ld-sub').textContent='Remover lançamento de '+qtd+' pcs em '+data+'? As peças voltam para "A Lançar" automaticamente.';
+  document.getElementById('ld-msg').innerHTML='';
+  abrirModal('mo-lanc-del');
+}
+async function confirmarDelLanc(){
+  try{
+    await db('lanc_eventos?id=eq.'+lancDelId,'DELETE');
+    await loadLancamentos();fecharModal('mo-lanc-del');
+  }catch(e){document.getElementById('ld-msg').innerHTML='<div style="color:var(--rd);font-size:11px;margin-top:6px">'+e.message+'</div>';}
+}
+
+// REMOVER MODELO (volta para fora do módulo de lançamentos)
+function delModLanc(id,nome){
+  if(!confirm('Remover "'+nome+'" dos Lançamentos?\n\nOs eventos de lançamento registrados serão apagados. O modelo continua no sistema de produção normalmente.'))return;
+  db('lanc_modelos?id=eq.'+id,'DELETE').then(()=>loadLancamentos()).catch(e=>toast('Erro: '+e.message,'err'));
+}
+
+// IMPORTAR DO ACABAMENTO + FACÇÃO
+let lancImpListFull=[]; // lista completa para filtro
+
+async function abrirImpLanc(){
+  lancImpList=[];lancImpListFull=[];lancImpSel=new Set();
+  document.getElementById('li-lista').innerHTML='<div class="nd"><span class="sp"></span>Buscando...</div>';
+  document.getElementById('li-msg').innerHTML='';
+  document.getElementById('li-btn').disabled=true;
+  document.getElementById('li-btn').textContent='Importar';
+  if(document.getElementById('li-srch'))document.getElementById('li-srch').value='';
+  abrirModal('mo-lanc-imp');
+  try{
+    const [lotesRows, acabRows] = await Promise.all([
+      db('lotes_faccao?select=modelo,colecao,qtd_enviada&status=in.(Conclu%C3%ADdo%20%2F%20Pago,Conclu%C3%ADdo%20%2F%20Pag.%20Parcial)'),
+      db('acabamentos?select=modelo,colecao,qtd_pecas&status=eq.Conclu%C3%ADdo%20%2F%20Pago')
+    ]);
+    const map={};
+    lotesRows.forEach(r=>{
+      const nome=(r.modelo||'').trim();if(!nome)return;
+      if(!map[nome])map[nome]={modelo:nome,colecao:(r.colecao||'').trim(),qtd:0,fonte:'Facção'};
+      map[nome].qtd+=(r.qtd_enviada||0);
+    });
+    acabRows.forEach(r=>{
+      const nome=(r.modelo||'').trim();if(!nome)return;
+      if(!map[nome]){map[nome]={modelo:nome,colecao:(r.colecao||'').trim(),qtd:0,fonte:'Acabamento'};}
+      else{map[nome].fonte='Fac+Acab';}
+      map[nome].qtd_acab=(map[nome].qtd_acab||0)+(r.qtd_pecas||0);
+    });
+    Object.values(map).forEach(m=>{if(m.qtd_acab)m.qtd=m.qtd_acab;});
+    lancImpListFull=Object.values(map).sort((a,b)=>a.modelo.localeCompare(b.modelo));
+    lancImpList=[...lancImpListFull];
+    if(!lancImpList.length){
+      document.getElementById('li-lista').innerHTML='<div class="nd">Nenhum modelo disponível para importar.</div>';
+      return;
+    }
+    const existentes=new Set(lancMods.map(m=>m.modelo));
+    lancImpList.forEach((_,i)=>{if(!existentes.has(lancImpList[i].modelo))lancImpSel.add(i);});
+    renderImpLancLista(existentes);
+  }catch(e){
+    document.getElementById('li-lista').innerHTML='<div class="nd" style="color:var(--rd)">Erro: '+e.message+'</div>';
+  }
+}
+
+function filtrarImpLanc(){
+  const q=(document.getElementById('li-srch').value||'').toLowerCase();
+  const existentes=new Set(lancMods.map(m=>m.modelo));
+  if(!q){lancImpList=[...lancImpListFull];}
+  else{lancImpList=lancImpListFull.filter(c=>c.modelo.toLowerCase().includes(q));}
+  // Reconstrói índices de seleção para a lista filtrada
+  lancImpSel=new Set();
+  lancImpList.forEach((c,i)=>{if(!existentes.has(c.modelo))lancImpSel.add(i);});
+  renderImpLancLista(existentes);
+}
+
+function renderImpLancLista(existentes){
+  if(!existentes)existentes=new Set(lancMods.map(m=>m.modelo));
+  const fonteBadge=f=>f==='Fac+Acab'?'<span class="chip cb" style="font-size:9px">Fac+Acab</span>':
+    f==='Acabamento'?'<span class="chip co" style="font-size:9px">Acabamento</span>':
+    '<span class="chip cgr" style="font-size:9px">Facção</span>';
+  document.getElementById('li-lista').innerHTML=lancImpList.map((c,i)=>{
+    const ex=existentes.has(c.modelo);
+    return`<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--bd);font-size:12px">
+      <input type="checkbox" id="lic-${i}" ${lancImpSel.has(i)?'checked':''} ${ex?'disabled':''} onchange="toggleImpLanc(${i})" style="accent-color:var(--yw);width:14px;height:14px;flex-shrink:0;cursor:pointer">
+      <span style="flex:1;font-weight:600;color:${ex?'var(--t3)':'var(--tx)'}">${c.modelo}</span>
+      <span style="color:var(--t2);font-size:11px;min-width:80px">${c.colecao}</span>
+      ${fonteBadge(c.fonte)}
+      <span style="color:var(--yw);font-weight:700;min-width:55px;text-align:right">${c.qtd} pcs</span>
+      ${ex?'<span class="chip cgr" style="font-size:9px">já existe</span>':''}
+    </div>`;
+  }).join('');
+  atualizarCntImpLanc();
+}
+
+function toggleImpLanc(i){lancImpSel.has(i)?lancImpSel.delete(i):lancImpSel.add(i);atualizarCntImpLanc();}
+function impLancToggle(check){
+  const ex=new Set(lancMods.map(m=>m.modelo));
+  lancImpSel=new Set();
+  if(check)lancImpList.forEach((_,i)=>{if(!ex.has(lancImpList[i].modelo))lancImpSel.add(i);});
+  lancImpList.forEach((_,i)=>{const chk=document.getElementById('lic-'+i);if(chk&&!chk.disabled)chk.checked=lancImpSel.has(i);});
+  atualizarCntImpLanc();
+}
+function atualizarCntImpLanc(){
+  const n=lancImpSel.size;
+  document.getElementById('li-cnt').textContent=n+' selecionado'+(n!==1?'s':'');
+  const btn=document.getElementById('li-btn');
+  btn.disabled=n===0;
+  btn.textContent=n>0?'Importar '+n+' modelo'+(n!==1?'s':''):'Importar';
+}
+async function confirmarImpLanc(){
+  const btn=document.getElementById('li-btn');btn.disabled=true;btn.textContent='Importando...';
+  try{
+    const ins=[...lancImpSel].map(i=>({
+      modelo:lancImpList[i].modelo,
+      colecao_original:lancImpList[i].colecao||null,
+      colecao_atual:lancImpList[i].colecao||null,
+      qtd_total:lancImpList[i].qtd
+    }));
+    await db('lanc_modelos','POST',ins);
+    await loadLancamentos();fecharModal('mo-lanc-imp');
+    toast('Importado com sucesso!');
+  }catch(e){
+    document.getElementById('li-msg').innerHTML='<div style="color:var(--rd);font-size:11px;margin-top:6px">'+e.message+'</div>';
+    btn.disabled=false;btn.textContent='Tentar novamente';
+  }
+}
+
+// MANUAL
+function abrirManualLanc(){
+  ['lm-ref','lm-nome','lm-col','lm-qtd'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('lm-msg').innerHTML='';
+  abrirModal('mo-lanc-man');
+  setTimeout(()=>document.getElementById('lm-nome').focus(),120);
+}
+async function salvarManualLanc(){
+  const ref=document.getElementById('lm-ref').value.trim();
+  const nome=document.getElementById('lm-nome').value.trim();
+  const col=document.getElementById('lm-col').value.trim();
+  const qtd=parseInt(document.getElementById('lm-qtd').value)||0;
+  if(!nome){document.getElementById('lm-msg').innerHTML='<div style="color:var(--rd);font-size:11px;margin-top:6px">Informe o nome.</div>';return;}
+  if(!col){document.getElementById('lm-msg').innerHTML='<div style="color:var(--rd);font-size:11px;margin-top:6px">Informe a coleção.</div>';return;}
+  if(!qtd){document.getElementById('lm-msg').innerHTML='<div style="color:var(--rd);font-size:11px;margin-top:6px">Informe a quantidade.</div>';return;}
+  try{
+    await db('lanc_modelos','POST',{ref:ref||null,modelo:nome,colecao_original:col,colecao_atual:col,qtd_total:qtd});
+    await loadLancamentos();fecharModal('mo-lanc-man');toast('Modelo adicionado!');
+  }catch(e){
+    const msg=e.message.includes('unique')?'Modelo já cadastrado.':e.message;
+    document.getElementById('lm-msg').innerHTML='<div style="color:var(--rd);font-size:11px;margin-top:6px">'+msg+'</div>';
+  }
+}
 
 async function loadLancamentos(){
   try{
@@ -2620,6 +3086,16 @@ async function salvarManualLanc(){
     const msg=e.message.includes('unique')?'Modelo já cadastrado.':e.message;
     document.getElementById('lm-msg').innerHTML='<div style="color:var(--rd);font-size:11px;margin-top:6px">'+msg+'</div>';
   }
+}
+
+function lancCheckAll(checked){
+  const rows=document.querySelectorAll('#tb-lanc input[type="checkbox"]');
+  rows.forEach(chk=>{
+    chk.checked=checked;
+    const id=chk.getAttribute('onchange')?.match(/'([^']+)'/)?.[1];
+    if(id){if(checked)lancSelIds.add(id);else lancSelIds.delete(id);}
+  });
+  renderSelBarLanc();
 }
 
 // INIT — não carrega nada, espera login
