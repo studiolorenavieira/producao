@@ -2631,20 +2631,28 @@ function delModLanc(id,nome){
 
 // IMPORTAR DO ACABAMENTO + FACÇÃO
 let lancImpListFull=[]; // lista completa para filtro
+let lancExistentes=new Set(); // modelos já cadastrados
 
 async function abrirImpLanc(){
-  lancImpList=[];lancImpListFull=[];lancImpSel=new Set();
+  lancImpList=[];lancImpListFull=[];lancImpSel=new Set();lancExistentes=new Set();
   document.getElementById('li-lista').innerHTML='<div class="nd"><span class="sp"></span>Buscando...</div>';
   document.getElementById('li-msg').innerHTML='';
   document.getElementById('li-btn').disabled=true;
   document.getElementById('li-btn').textContent='Importar';
   if(document.getElementById('li-srch'))document.getElementById('li-srch').value='';
+  if(document.getElementById('li-show-exist'))document.getElementById('li-show-exist').checked=false;
   abrirModal('mo-lanc-imp');
   try{
-    const [lotesRows, acabRows] = await Promise.all([
+    // Busca existentes + fontes em paralelo
+    const [lotesRows, acabRows, existRows] = await Promise.all([
       db('lotes_faccao?select=modelo,colecao,qtd_enviada&status=in.(Conclu%C3%ADdo%20%2F%20Pago,Conclu%C3%ADdo%20%2F%20Pag.%20Parcial)'),
-      db('acabamentos?select=modelo,colecao,qtd_pecas&status=eq.Conclu%C3%ADdo%20%2F%20Pago')
+      db('acabamentos?select=modelo,colecao,qtd_pecas&status=eq.Conclu%C3%ADdo%20%2F%20Pago'),
+      db('lanc_modelos?select=modelo')
     ]);
+
+    // Monta set de existentes direto do banco
+    existRows.forEach(r=>lancExistentes.add((r.modelo||'').trim()));
+
     const map={};
     lotesRows.forEach(r=>{
       const nome=(r.modelo||'').trim();if(!nome)return;
@@ -2963,98 +2971,6 @@ async function confirmarDelLanc(){
 function delModLanc(id,nome){
   if(!confirm('Remover "'+nome+'" e todos os seus lançamentos?'))return;
   db('lanc_modelos?id=eq.'+id,'DELETE').then(()=>loadLancamentos()).catch(e=>toast('Erro: '+e.message,'err'));
-}
-
-async function abrirImpLanc(){
-  lancImpList=[];lancImpSel=new Set();
-  document.getElementById('li-lista').innerHTML='<div class="nd"><span class="sp"></span>Buscando...</div>';
-  document.getElementById('li-msg').innerHTML='';
-  document.getElementById('li-btn').disabled=true;
-  document.getElementById('li-btn').textContent='Importar';
-  abrirModal('mo-lanc-imp');
-  try{
-    // Busca as duas fontes em paralelo
-    const [lotesRows, acabRows] = await Promise.all([
-      // Caminho 1: facção paga direto (sem acabamento)
-      db('lotes_faccao?select=modelo,colecao,qtd_enviada&status=in.(Conclu%C3%ADdo%20%2F%20Pago,Conclu%C3%ADdo%20%2F%20Pag.%20Parcial)'),
-      // Caminho 2: foi pro acabamento e acabamento foi pago
-      db('acabamentos?select=modelo,colecao,qtd_pecas&status=eq.Conclu%C3%ADdo%20%2F%20Pago')
-    ]);
-
-    const map={};
-
-    // Adiciona do lotes_faccao (caminho sem acabamento)
-    lotesRows.forEach(r=>{
-      const nome=(r.modelo||'').trim();if(!nome)return;
-      if(!map[nome])map[nome]={modelo:nome,colecao:(r.colecao||'').trim(),qtd:0,fonte:'Facção'};
-      map[nome].qtd+=(r.qtd_enviada||0);
-    });
-
-    // Adiciona/atualiza do acabamentos (caminho com acabamento)
-    // Se o modelo já existe via facção, usa a qtd do acabamento (mais precisa)
-    acabRows.forEach(r=>{
-      const nome=(r.modelo||'').trim();if(!nome)return;
-      if(!map[nome]){
-        map[nome]={modelo:nome,colecao:(r.colecao||'').trim(),qtd:0,fonte:'Acabamento'};
-      } else {
-        map[nome].fonte='Facção + Acabamento';
-      }
-      map[nome].qtd_acab=(map[nome].qtd_acab||0)+(r.qtd_pecas||0);
-    });
-
-    // Onde houver acabamento pago, usa a qtd do acabamento
-    Object.values(map).forEach(m=>{ if(m.qtd_acab) m.qtd=m.qtd_acab; });
-
-    lancImpList=Object.values(map).sort((a,b)=>a.modelo.localeCompare(b.modelo));
-    if(!lancImpList.length){
-      document.getElementById('li-lista').innerHTML='<div class="nd">Nenhum modelo disponível para importar.</div>';
-      return;
-    }
-    const existentes=new Set(lancMods.map(m=>m.modelo));
-    lancImpList.forEach((_,i)=>{if(!existentes.has(lancImpList[i].modelo))lancImpSel.add(i);});
-    renderImpLancLista(existentes);
-  }catch(e){
-    document.getElementById('li-lista').innerHTML='<div class="nd" style="color:var(--rd)">Erro: '+e.message+'</div>';
-  }
-}
-
-function renderImpLancLista(existentes){
-  if(!existentes)existentes=new Set(lancMods.map(m=>m.modelo));
-  document.getElementById('li-lista').innerHTML=lancImpList.map((c,i)=>{
-    const ex=existentes.has(c.modelo);
-    const fonteBadge=c.fonte==='Facção + Acabamento'
-      ?'<span class="chip cb" style="font-size:9px">Fac+Acab</span>'
-      :c.fonte==='Acabamento'
-      ?'<span class="chip co" style="font-size:9px">Acabamento</span>'
-      :'<span class="chip cgr" style="font-size:9px">Facção</span>';
-    return`<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--bd);font-size:12px">
-      <input type="checkbox" id="lic-${i}" ${lancImpSel.has(i)?'checked':''} ${ex?'disabled':''} onchange="toggleImpLanc(${i})" style="accent-color:var(--yw);width:14px;height:14px;flex-shrink:0;cursor:pointer">
-      <span style="flex:1;font-weight:600;color:${ex?'var(--t3)':'var(--tx)'}">${c.modelo}</span>
-      <span style="color:var(--t2);font-size:11px;min-width:80px">${c.colecao}</span>
-      ${fonteBadge}
-      <span style="color:var(--yw);font-weight:700;min-width:55px;text-align:right">${c.qtd} pcs</span>
-      ${ex?'<span class="chip cgr" style="font-size:9px">já existe</span>':''}
-    </div>`;
-  }).join('');
-  atualizarCntImpLanc();
-}
-
-function toggleImpLanc(i){lancImpSel.has(i)?lancImpSel.delete(i):lancImpSel.add(i);atualizarCntImpLanc();}
-
-function impLancToggle(check){
-  const ex=new Set(lancMods.map(m=>m.modelo));
-  lancImpSel=new Set();
-  if(check)lancImpList.forEach((_,i)=>{if(!ex.has(lancImpList[i].modelo))lancImpSel.add(i);});
-  lancImpList.forEach((_,i)=>{const chk=document.getElementById('lic-'+i);if(chk&&!chk.disabled)chk.checked=lancImpSel.has(i);});
-  atualizarCntImpLanc();
-}
-
-function atualizarCntImpLanc(){
-  const n=lancImpSel.size;
-  document.getElementById('li-cnt').textContent=n+' selecionado'+(n!==1?'s':'');
-  const btn=document.getElementById('li-btn');
-  btn.disabled=n===0;
-  btn.textContent=n>0?'Importar '+n+' modelo'+(n!==1?'s':''):'Importar';
 }
 
 async function confirmarImpLanc(){
