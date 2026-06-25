@@ -303,15 +303,18 @@ td{padding:9px 10px;white-space:nowrap;font-size:13px;}
 <div class="modal-overlay" id="modal-importar">
   <div class="modal modal-lg">
     <div class="modal-header">
-      <div class="modal-title" style="margin-bottom:4px">Selecionar produtos</div>
-      <div style="font-size:11px;color:var(--muted)" id="import-subtitle">Marque os produtos que deseja incluir na coleção.</div>
+      <div class="modal-title" style="margin-bottom:8px">Selecionar produtos</div>
+      <input type="text" id="import-search" class="input-text" placeholder="Buscar modelo..." oninput="filtrarImportLista()"
+        style="width:100%;margin-bottom:8px;font-size:12px;padding:7px 10px">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <span id="import-count-label" style="font-size:11px;color:var(--text)"></span>
+        <div style="display:flex;gap:12px">
+          <button class="import-ctrl-btn" onclick="toggleImportSelect(true)">Selecionar todos</button>
+          <button class="import-ctrl-btn" onclick="toggleImportSelect(false)">Nenhum</button>
+        </div>
+      </div>
     </div>
     <div class="modal-body">
-      <div class="import-ctrl">
-        <span id="import-count-label" style="color:var(--text)"></span>
-        <button class="import-ctrl-btn" onclick="toggleImportSelect(true)">Selecionar todos</button>
-        <button class="import-ctrl-btn" onclick="toggleImportSelect(false)">Nenhum</button>
-      </div>
       <div id="import-lista"></div>
     </div>
     <div class="modal-footer">
@@ -690,59 +693,96 @@ function parseProduzidosPeriodo(rows){
 }
 
 function abrirModalImportar(produtos){
+  // Ordena: primeiro palavra (tipo: Blusa, Calça...) depois nome completo
+  produtos.sort(function(a,b){
+    const ta=a.nome.split(' ')[0].toLowerCase(), tb=b.nome.split(' ')[0].toLowerCase();
+    if(ta!==tb)return ta<tb?-1:1;
+    return a.nome.toLowerCase()<b.nome.toLowerCase()?-1:a.nome.toLowerCase()>b.nome.toLowerCase()?1:0;
+  });
   _importProdutos=produtos;
-  document.getElementById('import-subtitle').textContent=
-    produtos.length+' produto'+(produtos.length!==1?'s':'')+' encontrado'+(produtos.length!==1?'s':'')+'. Marque os que deseja incluir na coleção.';
-  renderImportLista();
+  const el=document.getElementById('import-search');
+  if(el)el.value='';
+  atualizarContadorImport();
+  renderImportLista('');
   document.getElementById('modal-importar').classList.add('open');
+  setTimeout(function(){const s=document.getElementById('import-search');if(s)s.focus();},150);
 }
 function fecharModalImportar(){document.getElementById('modal-importar').classList.remove('open');_importProdutos=[];}
 
-function renderImportLista(){
-  document.getElementById('import-lista').innerHTML=_importProdutos.map((p,i)=>{
+function chkId(nome){return'imp-chk-'+nome.replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_]/g,'');}
+
+function filtrarImportLista(){
+  const q=(document.getElementById('import-search').value||'').toLowerCase().trim();
+  renderImportLista(q);
+}
+
+function renderImportLista(filtro){
+  filtro=filtro||'';
+  const lista=document.getElementById('import-lista');
+  const visibles=filtro?_importProdutos.filter(function(p){return p.nome.toLowerCase().includes(filtro);}):_importProdutos;
+
+  if(!visibles.length){
+    lista.innerHTML='<div style="padding:20px;text-align:center;color:var(--muted);font-size:12px">Nenhum produto encontrado para "'+filtro+'"</div>';
+    return;
+  }
+
+  // Agrupa por tipo (primeira palavra)
+  let lastTipo='';
+  lista.innerHTML=visibles.map(function(p){
+    const tipo=p.nome.split(' ')[0].toUpperCase();
+    const groupHeader=tipo!==lastTipo
+      ?'<div style="font-size:10px;font-weight:700;letter-spacing:1px;color:var(--gold);padding:8px 0 4px;border-bottom:1px solid rgba(201,169,110,0.12);margin-bottom:4px">'+tipo+'</div>'
+      :'';
+    lastTipo=tipo;
     const coresEntries=Object.entries(p.cores||{});
     const temCores=coresEntries.length>0;
-    const coresHtml=temCores
-      ?'<div class="import-cores-wrap" id="imp-cores-'+i+'">'+coresEntries.map(([cor,qtd])=>'<div class="import-cor-row"><span>'+cor+'</span><span>'+qtd+' pcs</span></div>').join('')+'</div>'
+    const cid=chkId(p.nome);
+    const cores=temCores
+      ?'<div class="import-cores-wrap" id="imp-cores-'+cid+'">'+coresEntries.map(function(e){return'<div class="import-cor-row"><span>'+e[0]+'</span><span>'+e[1]+' pcs</span></div>';}).join('')+'</div>'
       :'';
-    return '<div class="import-prod-wrap">'
+    const checked=document.getElementById(cid)?document.getElementById(cid).checked:true;
+    return groupHeader
+      +'<div class="import-prod-wrap">'
       +'<div class="import-prod-row">'
-      +'<input type="checkbox" id="imp-chk-'+i+'" checked onchange="atualizarContadorImport()">'
-      +(temCores?'<button class="import-expand" onclick="toggleImportCores('+i+')">+</button>':'<span style="width:20px;display:inline-block"></span>')
+      +'<input type="checkbox" id="'+cid+'" '+(checked?'checked':'')+" onchange=\"atualizarContadorImport()\">"
+      +(temCores?'<button class="import-expand" onclick="toggleImportCores(\'imp-cores-'+cid+'\')">+</button>':'<span style="width:20px;display:inline-block"></span>')
       +'<span class="import-prod-ref">'+p.ref+'</span>'
       +'<span class="import-prod-nome">'+p.nome+'</span>'
       +'<span class="import-prod-total">'+p.total+' pcs</span>'
-      +'</div>'+coresHtml+'</div>';
+      +'</div>'+cores+'</div>';
   }).join('');
   atualizarContadorImport();
 }
 
-function toggleImportCores(i){
-  const el=document.getElementById('imp-cores-'+i);
-  if(!el)return;
+function toggleImportCores(id){
+  const el=document.getElementById(id);if(!el)return;
   const btn=el.previousElementSibling&&el.previousElementSibling.querySelector('.import-expand');
   if(el.classList.contains('open')){el.classList.remove('open');if(btn)btn.textContent='+';}
   else{el.classList.add('open');if(btn)btn.textContent='-';}
 }
 function toggleImportSelect(check){
-  _importProdutos.forEach((_,i)=>{const chk=document.getElementById('imp-chk-'+i);if(chk)chk.checked=check;});
+  // aplica só nos visíveis (filtro ativo)
+  const q=(document.getElementById('import-search')&&document.getElementById('import-search').value||'').toLowerCase();
+  const visibles=q?_importProdutos.filter(function(p){return p.nome.toLowerCase().includes(q);}):_importProdutos;
+  visibles.forEach(function(p){const el=document.getElementById(chkId(p.nome));if(el)el.checked=check;});
   atualizarContadorImport();
 }
 function atualizarContadorImport(){
-  const sel=_importProdutos.filter((_,i)=>{const chk=document.getElementById('imp-chk-'+i);return chk&&chk.checked;}).length;
-  document.getElementById('import-count-label').textContent=sel+' de '+_importProdutos.length+' selecionado'+(sel!==1?'s':'');
+  const sel=_importProdutos.filter(function(p){const el=document.getElementById(chkId(p.nome));return el&&el.checked;}).length;
+  const lbl=document.getElementById('import-count-label');
+  if(lbl)lbl.textContent=sel+' de '+_importProdutos.length+' selecionado'+(sel!==1?'s':'');
   const btn=document.getElementById('btn-confirmar-import');
   if(btn)btn.textContent='Confirmar ('+sel+')';
 }
 async function confirmarImportacao(){
-  const selecionados=_importProdutos.filter((_,i)=>{const chk=document.getElementById('imp-chk-'+i);return chk&&chk.checked;});
+  const selecionados=_importProdutos.filter(function(p){const el=document.getElementById(chkId(p.nome));return el&&el.checked;});
   if(!selecionados.length){alert('Selecione ao menos um produto.');return;}
   const btn=document.getElementById('btn-confirmar-import');
   btn.disabled=true;btn.textContent='Salvando...';
   try{
     const existentes=_cache.produzidos||[];
-    const novosNomes=new Set(selecionados.map(p=>p.nome.toLowerCase()));
-    const mantidos=existentes.filter(e=>!novosNomes.has(e.nome.toLowerCase()));
+    const novosNomes=new Set(selecionados.map(function(p){return p.nome.toLowerCase();}));
+    const mantidos=existentes.filter(function(e){return!novosNomes.has(e.nome.toLowerCase());});
     await salvarProduzidos([...mantidos,...selecionados]);
     renderListaProduzidos();renderTable();updateSummary();renderAlertas();
     fecharModalImportar();
@@ -866,8 +906,8 @@ function aggregate(){
     const transfEnt=h.transfEnt||0;const transfSai=h.transfSai||0;
     const consRem=h.consRem||0;const consRet=h.consRet||0;
     const vendNorm=h.vendNorm||0;const vendBrind=h.vendBrind||0;
+    const resultado=h.res||0;
     const consigPend=consRem-consRet;
-    const resultado=tLoja+devol-vendNorm-vendBrind-bazarQtd-consigPend;
     const disponivel=resultado-compQtd;
     const movAlert=movEnt>0||(movSai>0&&movSai!==bazarQtd)||(bazarQtd>0&&movSai!==bazarQtd);
     const transfAlert=transfEnt>0||transfSai>0;
@@ -981,7 +1021,7 @@ function renderTable(){
     +th('vendBrind','Brinde')
     +th('consigPend','Consig. Pend.','Remessa - Retorno')
     +th('bazarQtd','Bazar','Transferencias para Bazar')
-    +th('resultado','Resultado','T.Loja + Devol - Venda - Brinde - Bazar - Consig.')
+    +th('resultado','Resultado','Estoque fisico atual (do DAPIC)')
     +th('compQtd','Comprometido','Separado, ainda nao vendido')
     +th('disponivel','Disponivel','Resultado - Comprometido')
     +th('perf','Performance','(Vendas + Consig.) / (T.Loja - Bazar - Brinde)')
