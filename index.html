@@ -1626,7 +1626,7 @@ async function loadHistPgto(){
 async function verDetalhePgto(pgtoId,data,total){
   try{
     const itens=await db('itens_pagamento?lote_pgto_id=eq.'+pgtoId+'&select=*');
-    const byTipo={'Corte':[],'Facção':[]};
+    const byTipo={'Corte':[],'Facção':[],'Acabamento':[]};
     itens.forEach(i=>(byTipo[i.tipo]||[]).push(i));
     let html='';
     for(const[tipo,its] of Object.entries(byTipo)){
