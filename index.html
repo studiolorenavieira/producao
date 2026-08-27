@@ -743,6 +743,19 @@ tr:hover td{background:rgba(255,255,255,.015);}
   </div>
 </div>
 
+<!-- MODAL REDEFINIR SENHA -->
+<div class="mo open" id="mo-reset" style="display:none">
+  <div class="md" style="max-width:400px">
+    <div class="md-t">Nova Senha</div>
+    <p style="font-size:12px;color:var(--t2);margin-bottom:16px">Digite sua nova senha para o sistema.</p>
+    <div class="fi" style="margin-bottom:12px"><label>Nova Senha *</label><input type="password" id="reset-senha" placeholder="mínimo 6 caracteres"></div>
+    <div class="fi"><label>Confirmar Senha *</label><input type="password" id="reset-confirma" placeholder="repita a senha"></div>
+    <div id="reset-msg" style="font-size:12px;color:var(--rd);margin-top:8px;min-height:16px"></div>
+    <div class="md-f">
+      <button class="btn by" onclick="salvarNovaSenha()" id="reset-btn">Salvar Nova Senha</button>
+    </div>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -3069,6 +3082,53 @@ function lancCheckAll(checked){
     if(id){if(checked)lancSelIds.add(id);else lancSelIds.delete(id);}
   });
   renderSelBarLanc();
+}
+
+// RECUPERAÇÃO DE SENHA — detecta token na URL
+(function(){
+  const hash = window.location.hash;
+  if(hash.includes('type=recovery') && hash.includes('access_token')){
+    const params = new URLSearchParams(hash.replace('#',''));
+    const token = params.get('access_token');
+    if(token){
+      window.__resetToken = token;
+      // Mostra o modal de redefinição
+      document.addEventListener('DOMContentLoaded', function(){
+        const mo = document.getElementById('mo-reset');
+        if(mo){ mo.style.display='flex'; mo.classList.add('open'); }
+      });
+      // Se DOM já carregou
+      if(document.readyState !== 'loading'){
+        const mo = document.getElementById('mo-reset');
+        if(mo){ mo.style.display='flex'; mo.classList.add('open'); }
+      }
+    }
+  }
+})();
+
+async function salvarNovaSenha(){
+  const senha = document.getElementById('reset-senha').value;
+  const confirma = document.getElementById('reset-confirma').value;
+  const msg = document.getElementById('reset-msg');
+  const btn = document.getElementById('reset-btn');
+  if(!senha || senha.length < 6){ msg.textContent='Senha deve ter no mínimo 6 caracteres.'; return; }
+  if(senha !== confirma){ msg.textContent='As senhas não coincidem.'; return; }
+  btn.disabled=true; btn.textContent='Salvando...';
+  try{
+    const r = await fetch(SB+'/auth/v1/user', {
+      method:'PUT',
+      headers:{'Content-Type':'application/json','apikey':KEY,'Authorization':'Bearer '+window.__resetToken},
+      body: JSON.stringify({password: senha})
+    });
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.message || d.msg || 'Erro ao salvar');
+    msg.style.color='var(--gn)';
+    msg.textContent='Senha alterada com sucesso! Redirecionando...';
+    setTimeout(()=>{ window.location.hash=''; window.location.reload(); }, 2000);
+  }catch(e){
+    msg.textContent='Erro: '+e.message;
+    btn.disabled=false; btn.textContent='Salvar Nova Senha';
+  }
 }
 
 // INIT — não carrega nada, espera login
