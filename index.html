@@ -642,7 +642,7 @@ function dataPrevRetorno(dataEnvio,prazo){
 }
 
 // ===== DASHBOARD =====
-async function loadDash(){
+async function loadDash(tent=0){
   const now=new Date();
   const mes=String(now.getMonth()+1).padStart(2,'0'),ano=now.getFullYear();
   document.getElementById('d-mes').textContent=now.toLocaleString('pt-BR',{month:'long'})+' '+ano;
@@ -722,7 +722,10 @@ async function loadDash(){
         <span class="chip cr">${Math.abs(diff)}d atraso</span>
       </div>`;
     }).join(''):'<div class="nd">Nenhum atraso</div>';
-  }catch(e){toast('Erro dashboard: '+e.message,'err');}
+  }catch(e){
+    if((e.message||'').includes('future')&&tent<3){await new Promise(r=>setTimeout(r,1500));return loadDash(tent+1);}
+    toast('Erro dashboard: '+e.message,'err');
+  }
 }
 
 // ===== CORTES =====
