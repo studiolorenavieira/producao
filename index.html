@@ -656,7 +656,7 @@ async function loadDash(tent=0){
     document.getElementById('d1').textContent=mc.reduce((s,c)=>s+(c.qtd_cortada||c.qtd_pretendida||0),0);
     document.getElementById('d2').textContent=lotes.filter(l=>l.status==='Aguardando Facção').length;
     document.getElementById('d3').textContent=lotes.filter(l=>{
-      if(['Concluído','Aguardando Facção'].includes(l.status))return false;
+      if(l.status.startsWith('Concluído')||l.status==='Aguardando Facção')return false;
       if(!l.data_envio||!l.prazo_dias)return false;
       const p=new Date(l.data_envio);p.setDate(p.getDate()+l.prazo_dias);
       return p<new Date();
