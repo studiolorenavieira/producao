@@ -1940,8 +1940,11 @@ async function executarFechamento(){
   const mes=document.getElementById('fech-mes').value;
   const salario=parseFloat(document.getElementById('fech-salario').value)||0;
   if(!mes||!salario){toast('Informe mês e salário','err');return;}
-
+  const btnF=document.querySelector('[onclick="executarFechamento()"]');
+  if(btnF){if(btnF.disabled)return;btnF.disabled=true;btnF.textContent='Processando...';}
   try{
+    const jaExiste=await db('fechamentos_mensais?mes=eq.'+mes+'&select=id,total_pecas,custo_por_peca');
+    if(jaExiste.length){const conf=confirm('Já existe um fechamento para '+mes+' ('+jaExiste[0].total_pecas+' peças).\nDeseja criar outro mesmo assim? O anterior NÃO será removido.');if(!conf){if(btnF){btnF.disabled=false;btnF.textContent='Fechar Mês';}return;}}
     // Busca cortes internos do mês não fechados
     const dtIni=mes+'-01';
     const dtFim=mes+'-31';
@@ -1975,6 +1978,7 @@ async function executarFechamento(){
     document.getElementById('fech-salario').value='';
     loadRel();
   }catch(e){toast('Erro: '+e.message,'err');}
+  finally{if(btnF){btnF.disabled=false;btnF.textContent='Fechar Mês';}}
 }
 
 async function loadFechamentos(){
