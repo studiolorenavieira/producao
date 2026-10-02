@@ -182,6 +182,18 @@ tr:hover td{background:rgba(255,255,255,.015);}
     <div class="stat"><div class="sl">A Pagar — Facções</div><div class="sv" style="color:var(--gn)" id="d5">—</div></div>
     <div class="stat"><div class="sl">Lotes Ativos</div><div class="sv" id="d6">—</div></div>
   </div>
+
+  <!-- RELATÓRIO POR LANÇAMENTO -->
+  <div class="card">
+    <div style="font-size:13px;font-weight:700;margin-bottom:14px">🚀 Relatório por Lançamento</div>
+    <div style="font-size:11px;color:var(--t2);margin-bottom:14px">Peças cortadas agrupadas pelo mês de lançamento planejado.</div>
+    <div class="fg" style="margin-bottom:14px">
+      <div class="fi"><label>Mês de Lançamento</label><select id="rel-lanc-mes"><option value="">Selecione o mês...</option></select></div>
+      <div class="fi" style="justify-content:flex-end;padding-top:18px"><button class="btn by" onclick="gerarRelLancamento()">Gerar Relatório</button></div>
+    </div>
+    <div id="rel-lanc-result"></div>
+  </div>
+
   <div class="gc2">
     <div class="card">
       <div style="font-size:12px;font-weight:700;margin-bottom:12px">✂️ Cortes no Cortador</div>
@@ -1978,6 +1990,24 @@ async function loadFechamentos(){
   }catch(e){}
 }
 
+async function gerarRelLancamento(){
+  const mes=document.getElementById('rel-lanc-mes').value;
+  const el=document.getElementById('rel-lanc-result');
+  if(!mes){el.innerHTML='<div style="color:var(--rd);font-size:12px">Selecione um mês de lançamento.</div>';return;}
+  el.innerHTML='<div class="nd"><span class="sp"></span>Carregando...</div>';
+  try{
+    const[lMods,cortes]=await Promise.all([
+      db('lanc_modelos?select=modelo,colecao_atual&colecao_atual=eq.'+encodeURIComponent(mes)),
+      db('cortes?select=modelo,qtd_cortada,numero_corte')
+    ]);
+    if(!lMods.length){el.innerHTML='<div class="nd">Nenhum modelo cadastrado para este mês de lançamento.</div>';return;}
+    const cMap={};
+    cortes.forEach(c=>{const n=(c.modelo||'').trim();if(!cMap[n])cMap[n]={total:0,lista:[]};cMap[n].total+=(c.qtd_cortada||0);if(c.qtd_cortada)cMap[n].lista.push('#'+(c.numero_corte||'?')+' ('+c.qtd_cortada+' pcs)');});
+    let tot=0;
+    const rows=lMods.map(m=>{const n=(m.modelo||'').trim(),d=cMap[n]||{total:0,lista:[]};tot+=d.total;return`<tr><td style="font-weight:600;color:var(--yw)">${n}</td><td style="font-weight:700;text-align:center;color:${d.total>0?'var(--gn)':'var(--t3)'}">${d.total||'—'}</td><td style="font-size:11px;color:var(--t2)">${d.lista.join(', ')||'Nenhum corte encontrado'}</td></tr>`;}).join('');
+    el.innerHTML=`<div style="margin-bottom:10px;font-size:12px;color:var(--t2)">${lMods.length} modelo(s) · <strong style="color:var(--yw)">${tot} peças cortadas</strong> para ${mes}</div><div class="tw"><table style="min-width:500px"><thead><tr><th>Modelo</th><th style="text-align:center">Peças Cortadas</th><th>Detalhe dos Cortes</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td style="font-weight:700;padding:10px 12px;border-top:1px solid var(--bd)">TOTAL</td><td style="font-weight:800;color:var(--yw);text-align:center;padding:10px 12px;border-top:1px solid var(--bd)">${tot}</td><td style="padding:10px 12px;border-top:1px solid var(--bd)"></td></tr></tfoot></table></div>`;
+  }catch(e){el.innerHTML='<div style="color:var(--rd);font-size:12px">Erro: '+e.message+'</div>';}
+}
 async function loadRel(){
   try{
     // Lead time usa lotes com status que contém "Concluído"
@@ -2026,6 +2056,9 @@ async function loadRel(){
       :'<div class="nd">Dados insuficientes</div>';
 
     // Histórico de pagamentos com valores reais (descontando cancelados)
+    
+    try{const lm=await db('lanc_modelos?select=colecao_atual&order=colecao_atual.asc');const mu=[...new Set(lm.map(m=>m.colecao_atual||'').filter(Boolean))];const sel=document.getElementById('rel-lanc-mes');if(sel){const cur=sel.value;sel.innerHTML='<option value="">Selecione o mês...</option>'+mu.map(m=>`<option${m===cur?' selected':''} value="${m}">${m}</option>`).join('');}}catch(e){}
+
     document.getElementById('rel-pgtos').innerHTML=pgtos.length?
       pgtos.map(p=>{
         const itens=pgItens.filter(i=>i.lote_pgto_id===p.id);
