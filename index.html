@@ -120,6 +120,27 @@ tr:hover td{background:rgba(255,255,255,.015);}
 .lote-row{padding:9px 0;border-bottom:1px solid var(--bd);}.lote-row:last-child{border-bottom:none;}
 .lote-main{display:flex;align-items:center;gap:10px;}
 .lote-obs-wrap{display:none;padding:6px 0 2px 0;}.lote-obs-wrap.open{display:block;}
+/* ===== KANBAN ===== */
+.kb-board{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;align-items:start;}
+.kb-col{background:var(--s1);border:1px solid var(--bd);border-radius:10px;padding:0;overflow:hidden;}
+.kb-col-hd{padding:12px 14px;font-weight:600;font-size:13px;letter-spacing:.4px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:8px;}
+.kb-col-hd .kb-cnt{background:rgba(255,255,255,.12);border-radius:20px;padding:1px 8px;font-size:11px;font-weight:700;}
+.kb-col-body{padding:10px;display:flex;flex-direction:column;gap:8px;min-height:80px;}
+.kb-card{background:var(--s2);border:1px solid var(--bd);border-radius:7px;padding:11px 12px;}
+.kb-card-modelo{font-weight:700;font-size:13px;margin-bottom:6px;color:var(--tx);}
+.kb-card-row{display:flex;justify-content:space-between;font-size:11px;color:var(--t2);margin-bottom:3px;}
+.kb-card-row span:last-child{color:var(--tx);font-weight:500;}
+.kb-badge-atrasado{display:inline-block;background:#c0392b;color:#fff;border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;margin-top:5px;}
+.kb-badge-prazo{display:inline-block;background:rgba(39,174,96,.2);color:#2ecc71;border:1px solid rgba(39,174,96,.3);border-radius:4px;padding:2px 7px;font-size:10px;font-weight:600;margin-top:5px;}
+.kb-badge-hoje{display:inline-block;background:rgba(230,126,34,.2);color:#e67e22;border:1px solid rgba(230,126,34,.3);border-radius:4px;padding:2px 7px;font-size:10px;font-weight:600;margin-top:5px;}
+.kb-empty{color:var(--t2);font-size:12px;text-align:center;padding:14px 0;font-style:italic;}
+.kb-col-cortador{border-top:3px solid #9b59b6;}
+.kb-col-agfac{border-top:3px solid var(--yw);}
+.kb-col-emprod{border-top:3px solid #3498db;}
+.kb-col-conserto{border-top:3px solid #e67e22;}
+.kb-col-acabamento{border-top:3px solid #1abc9c;}
+.kb-col-concluido{border-top:3px solid #2ecc71;}
+@media(max-width:640px){.kb-board{grid-template-columns:1fr;}}
 </style>
 </head>
 <body>
@@ -151,6 +172,7 @@ tr:hover td{background:rgba(255,255,255,.015);}
     <button class="nb" onclick="P('pagamentos')">Pagamentos</button>
     <button class="nb" onclick="P('relatorios')">Relatórios</button>
     <button class="nb" onclick="P('lancamentos')">Lançamentos</button>
+    <button class="nb" onclick="P('kanban')">Kanban</button>
   </nav>
   <div class="user-info">
     <span class="user-email" id="user-email"></span>
@@ -165,6 +187,7 @@ tr:hover td{background:rgba(255,255,255,.015);}
   <button class="nb" onclick="P('acabamentos')">Acabamento</button>
   <button class="nb" onclick="P('pagamentos')">Pagamentos</button>
   <button class="nb" onclick="P('relatorios')">Relatórios</button>
+  <button class="nb" onclick="P('kanban')">Kanban</button>
 </div>
 <div class="ct">
 
@@ -402,6 +425,16 @@ tr:hover td{background:rgba(255,255,255,.015);}
     <tbody id="tb-lanc"><tr><td colspan="11" class="nd"><span class="sp"></span></td></tr></tbody>
   </table></div></div>
 </div>
+
+<!-- KANBAN -->
+<div id="pg-kanban" style="display:none">
+  <div class="sh">
+    <div><div class="st">Kanban de Produção</div><div class="ss" id="kb-upd"></div></div>
+    <button class="btn bg bsm" onclick="loadKanban()">↻ Atualizar</button>
+  </div>
+  <div id="kb-board" class="kb-board"></div>
+</div>
+
 </div><!-- /ct -->
 
 <!-- MODAL ACABAMENTO -->
@@ -676,7 +709,7 @@ function P(page){
   document.querySelectorAll('[id^="pg-"]').forEach(e=>e.style.display='none');
   document.getElementById('pg-'+page).style.display='block';
   document.querySelectorAll('.nb').forEach(b=>b.classList.toggle('active',b.getAttribute('onclick')?.includes("'"+page+"'")));
-  const map={dash:loadDash,cortes:loadCortes,faccoes:loadFaccoes,acabamentos:loadAcabamentos,pagamentos:loadPagamentos,relatorios:loadRel,lancamentos:loadLancamentos};
+  const map={dash:loadDash,cortes:loadCortes,faccoes:loadFaccoes,acabamentos:loadAcabamentos,pagamentos:loadPagamentos,relatorios:loadRel,lancamentos:loadLancamentos,kanban:loadKanban};
   map[page]?.();
 }
 
@@ -2285,6 +2318,75 @@ function abrirRenomearLanc(mid){lancEditId=mid;const m=lancMods.find(x=>x.id===m
 async function salvarRenomearLanc(){const novo=document.getElementById('mr-novo').value.trim();if(!novo){document.getElementById('mr-msg').innerHTML='<div style="color:var(--rd);font-size:11px;margin-top:6px">Informe o novo nome.</div>';return;}try{await db('lanc_modelos?id=eq.'+lancEditId,'PATCH',{nome_exibicao:novo});await loadLancamentos();fecharModal('mo-lanc-rename');toast('Nome de exibição atualizado!');}catch(e){document.getElementById('mr-msg').innerHTML='<div style="color:var(--rd);font-size:11px;margin-top:6px">'+e.message+'</div>';}}
 async function limparRenomearLanc(){if(!confirm('Remover o apelido e voltar ao nome original?'))return;try{await db('lanc_modelos?id=eq.'+lancEditId,'PATCH',{nome_exibicao:null});await loadLancamentos();fecharModal('mo-lanc-rename');toast('Apelido removido.');}catch(e){document.getElementById('mr-msg').innerHTML='<div style="color:var(--rd);font-size:11px;margin-top:6px">'+e.message+'</div>';}}
 async function salvarManualLanc(){const ref=document.getElementById('lm-ref').value.trim(),nome=document.getElementById('lm-nome').value.trim(),col=document.getElementById('lm-col').value.trim(),qtd=parseInt(document.getElementById('lm-qtd').value)||0;if(!nome){document.getElementById('lm-msg').innerHTML='<div style="color:var(--rd);font-size:11px;margin-top:6px">Informe o nome.</div>';return;}if(!col){document.getElementById('lm-msg').innerHTML='<div style="color:var(--rd);font-size:11px;margin-top:6px">Informe a coleção.</div>';return;}if(!qtd){document.getElementById('lm-msg').innerHTML='<div style="color:var(--rd);font-size:11px;margin-top:6px">Informe a quantidade.</div>';return;}try{await db('lanc_modelos','POST',{ref:ref||null,modelo:nome,colecao_original:col,colecao_atual:col,qtd_total:qtd});await loadLancamentos();fecharModal('mo-lanc-man');toast('Modelo adicionado!');}catch(e){const msg=e.message.includes('unique')?'Modelo já cadastrado.':e.message;document.getElementById('lm-msg').innerHTML='<div style="color:var(--rd);font-size:11px;margin-top:6px">'+msg+'</div>';}}
+
+// ===== KANBAN =====
+let kbRefreshTimer=null;
+async function loadKanban(){
+  const el=document.getElementById('kb-board');
+  if(el)el.innerHTML='<div style="color:var(--t2);font-size:13px;padding:20px;text-align:center"><span class="sp"></span> Carregando...</div>';
+  const upd=document.getElementById('kb-upd');
+  if(upd)upd.textContent='Atualizado: '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  if(kbRefreshTimer)clearInterval(kbRefreshTimer);
+  kbRefreshTimer=setInterval(()=>{if(document.getElementById('pg-kanban')&&document.getElementById('pg-kanban').style.display!=='none')loadKanban();},300000);
+  try{
+    const[cortes,lotes,acabamentos]=await Promise.all([
+      db('cortes?select=*'),
+      db('lotes_faccao?select=*'),
+      db('acabamentos?select=*')
+    ]);
+    const cols=[
+      {id:'cortador',label:'No Cortador',cls:'kb-col-cortador',items:[]},
+      {id:'agfac',label:'Ag. Facção',cls:'kb-col-agfac',items:[]},
+      {id:'emprod',label:'Em Produção',cls:'kb-col-emprod',items:[]},
+      {id:'conserto',label:'Em Conserto',cls:'kb-col-conserto',items:[]},
+      {id:'acabamento',label:'Em Acabamento',cls:'kb-col-acabamento',items:[]},
+    ];
+    cortes.filter(c=>c.status==='Aguardando Retorno').forEach(c=>{
+      const dtCorte=c.data_corte?new Date(c.data_corte):null;
+      const dias=dtCorte?Math.floor((new Date()-dtCorte)/864e5):null;
+      cols[0].items.push({modelo:c.modelo||'—',qtd:c.qtd_cortada||c.qtd_pretendida||0,responsavel:c.cortador||'—',label_responsavel:'Cortador',dias:dias,dataPrev:null,prazo_dias:null,data_envio:null,status:c.status,colecao:c.colecao||''});
+    });
+    lotes.filter(l=>l.status==='Aguardando Facção').forEach(l=>{
+      const dtEnv=l.data_envio?new Date(l.data_envio):null;
+      const dias=dtEnv?Math.floor((new Date()-dtEnv)/864e5):null;
+      cols[1].items.push({modelo:l.modelo||'—',qtd:l.qtd_enviada||0,responsavel:l.faccao||'—',label_responsavel:'Facção',dias:dias,dataPrev:dataPrevRetorno(l.data_envio,l.prazo_dias),prazo_dias:l.prazo_dias,data_envio:l.data_envio,status:l.status,colecao:l.colecao||''});
+    });
+    lotes.filter(l=>l.status==='Em Produção').forEach(l=>{
+      const dtEnv=l.data_envio?new Date(l.data_envio):null;
+      const dias=dtEnv?Math.floor((new Date()-dtEnv)/864e5):null;
+      cols[2].items.push({modelo:l.modelo||'—',qtd:l.qtd_enviada||0,responsavel:l.faccao||'—',label_responsavel:'Facção',dias:dias,dataPrev:dataPrevRetorno(l.data_envio,l.prazo_dias),prazo_dias:l.prazo_dias,data_envio:l.data_envio,status:l.status,colecao:l.colecao||''});
+    });
+    lotes.filter(l=>l.status==='Ret. Conserto / Ag. Pagamento'||l.status==='Ret. Conserto / Pag. Parcial').forEach(l=>{
+      const dtEnv=l.data_envio?new Date(l.data_envio):null;
+      const dias=dtEnv?Math.floor((new Date()-dtEnv)/864e5):null;
+      cols[3].items.push({modelo:l.modelo||'—',qtd:l.qtd_enviada||0,responsavel:l.faccao||'—',label_responsavel:'Facção',dias:dias,dataPrev:null,prazo_dias:null,data_envio:null,status:l.status,colecao:l.colecao||''});
+    });
+    acabamentos.filter(a=>a.status==='Em Acabamento'||a.status==='Aguardando Acabamento').forEach(a=>{
+      const dtEnv=a.data_envio?new Date(a.data_envio):null;
+      const dias=dtEnv?Math.floor((new Date()-dtEnv)/864e5):null;
+      cols[4].items.push({modelo:a.modelo||'—',qtd:a.qtd_pecas||0,responsavel:a.acabador||'—',label_responsavel:'Acabador',dias:dias,dataPrev:dataPrevRetorno(a.data_envio,a.prazo_dias),prazo_dias:a.prazo_dias,data_envio:a.data_envio,status:a.status,colecao:a.colecao||''});
+    });
+    if(!el)return;
+    el.innerHTML=cols.map(col=>{
+      const cards=col.items.map(item=>{
+        let badge='';
+        if(item.prazo_dias&&item.data_envio){
+          const prev=new Date(item.data_envio);prev.setDate(prev.getDate()+parseInt(item.prazo_dias));
+          const diff=Math.ceil((prev-new Date())/864e5);
+          if(diff<0)badge='<span class="kb-badge-atrasado">ATRASADO '+Math.abs(diff)+' dias</span>';
+          else if(diff===0)badge='<span class="kb-badge-hoje">Vence hoje</span>';
+          else badge='<span class="kb-badge-prazo">No prazo · '+diff+'d</span>';
+        }
+        const diasText=item.dias!=null?item.dias+'d na etapa':'—';
+        return'<div class="kb-card"><div class="kb-card-modelo">'+item.modelo+(item.colecao?'<span style="font-size:10px;color:var(--t2);font-weight:400;margin-left:6px">'+item.colecao+'</span>':'')+'</div><div class="kb-card-row"><span>Quantidade</span><span>'+item.qtd+' pcs</span></div><div class="kb-card-row"><span>'+item.label_responsavel+'</span><span>'+item.responsavel+'</span></div><div class="kb-card-row"><span>Tempo na etapa</span><span>'+diasText+'</span></div>'+(item.dataPrev&&item.dataPrev!=='—'?'<div class="kb-card-row"><span>Previsão</span><span>'+item.dataPrev+'</span></div>':'')+badge+'</div>';
+      }).join('');
+      return'<div class="kb-col '+col.cls+'"><div class="kb-col-hd">'+col.label+'<span class="kb-cnt">'+col.items.length+'</span></div><div class="kb-col-body">'+(cards||'<div class="kb-empty">Nenhum item</div>')+'</div></div>';
+    }).join('');
+  }catch(e){
+    if(el)el.innerHTML='<div style="color:var(--rd);font-size:13px;padding:20px">Erro ao carregar Kanban: '+e.message+'</div>';
+  }
+}
+
 // INIT — não carrega nada, espera login
 </script>
 </body>
